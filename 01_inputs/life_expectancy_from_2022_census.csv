@@ -1,0 +1,211 @@
+name_indonesian,sex,year,life_expectancy
+Aceh,male,2020,68.04
+Aceh,male,2021,68.07
+Aceh,male,2022,68.26
+Aceh,female,2020,71.91
+Aceh,female,2021,71.94
+Aceh,female,2022,72.16
+Bali,male,2020,70.28
+Bali,male,2021,70.39
+Bali,male,2022,70.69
+Bali,female,2020,74.03
+Bali,female,2021,74.17
+Bali,female,2022,74.53
+Banten,male,2020,68.08
+Banten,male,2021,68.15
+Banten,male,2022,68.46
+Banten,female,2020,71.93
+Banten,female,2021,71.99
+Banten,female,2022,72.36
+Bengkulu,male,2020,67.47
+Bengkulu,male,2021,67.54
+Bengkulu,male,2022,67.74
+Bengkulu,female,2020,71.27
+Bengkulu,female,2021,71.40
+Bengkulu,female,2022,71.68
+Daerah Istimewa Yogyakarta,male,2020,73.22
+Daerah Istimewa Yogyakarta,male,2021,73.27
+Daerah Istimewa Yogyakarta,male,2022,73.28
+Daerah Istimewa Yogyakarta,female,2020,76.83
+Daerah Istimewa Yogyakarta,female,2021,76.89
+Daerah Istimewa Yogyakarta,female,2022,76.93
+Daerah Khusus Ibukota Jakarta,male,2020,71.10
+Daerah Khusus Ibukota Jakarta,male,2021,71.21
+Daerah Khusus Ibukota Jakarta,male,2022,71.45
+Daerah Khusus Ibukota Jakarta,female,2020,74.80
+Daerah Khusus Ibukota Jakarta,female,2021,74.91
+Daerah Khusus Ibukota Jakarta,female,2022,75.22
+Gorontalo,male,2020,66.14
+Gorontalo,male,2021,66.27
+Gorontalo,male,2022,66.56
+Gorontalo,female,2020,70.09
+Gorontalo,female,2021,70.21
+Gorontalo,female,2022,70.53
+Indonesia,male,2020,69.59
+Indonesia,male,2021,69.67
+Indonesia,male,2022,69.93
+Indonesia,female,2020,73.46
+Indonesia,female,2021,73.55
+Indonesia,female,2022,73.83
+Jambi,male,2020,69.27
+Jambi,male,2021,69.33
+Jambi,male,2022,69.57
+Jambi,female,2020,73.07
+Jambi,female,2021,73.19
+Jambi,female,2022,73.49
+Jawa Barat,male,2020,71.30
+Jawa Barat,male,2021,71.57
+Jawa Barat,male,2022,71.77
+Jawa Barat,female,2020,75.00
+Jawa Barat,female,2021,75.19
+Jawa Barat,female,2022,75.48
+Jawa Tengah,male,2020,72.51
+Jawa Tengah,male,2021,72.61
+Jawa Tengah,male,2022,72.71
+Jawa Tengah,female,2020,76.30
+Jawa Tengah,female,2021,76.42
+Jawa Tengah,female,2022,76.53
+Jawa Timur,male,2020,69.42
+Jawa Timur,male,2021,69.51
+Jawa Timur,male,2022,69.81
+Jawa Timur,female,2020,73.27
+Jawa Timur,female,2021,73.35
+Jawa Timur,female,2022,73.71
+Kalimantan Barat,male,2020,68.80
+Kalimantan Barat,male,2021,68.87
+Kalimantan Barat,male,2022,69.08
+Kalimantan Barat,female,2020,72.67
+Kalimantan Barat,female,2021,72.74
+Kalimantan Barat,female,2022,73.00
+Kalimantan Selatan,male,2020,66.76
+Kalimantan Selatan,male,2021,66.97
+Kalimantan Selatan,male,2022,67.23
+Kalimantan Selatan,female,2020,70.62
+Kalimantan Selatan,female,2021,70.79
+Kalimantan Selatan,female,2022,71.13
+Kalimantan Tengah,male,2020,67.84
+Kalimantan Tengah,male,2021,67.89
+Kalimantan Tengah,male,2022,68.08
+Kalimantan Tengah,female,2020,71.66
+Kalimantan Tengah,female,2021,71.72
+Kalimantan Tengah,female,2022,72.02
+Kalimantan Timur,male,2020,72.54
+Kalimantan Timur,male,2021,72.79
+Kalimantan Timur,male,2022,72.80
+Kalimantan Timur,female,2020,76.21
+Kalimantan Timur,female,2021,76.51
+Kalimantan Timur,female,2022,76.52
+Kalimantan Utara,male,2020,70.63
+Kalimantan Utara,male,2021,70.69
+Kalimantan Utara,male,2022,70.70
+Kalimantan Utara,female,2020,74.44
+Kalimantan Utara,female,2021,74.48
+Kalimantan Utara,female,2022,74.54
+Kepulauan Bangka Belitung,male,2020,68.77
+Kepulauan Bangka Belitung,male,2021,68.86
+Kepulauan Bangka Belitung,male,2022,69.06
+Kepulauan Bangka Belitung,female,2020,72.59
+Kepulauan Bangka Belitung,female,2021,72.70
+Kepulauan Bangka Belitung,female,2022,72.97
+Kepulauan Riau,male,2020,68.08
+Kepulauan Riau,male,2021,68.24
+Kepulauan Riau,male,2022,68.58
+Kepulauan Riau,female,2020,71.90
+Kepulauan Riau,female,2021,72.07
+Kepulauan Riau,female,2022,72.47
+Lampung,male,2020,68.78
+Lampung,male,2021,68.86
+Lampung,male,2022,69.07
+Lampung,female,2020,72.61
+Lampung,female,2021,72.69
+Lampung,female,2022,72.97
+Maluku,male,2020,64.12
+Maluku,male,2021,64.23
+Maluku,male,2022,64.53
+Maluku,female,2020,67.93
+Maluku,female,2021,68.05
+Maluku,female,2022,68.43
+Maluku Utara,male,2020,66.43
+Maluku Utara,male,2021,66.55
+Maluku Utara,male,2022,66.84
+Maluku Utara,female,2020,70.32
+Maluku Utara,female,2021,70.44
+Maluku Utara,female,2022,70.79
+Nusa Tenggara Barat,male,2020,64.63
+Nusa Tenggara Barat,male,2021,64.81
+Nusa Tenggara Barat,male,2022,65.14
+Nusa Tenggara Barat,female,2020,68.39
+Nusa Tenggara Barat,female,2021,68.66
+Nusa Tenggara Barat,female,2022,69.07
+Nusa Tenggara Timur,male,2020,65.15
+Nusa Tenggara Timur,male,2021,65.28
+Nusa Tenggara Timur,male,2022,65.54
+Nusa Tenggara Timur,female,2020,68.96
+Nusa Tenggara Timur,female,2021,69.11
+Nusa Tenggara Timur,female,2022,69.43
+Papua,male,2020,64.02
+Papua,male,2021,64.15
+Papua,male,2022,64.34
+Papua,female,2020,67.65
+Papua,female,2021,67.79
+Papua,female,2022,68.16
+Papua Barat,male,2020,64.20
+Papua Barat,male,2021,64.33
+Papua Barat,male,2022,64.54
+Papua Barat,female,2020,67.90
+Papua Barat,female,2021,68.05
+Papua Barat,female,2022,68.44
+Riau,male,2020,69.75
+Riau,male,2021,69.82
+Riau,male,2022,70.03
+Riau,female,2020,73.55
+Riau,female,2021,73.62
+Riau,female,2022,73.90
+Sulawesi Barat,male,2020,63.20
+Sulawesi Barat,male,2021,63.39
+Sulawesi Barat,male,2022,63.74
+Sulawesi Barat,female,2020,67.02
+Sulawesi Barat,female,2021,67.19
+Sulawesi Barat,female,2022,67.60
+Sulawesi Selatan,male,2020,68.68
+Sulawesi Selatan,male,2021,68.77
+Sulawesi Selatan,male,2022,69.03
+Sulawesi Selatan,female,2020,72.56
+Sulawesi Selatan,female,2021,72.65
+Sulawesi Selatan,female,2022,72.96
+Sulawesi Tengah,male,2020,66.77
+Sulawesi Tengah,male,2021,66.91
+Sulawesi Tengah,male,2022,66.98
+Sulawesi Tengah,female,2020,70.72
+Sulawesi Tengah,female,2021,70.85
+Sulawesi Tengah,female,2022,70.95
+Sulawesi Tenggara,male,2020,69.31
+Sulawesi Tenggara,male,2021,69.35
+Sulawesi Tenggara,male,2022,69.44
+Sulawesi Tenggara,female,2020,73.37
+Sulawesi Tenggara,female,2021,73.37
+Sulawesi Tenggara,female,2022,73.47
+Sulawesi Utara,male,2020,69.82
+Sulawesi Utara,male,2021,69.89
+Sulawesi Utara,male,2022,70.16
+Sulawesi Utara,female,2020,73.67
+Sulawesi Utara,female,2021,73.72
+Sulawesi Utara,female,2022,74.04
+Sumatera Barat,male,2020,67.59
+Sumatera Barat,male,2021,67.70
+Sumatera Barat,male,2022,67.99
+Sumatera Barat,female,2020,71.45
+Sumatera Barat,female,2021,71.57
+Sumatera Barat,female,2022,71.89
+Sumatera Selatan,male,2020,68.00
+Sumatera Selatan,male,2021,68.11
+Sumatera Selatan,male,2022,68.38
+Sumatera Selatan,female,2020,71.86
+Sumatera Selatan,female,2021,71.95
+Sumatera Selatan,female,2022,72.29
+Sumatera Utara,male,2020,67.22
+Sumatera Utara,male,2021,67.35
+Sumatera Utara,male,2022,67.66
+Sumatera Utara,female,2020,71.08
+Sumatera Utara,female,2021,71.21
+Sumatera Utara,female,2022,71.60
