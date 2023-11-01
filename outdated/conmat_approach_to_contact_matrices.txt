@@ -1,0 +1,96 @@
+### Let's use the conmat package to derive contact matrices at the province-level 
+library(conmat)
+polymod_contact_data <- get_polymod_contact_data()
+polymod_survey_data <- get_polymod_population()
+contact_model <- fit_single_contact_model(
+  contact_data = polymod_contact_data,
+  population = polymod_survey_data
+)
+
+
+# indonesian_pop <- population_MASTER %>%
+#   filter(name_english == "Indonesia") %>%
+#   rename(population = individuals) %>%
+#   mutate(lower.age.limit = as.numeric(word(age_group, 1, sep = "to"))) %>%
+#   select(lower.age.limit,population)
+# indonesian_pop <- age_population(indonesian_pop,
+#                                  age_col = lower.age.limit)
+
+indonesian_pop <- population_MASTER_five_year_age_groups %>%
+  filter(name_english == "Indonesia") %>%
+  rename(population = individuals) %>%
+  mutate(lower.age.limit = age_group_start) %>%
+  select(lower.age.limit,population)
+indonesian_pop <- age_population(indonesian_pop,
+                                 age_col = lower.age.limit)
+
+synthetic_contact_indonesia <- predict_contacts(
+  model = contact_model,
+  population = indonesian_pop,
+  age_breaks = c(unique(indonesian_pop$lower.age.limit),Inf)
+) %>%
+  mutate(
+    age_of_contact = as.numeric(regmatches(age_group_from , regexpr("([0-9]+)", age_group_from ))),
+    age_of_individual  = as.numeric(regmatches(age_group_to , regexpr("([0-9]+)" , age_group_to )))) %>%
+  select(-age_group_from,-age_group_to)
+
+#
+pop_Prem <- population_MASTER_single_age_groups %>%
+  filter(name_english == "Indonesia") %>%
+  mutate(agegroup_PREM = cut(age_group_single,breaks = c(0,seq(4,94,by=5),110), include.lowest = T, labels = unique(synthetic_contact_indonesia$age_of_individual)),
+         agegroup_MODEL = cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_groups_label)) %>%
+  ungroup() %>%
+  group_by(agegroup_MODEL) %>%
+  mutate(model_group_percent = individuals/sum(individuals)) %>%
+  ungroup() %>%
+  group_by(agegroup_PREM) %>%
+  mutate(prem_group_percent = individuals/sum(individuals)) %>%
+  select(age_group_single,agegroup_PREM,agegroup_MODEL,model_group_percent,prem_group_percent)
+sum_1 = pop_Prem %>%
+  group_by(agegroup_MODEL,agegroup_PREM) %>%
+  summarise(model_group_percentage = sum(model_group_percent),.groups = "keep")
+sum_2 = pop_Prem %>%
+  group_by(agegroup_MODEL,agegroup_PREM) %>%
+  summarise(prem_group_percentage = sum(prem_group_percent),.groups = "keep") 
+pop_Prem = sum_1 %>% left_join(sum_2, by = c("agegroup_MODEL", "agegroup_PREM"))
+pop_Prem$agegroup_PREM <- as.numeric(as.character(pop_Prem$agegroup_PREM)) 
+
+#collapse columns
+workshop <- synthetic_contact_indonesia %>% 
+  rename(agegroup_PREM = age_of_contact) %>%
+  left_join(pop_Prem, by = c("agegroup_PREM"),relationship = "many-to-many") %>%
+  mutate(contacts = contacts * prem_group_percentage) %>%
+  rename(age_of_contact = agegroup_MODEL) %>%
+  group_by(age_of_individual,age_of_contact) %>%
+  summarise(contacts = sum(contacts), .groups = "keep")
+# workshop %>% 
+#   filter(year == 2021 & location == "") %>%
+#   group_by(age_of_individual) %>%
+#   summarise(daily_contact = sum(contacts))
+#NB NOT CHECKED: against baseline
+
+#collapse rows
+workshop <- workshop %>% 
+  rename(agegroup_PREM = age_of_individual) %>%
+  left_join(pop_Prem, by = c("agegroup_PREM"),relationship = "many-to-many") %>%
+  mutate(contacts = contacts * model_group_percentage ) %>%
+  rename(age_of_individual = agegroup_MODEL) %>%
+  group_by(age_of_individual,age_of_contact) %>%
+  summarise(contacts = sum(contacts), .groups = "keep")
+
+contact_matrix_synthetic <- workshop %>% mutate(label = "synthetic")
+to_plot <- contact_matrix_prem %>%  filter(label %in% c("2017","2021_"))
+to_plot = rbind(to_plot,contact_matrix_synthetic)
+ggplot(to_plot)+
+  geom_point(aes(x = age_of_contact, y = contacts, colour = label),size = 2) + 
+  theme(legend.position = "bottom") +
+  facet_grid(age_of_individual ~.)
+
+check = to_plot %>%
+  ungroup() %>%
+  select(-year,-location) %>%
+  pivot_wider(names_from = label,
+              values_from = contacts)
+
+
+### DECISION: doesn't align well enough at the national level to use at the provincal level, perhaps because this model includes less data than Prem et al.
