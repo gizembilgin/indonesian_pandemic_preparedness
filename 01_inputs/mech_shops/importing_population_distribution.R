@@ -56,6 +56,11 @@ if (length(unique(workshop$individuals)) != 1){stop("The total number of individ
 population_MASTER <- population_MASTER %>%
   filter(age_group_raw != "total")
 
+population_MASTER_five_year_age_groups <- population_MASTER %>% 
+  ungroup() %>% 
+  filter(sex == "all") %>%
+  select(-age_group_raw,-sex)
+save(population_MASTER_five_year_age_groups, file = "01_inputs/population_MASTER_five_year_age_groups.Rdata")
 
 ### CHECK Indonesia == sum(provinces) and ~ wiki population size
 workshop <- population_MASTER %>%
@@ -85,6 +90,12 @@ population_MASTER <- population_MASTER %>%
   mutate(individuals = individuals/n()) %>%
   select(name_english,name_indonesian,sex,age_group_single,individuals)
 if (sum(population_MASTER$individuals) != baseline){stop("Population size changed when moved to single age bands")}
+
+population_MASTER_single_age_groups <- population_MASTER %>% 
+  ungroup() %>% 
+  filter(sex == "all") %>%
+  select(-age_group_raw,-sex)
+save(population_MASTER_single_age_groups, file = "01_inputs/population_MASTER_single_age_groups.Rdata")
 
 
 ### APPLY new model age groups
