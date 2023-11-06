@@ -1,16 +1,29 @@
 
 
 fit_beta_to_R0 <- function(R0_to_fit = 2,
-                           this_contact_matrix = contact_matrix,
-                           this_pop = pop,
+                           this_contact_matrix = loaded_setting_characteristics$contact_matrix,
+                           this_pop = loaded_setting_characteristics$population,
                            this_average_symptomatic_period = average_symptomatic_period,
                            this_prevalence_symptoms = prevalence_symptoms,
                            this_reduced_infectiousness_asymptomatic = reduced_infectiousness_asymptomatic,
-                           this_susceptibility = susceptibility) {
+                           this_susceptibility = susceptibility,
+                           age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
   
-  num_age_groups = length(unique(this_contact_matrix$age_group))
+  num_age_groups = length(age_group_labels)
   
-  contact_matrix_adjust = matrix(data = 0, 
+  workshop <- this_contact_matrix %>%
+    pivot_wider(names_from = age_of_contact,
+                values_from = contacts,
+                names_prefix = "age_contact_")
+  colnames(workshop) <- gsub(" ","_",colnames(workshop))
+  workshop$age_of_individual <- factor(workshop$age_of_individual, levels = age_group_labels)
+  workshop <- workshop %>% 
+    select(age_of_individual, age_contact_0_to_4, age_contact_5_to_17, age_contact_18_to_29, age_contact_30_to_59, age_contact_60_to_110) %>%
+    arrange(age_of_individual)
+  this_contact_matrix <- as.matrix(workshop[,-c(1)])
+
+  
+    contact_matrix_adjust = matrix(data = 0, 
                                  nrow = num_age_groups, 
                                  ncol = num_age_groups)
   for (i in 1:num_age_groups){
