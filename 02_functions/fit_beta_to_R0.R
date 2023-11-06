@@ -1,16 +1,19 @@
 
 
 fit_beta_to_R0 <- function(R0_to_fit = 2,
-                           this_contact_matrix = loaded_setting_characteristics$contact_matrix,
-                           this_pop = loaded_setting_characteristics$population,
+                          
                            this_average_symptomatic_period = average_symptomatic_period,
                            this_prevalence_symptoms = prevalence_symptoms,
                            this_reduced_infectiousness_asymptomatic = reduced_infectiousness_asymptomatic,
                            this_susceptibility = susceptibility,
+                           
+                           this_contact_matrix = loaded_setting_characteristics$contact_matrix,
+                           this_pop = loaded_setting_characteristics$population,
                            age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
   
   num_age_groups = length(age_group_labels)
   
+  # simplify tidy contact matrix to matrix form
   workshop <- this_contact_matrix %>%
     pivot_wider(names_from = age_of_contact,
                 values_from = contacts,
