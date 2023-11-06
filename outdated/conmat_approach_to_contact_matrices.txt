@@ -38,7 +38,7 @@ synthetic_contact_indonesia <- predict_contacts(
 pop_Prem <- population_MASTER_single_age_groups %>%
   filter(name_english == "Indonesia") %>%
   mutate(agegroup_PREM = cut(age_group_single,breaks = c(0,seq(4,94,by=5),110), include.lowest = T, labels = unique(synthetic_contact_indonesia$age_of_individual)),
-         agegroup_MODEL = cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_groups_label)) %>%
+         agegroup_MODEL = cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_group_labels)) %>%
   ungroup() %>%
   group_by(agegroup_MODEL) %>%
   mutate(model_group_percent = individuals/sum(individuals)) %>%

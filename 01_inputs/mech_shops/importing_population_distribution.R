@@ -1,7 +1,7 @@
 
 require(tidyverse); require(stringr); require(ggpubr)
 
-age_groups_label <- c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
+age_group_labels <- c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 age_groups_num <- c(0,4,17,29,59,110)
 
 
@@ -103,7 +103,7 @@ population_MASTER <- population_MASTER %>%
   mutate(age_group = cut(age_group_single,
                              breaks =  age_groups_num,
                              include.lowest = TRUE,
-                             labels = age_groups_label)) %>%
+                             labels = age_group_labels)) %>%
   group_by(name_english,name_indonesian,sex,age_group) %>%
   summarise(individuals = sum(individuals), .groups = "keep") %>%
   ungroup()

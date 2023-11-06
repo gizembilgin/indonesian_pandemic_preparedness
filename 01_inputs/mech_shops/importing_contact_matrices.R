@@ -3,8 +3,11 @@ require(tidyverse); require(ggpubr)
 
 load(file = "01_inputs/population_MASTER_single_age_groups.Rdata")
 urbanicity <- read.csv("01_inputs/rural_urban_breakdown_from_2022_census.csv", header = TRUE)
-age_groups_label <- c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
+age_group_labels <- c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 age_groups_num <- c(0,4,17,29,59,110)
+name_translation <- population_MASTER_single_age_groups %>%
+  select(name_indonesian,name_english) %>%
+  distinct()
 
 
 
@@ -88,7 +91,7 @@ baseline <- prem %>%
 pop_Prem <- population_MASTER_single_age_groups %>%
   filter(name_english == "Indonesia") %>%
   mutate(agegroup_PREM = cut(age_group_single,breaks = c(0,seq(4,74,by=5),110), include.lowest = T, labels = unique(prem$age_of_individual)),
-         agegroup_MODEL = cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_groups_label)) %>%
+         agegroup_MODEL = cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_group_labels)) %>%
   ungroup() %>%
   group_by(agegroup_MODEL) %>%
   mutate(model_group_percent = individuals/sum(individuals)) %>%
@@ -151,13 +154,14 @@ workshop <- contact_matrix_prem %>%
   pivot_wider(names_from = "location",
               values_from = "contacts")
 
-contact_matrix_MASTER <- crossing(age_of_individual = age_groups_label,
-                                    age_of_contact = age_groups_label,
+contact_matrix_MASTER <- crossing(age_of_individual = age_group_labels,
+                                    age_of_contact = age_group_labels,
                                     name_indonesian = unique(urbanicity$name_indonesian)) %>%
   left_join(workshop, by = c("age_of_individual","age_of_contact")) %>%
   left_join(urbanicity, by = "name_indonesian") %>%
   mutate(contacts = urban * urbanicity_percentage + rural * (1-urbanicity_percentage)) %>%
-  select(name_indonesian,age_of_individual,age_of_contact,contacts)
+  left_join(name_translation, by = "name_indonesian")%>%
+  select(name_indonesian,name_english,age_of_individual,age_of_contact,contacts) 
 
 save(contact_matrix_MASTER, file = "01_inputs/contact_matrix_MASTER.Rdata")
 ################################################################################
@@ -169,7 +173,7 @@ to_plot <- contact_matrix_MASTER %>%
   group_by(name_indonesian,age_of_individual) %>%
   summarise(contacts = sum(contacts)) %>%
   arrange(age_of_individual)
-to_plot$age_of_individual = factor(to_plot$age_of_individual,levels = age_groups_label)
+to_plot$age_of_individual = factor(to_plot$age_of_individual,levels = age_group_labels)
 
 #add pure urban and rural
 workshop <- contact_matrix_prem %>% 
@@ -197,4 +201,4 @@ ggplot() +
 ################################################################################
 
 
-rm(contact_matrix_prem,to_plot,check,workshop,urbanicity,prem)
+rm(contact_matrix_prem,to_plot,check,workshop,urbanicity,prem,name_translation)
