@@ -19,7 +19,22 @@ configure_inital_state <- function(age_group_labels = c("0 to 4","5 to 17","18 t
     ) %>%
     select(-proportion)
   
+  #add in empty E, I, R classes  
+  workshop <- inital_state %>%
+    mutate(individuals = 0)
+  workshop <- crossing(class = c("E","I","R"), workshop) 
+  inital_state <- inital_state %>%
+    mutate(class = "S")
+  inital_state = rbind(inital_state,workshop)
+  
+  # order correctly
+  inital_state$class <- factor(inital_state$class, levels = c("S","E","I","R"))
+  inital_state$age_group <- factor(inital_state$age_group, levels = age_group_labels)
+  inital_state <- inital_state %>%
+    arrange(class,comorbidity,vaccination_status,age_group)  
+  
   if(sum(round(inital_state$individuals)) != sum(population$individuals)){stop("inital state does not match population")}
+  if(sum(inital_state$individuals[inital_state$vaccination_status != 0]) > 0 ){stop("inital state contains vaccinated individuals")}
   
   return(inital_state)
 }
