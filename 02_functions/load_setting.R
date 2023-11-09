@@ -14,6 +14,7 @@ load_setting <- function(this_setting = "Indonesia",
     select(age_group,individuals)
   rm(population_MASTER)
   
+  
   #(2/?) contact patterns
   load("01_inputs/contact_matrix_MASTER.Rdata")
   contact_matrix <- contact_matrix_MASTER %>%
@@ -22,27 +23,51 @@ load_setting <- function(this_setting = "Indonesia",
   rm(contact_matrix_MASTER)
   if (nrow(contact_matrix) != length(age_group_labels)^2){stop("too many contact matrix rows!")}
   
+  # simplify tidy contact matrix to matrix form
+  workshop <- contact_matrix %>%
+    pivot_wider(names_from = age_of_contact,
+                values_from = contacts,
+                names_prefix = "age_contact_")
+  colnames(workshop) <- gsub(" ","_",colnames(workshop))
+  workshop$age_of_individual <- factor(workshop$age_of_individual, levels = age_group_labels)
+  workshop <- workshop %>% 
+    select(age_of_individual, age_contact_0_to_4, age_contact_5_to_17, age_contact_18_to_29, age_contact_30_to_59, age_contact_60_to_110) %>%
+    arrange(age_of_individual)
+  contact_matrix <- as.matrix(workshop[,-c(1)])
+  
+  
   #(3/?) % of essential workers (DUMMY VALUE) - COVID-19 vaccination data
   essential_workers <- data.frame(age_group = age_group_labels,
                                   proportion = c(0,rep(0.1,length(age_group_labels)-2),0))
   
-  #(4/?) % comorb (DUMMY VALUE) - Basic Health Survey
+  
+  #(4/?) vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
+  vaccine_delivery_capacity = 0.00163*sum(population$individuals)
+  
+  
+  #(5/?) % comorb (DUMMY VALUE) - Basic Health Survey
   comorbidities <- data.frame(age_group = age_group_labels) %>%
     mutate(proportion = (row_number()-1)*1/length(age_group_labels))
   
-  #(5/?) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
+  
+  #(6/?) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
   access_to_care <- crossing(age_group = age_group_labels,
                              proportion = 0.8)
   
-  #(6/?) modification on R0 based on province (DUMMY) - seroprevalence survey
+  
+  #(7/?) modification on R0 based on province (DUMMY) - seroprevalence survey
   R0_adjustement = 1
+  
+
   
   loaded_setting_characteristics <- list(population = population,
                                          contact_matrix = contact_matrix,
                                          essential_workers = essential_workers,
+                                         vaccine_delivery_capacity = vaccine_delivery_capacity,
                                          comorbidities = comorbidities,
                                          access_to_care = access_to_care,
                                          R0_adjustement = R0_adjustement)
+  
   
   return(loaded_setting_characteristics)
   
