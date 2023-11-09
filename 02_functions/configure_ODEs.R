@@ -6,8 +6,9 @@ configure_ODEs <- function(t, state, parameters){
   with(as.list(c(state,parameters)),{
     
     J = num_age_groups
-    D = num_vax_doses
-    RISK = num_risk_groups
+    D = 1 #num_vax_doses
+    RISK = 2 #num_risk_groups
+    num_disease_classes = 4
     
     A=RISK*J*(D+1) # +1 is unvax
     
@@ -17,7 +18,7 @@ configure_ODEs <- function(t, state, parameters){
     R=state[(3*A+1):(4*A)]
     
     dS = dE = dI = dR = dIncidence  <- numeric(length=A)
-    dExposed_S = dExposed_R         <- numeric(length=J)
+    #dExposed_S = dExposed_R         <- numeric(length=J)
     
     tau =(rep(0,J)) 
     
@@ -42,7 +43,7 @@ configure_ODEs <- function(t, state, parameters){
         tau[i]=tau[i]+contact_matrix[i,j]*(total_infected_mod*(lota*(1-gamma[j])+gamma[j]))/(total)
         
       }
-      tau[i]=tau[i]*(1-NPI)*beta[i]*suscept[i]
+      tau[i]=tau[i]*(1-NPI)*beta*suscept[i]
       tau[i]=max(min(1,tau[i]),0) #transmission can not be more than 1 (100%)
     }
     
@@ -56,25 +57,21 @@ configure_ODEs <- function(t, state, parameters){
         dI[unvax] = lambda*E[unvax] - delta*I[unvax]
         dR[unvax] = delta*I[unvax]  - omega*R[unvax]  - tau[i]*(1-rho)*R[unvax]
         
-        dIncidence[unvax] = lambda*E[unvax]
-        dExposed_S[i] = tau[i]*S[i]
-        dExposed_R[i] = tau[i]*(1-rho)*R[i]
+         dIncidence[unvax] = lambda*E[unvax]
+        # dExposed_S[i] = tau[i]*S[i]
+        # dExposed_R[i] = tau[i]*(1-rho)*R[i]
         
         for (d in 1:D){
           B = i + J*d+(r-1)*A/RISK
-          VE_step = VE$VE[VE$dose==d & 
-                            VE$risk_group == risk_group_labels[r] &
-                            VE$age_group == age_group_labels[i]] 
-          if (length(VE_step) == 0){ VE_step = 0 } #no VE calculated because doses not delivered for this d/i combination
-          
-          dS[B] = omega*R[B]              - tau[i]*(1-VE_step)*S[B] 
-          dE[B] = tau[i]*(1-VE_step)*S[B] - lambda*E[B] + tau[i]*(1-VE_step)*(1-rho)*R[B]
+
+          dS[B] = omega*R[B]              - tau[i]*(1-VE)*S[B] 
+          dE[B] = tau[i]*(1-VE)*S[B] - lambda*E[B] + tau[i]*(1-VE)*(1-rho)*R[B]
           dI[B] = lambda*E[B]             - delta*I[B]
-          dR[B] = delta*I[B]              - omega*R[B]  - tau[i]*(1-VE_step)*(1-rho)*R[B]
+          dR[B] = delta*I[B]              - omega*R[B]  - tau[i]*(1-VE)*(1-rho)*R[B]
           
           dIncidence[B] = lambda*E[B] 
-          dExposed_S[i] = dExposed_S[i] + tau[i]*(1-VE_step)*S[B] 
-          dExposed_R[i] = dExposed_R[i] + tau[i]*(1-VE_step)*(1-rho)*R[B]
+          # dExposed_S[i] = dExposed_S[i] + tau[i]*(1-VE)*S[B] 
+          # dExposed_R[i] = dExposed_R[i] + tau[i]*(1-VE)*(1-rho)*R[B]
           
         }
       }
@@ -85,7 +82,8 @@ configure_ODEs <- function(t, state, parameters){
     dI = as.numeric(dI)
     dR = as.numeric(dR)
     
-    list(c(dS,dE,dI,dR,dIncidence,dExposed_S,dExposed_R))  
+    #list(c(dS,dE,dI,dR,dIncidence,dExposed_S,dExposed_R))  
+    list(c(dS,dE,dI,dR,dIncidence))
   })
 }
 
