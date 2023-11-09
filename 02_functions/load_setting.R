@@ -58,9 +58,24 @@ load_setting <- function(this_setting = "Indonesia",
   #(7/?) modification on R0 based on province (DUMMY) - seroprevalence survey
   R0_adjustement = 1
   
+  
+  #derive population_risk_group
+  population_by_risk_group <- crossing(age_group = age_group_labels,
+                                       comorbidity = c(0, 1)) %>%
+    left_join(population, by = "age_group") %>%
+    left_join(comorbidities, by = "age_group") %>%
+    mutate(
+      individuals =
+        case_when(
+          comorbidity == 0 ~ (1 - proportion) * individuals,
+          comorbidity == 1 ~ proportion * individuals
+        )
+    ) %>%
+    select(-proportion)
 
   
   loaded_setting_characteristics <- list(population = population,
+                                         population_by_risk_group = population_by_risk_group,
                                          contact_matrix = contact_matrix,
                                          essential_workers = essential_workers,
                                          vaccine_delivery_capacity = vaccine_delivery_capacity,
