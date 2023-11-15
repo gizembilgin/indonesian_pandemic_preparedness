@@ -3,6 +3,7 @@
 # providing multiple possible allocation pathways, identified by the variable "phase". 
 
 configure_vaccination_history <- function(TOGGLE_vaccination_strategy = list(),
+                                          
                                           vaccine_acceptance = load_setting_characteristics$vaccine_acceptance, 
                                           daily_vaccine_delivery_capacity = load_setting_characteristics$daily_vaccine_delivery_capacity,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
@@ -54,7 +55,7 @@ configure_vaccination_history <- function(TOGGLE_vaccination_strategy = list(),
   final_row_delivery =  sum(essential_worker_target$individuals) - sum(essential_worker_delivery$doses_delivered)
   final_row = essential_worker_target %>%
     mutate(doses_delivered = proportion * final_row_delivery,
-           time = 100 + essential_worker_timeframe + 1)
+           time = TOGGLE_vaccination_strategy$vaccine_delivery_start_date + essential_worker_timeframe + 1)
   essential_worker_delivery <- rbind(essential_worker_delivery,final_row) %>%
     select(-proportion,-individuals) %>%
     mutate(phase = "essential_workers")
