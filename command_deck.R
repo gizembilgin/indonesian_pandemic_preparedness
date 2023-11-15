@@ -81,7 +81,10 @@ parameters = list(
   VE=TOGGLE_vaccine_derived_immunity,
   num_age_groups=num_age_groups)
 
-incidence_log_tidy<- run_disease_model()
+vaccination_history_permutations <- configure_vaccination_history(LIST_vaccination_strategies = TOGGLE_vaccination_strategy)
+
+incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
+                                       vaccination_history = vaccination_history_permutations)
 
 
 to_plot <- incidence_log_tidy %>%
