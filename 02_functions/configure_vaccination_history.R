@@ -2,23 +2,23 @@
 # This function creates combinations of vaccination strategies. It starts with the delivery of vaccines to essential workers, before
 # providing multiple possible allocation pathways, identified by the variable "phase". 
 
-configure_vaccination_history <- function(TOGGLE_vaccination_strategy = list(),
+configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           
-                                          vaccine_acceptance = load_setting_characteristics$vaccine_acceptance, 
-                                          daily_vaccine_delivery_capacity = load_setting_characteristics$daily_vaccine_delivery_capacity,
+                                          vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
+                                          daily_vaccine_delivery_capacity = loaded_setting_characteristics$daily_vaccine_delivery_capacity,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
                                           essential_workers = loaded_setting_characteristics$essential_workers){
   
   
   
   ### RETURN if no vaccination strategy specified
-  if (length(TOGGLE_vaccination_strategy) == 0) return(vaccination_history = data.frame())
+  if (length(LIST_vaccination_strategies) == 0) return(vaccination_history = data.frame())
   
   
   
-  ### CHECK that TOGGLE_vaccination_strategy provided as expected
+  ### CHECK that LIST_vaccination_strategies provided as expected
   #NB: checking that a label has been provided for each vaccination strategy, and that age groups and comorbidity statuses provided are valid values
-  check_configured_strategies <- TOGGLE_vaccination_strategy$strategy
+  check_configured_strategies <- LIST_vaccination_strategies$strategy
   for(this_strategy in check_configured_strategies){
     if(grepl('[0-9]', substr(this_strategy[[1]],1,1))){stop("the label of your vaccination strategies should start with character descriptions NOT digits")}
     this_strategy <- this_strategy[-1]
@@ -48,14 +48,14 @@ configure_vaccination_history <- function(TOGGLE_vaccination_strategy = list(),
   if(round(sum(essential_worker_target$proportion),digits=2) != 1){stop("proportion calculation on essential_worker_target not EQ 100%")}
   
   essential_worker_timeframe = floor(sum(essential_worker_target$individuals)/daily_vaccine_delivery_capacity) #create sequence of days for full capacity delivery to essential workers
-  time_sequence = seq(TOGGLE_vaccination_strategy$vaccine_delivery_start_date,TOGGLE_vaccination_strategy$vaccine_delivery_start_date+essential_worker_timeframe-1,by=1)
+  time_sequence = seq(LIST_vaccination_strategies$vaccine_delivery_start_date,LIST_vaccination_strategies$vaccine_delivery_start_date+essential_worker_timeframe-1,by=1)
   if(length(time_sequence) != essential_worker_timeframe){stop("time sequence not aligning with timeframe for delivery of doses to essential workers")}
   
   essential_worker_delivery = crossing(time = time_sequence,essential_worker_target) 
   final_row_delivery =  sum(essential_worker_target$individuals) - sum(essential_worker_delivery$doses_delivered)
   final_row = essential_worker_target %>%
     mutate(doses_delivered = proportion * final_row_delivery,
-           time = TOGGLE_vaccination_strategy$vaccine_delivery_start_date + essential_worker_timeframe + 1)
+           time = LIST_vaccination_strategies$vaccine_delivery_start_date + essential_worker_timeframe + 1)
   essential_worker_delivery <- rbind(essential_worker_delivery,final_row) %>%
     select(-proportion,-individuals) %>%
     mutate(phase = "essential_workers")
@@ -78,12 +78,12 @@ configure_vaccination_history <- function(TOGGLE_vaccination_strategy = list(),
   
   index = 0
   target_population_delivery = data.frame()
-  for (this_supply in TOGGLE_vaccination_strategy$supply){
-    for (this_strategy_index in 1:length(TOGGLE_vaccination_strategy$strategy)){
+  for (this_supply in LIST_vaccination_strategies$supply){
+    for (this_strategy_index in 1:length(LIST_vaccination_strategies$strategy)){
       
       index = index + 1
-      this_phase = as.character(TOGGLE_vaccination_strategy$strategy[[this_strategy_index]][1])
-      this_strategy = TOGGLE_vaccination_strategy$strategy[[this_strategy_index]][-1]
+      this_phase = as.character(LIST_vaccination_strategies$strategy[[this_strategy_index]][1])
+      this_strategy = LIST_vaccination_strategies$strategy[[this_strategy_index]][-1]
       this_population_target <- remainder_of_population_target
       this_population_target$priority <- NA
       
