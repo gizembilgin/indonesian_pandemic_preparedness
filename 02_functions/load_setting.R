@@ -41,26 +41,32 @@ load_setting <- function(this_setting = "Indonesia",
                                   proportion = c(0,rep(0.1,length(age_group_labels)-2),0))
   
   
-  #(4/?) vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
-  vaccine_delivery_capacity = 0.00163*sum(population$individuals)
+  #(4/?) daily_vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
+  daily_vaccine_delivery_capacity = 0.00163*sum(population$individuals)
   
   
-  #(5/?) % comorb (DUMMY VALUE) - Basic Health Survey
+  #(5/?) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
+  vaccine_acceptance = data.frame(phase = c(rep("essential_workers",2),rep("vaccination_strategy",2)),
+                                  comorbidity = rep(c(0,1),2),
+                                  uptake = c(0.95,0.95,0.9,0.95))
+  
+  
+  #(6/?) % comorb (DUMMY VALUE) - Basic Health Survey
   comorbidities <- data.frame(age_group = age_group_labels) %>%
     mutate(proportion = (row_number()-1)*1/length(age_group_labels))
   
   
-  #(6/?) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
+  #(7/?) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
   access_to_care <- crossing(age_group = age_group_labels,
                              proportion = 0.8)
   
   
-  #(7/?) modification on R0 based on province (DUMMY) - seroprevalence survey
+  #(8/?) modification on R0 based on province (DUMMY) - seroprevalence survey
   R0_adjustement = 1
   
   
   #derive population_risk_group
-  population_by_risk_group <- crossing(age_group = age_group_labels,
+  population_by_comorbidity <- crossing(age_group = age_group_labels,
                                        comorbidity = c(0, 1)) %>%
     left_join(population, by = "age_group") %>%
     left_join(comorbidities, by = "age_group") %>%
@@ -75,10 +81,11 @@ load_setting <- function(this_setting = "Indonesia",
 
   
   loaded_setting_characteristics <- list(population = population,
-                                         population_by_risk_group = population_by_risk_group,
+                                         population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
                                          essential_workers = essential_workers,
-                                         vaccine_delivery_capacity = vaccine_delivery_capacity,
+                                         daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity,
+                                         vaccine_acceptance = vaccine_acceptance,
                                          comorbidities = comorbidities,
                                          access_to_care = access_to_care,
                                          R0_adjustement = R0_adjustement)
