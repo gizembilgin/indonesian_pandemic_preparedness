@@ -26,12 +26,17 @@ TOGGLE_average_immune_period = 365*10
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100,
                                    supply = c(0.2,0.5),
                                    strategy = list(
-                                     list("older adults followed by all adults",c("60 to 110"),c("18 to 29","30 to 59")),
-                                     list("all adults at the same time",c("18 to 29","30 to 59","60 to 110")),
-                                     list("children before adults", c("0 to 4","5 to 17"), c("18 to 29","30 to 59","60 to 110"))                                                     )
+                                     list("older adults followed by all adults",
+                                          list(c("60 to 110"),c(0,1)),
+                                          list(c("18 to 29","30 to 59"),c(0,1))),
+                                     list("all adults at the same time",
+                                          list(c("18 to 29","30 to 59","60 to 110"),c(0,1))),
+                                     list("children before adults", 
+                                          list(c("0 to 4","5 to 17"),c(0,1)), 
+                                          list(c("18 to 29","30 to 59","60 to 110"),c(0,1)))                                                     )
 )
 
-
+TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
 TOGGLE_NPI = 0.5
 TOGGLE_infection_derived_immunity = 1
 TOGGLE_vaccine_derived_immunity = 0.8
