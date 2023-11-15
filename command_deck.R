@@ -16,6 +16,7 @@ age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 TOGGLE_setting = "Indonesia"
 
 # pathogen characteristics
+TOGGLE_time_horizon = 365 #scope of analysis to one year
 TOGGLE_R0_to_fit = 2
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
@@ -23,7 +24,7 @@ TOGGLE_prevalence_symptoms = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_reduced_infectiousness_asymptomatic = 0.5
 TOGGLE_susceptibility = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_average_immune_period = 365*10
-TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100,
+TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.2,0.5),
                                    strategy = list(
                                      list("older adults followed by all adults",

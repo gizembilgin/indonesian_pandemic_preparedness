@@ -1,6 +1,7 @@
 
 
-run_disease_model <- function(vaccination_history = data.frame(),
+run_disease_model <- function(time_horizon = 365,
+                              vaccination_history = data.frame(),
                               
                               this_inital_state = inital_state,
                               this_configure_ODEs = configure_ODEs,
@@ -13,17 +14,17 @@ run_disease_model <- function(vaccination_history = data.frame(),
   
   if (nrow(vaccination_history) == 0){
     sol = as.data.frame(ode(y=state,
-                            times=seq(0,365,by=1),
+                            times=seq(0,time_horizon,by=1),
                             func=this_configure_ODEs,
                             parms=this_parameters))
   } else{
     #first 100 days of the outbreak, NB: COMEBACK to allow variation in time of detection
-    sol_first_100_days = as.data.frame(ode(y=state,
-                            times=seq(0,100,by=1),
+    sol_without_vaccine = as.data.frame(ode(y=state,
+                            times=seq(0,min(vaccination_history$time),by=1),
                             func=this_configure_ODEs,
                             parms=this_parameters))
     
-    #delivery to essential workers
+    #delivery exclusively to essential workers
     sol_delivery_to_essential_workers
     
     #delivery to else (nb: run multiple times depending on vax strategies being tested)
