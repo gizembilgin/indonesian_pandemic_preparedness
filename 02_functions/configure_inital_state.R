@@ -15,16 +15,17 @@ configure_inital_state <- function(introduction,
                        TRUE ~ individuals)) 
   
   #include SEIR classes
-  inital_state <- crossing(class = c("S","E","I","R"), inital_state) %>%
+  inital_state <- crossing(class = c("S","E","I","R","Incid"), inital_state) %>%
     mutate(individuals = case_when(
       class == "S" ~ individuals * (1-introduction),
       class == "E" ~ individuals * introduction * average_exposed_period/(average_exposed_period + average_symptomatic_period),
       class == "I" ~ individuals * introduction * average_symptomatic_period/(average_exposed_period + average_symptomatic_period),
-      class == "R" ~ 0
+      class == "R" ~ 0,
+      class == "Incid" ~ 0 #add empty rows for incidence tracker
     ))
 
   # order correctly
-  inital_state$class <- factor(inital_state$class, levels = c("S","E","I","R"))
+  inital_state$class <- factor(inital_state$class, levels = c("S","E","I","R","Incid"))
   inital_state$age_group <- factor(inital_state$age_group, levels = age_group_labels)
   inital_state <- inital_state %>%
     arrange(class,comorbidity,vaccination_status,age_group)  
