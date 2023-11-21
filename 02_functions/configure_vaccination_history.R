@@ -192,6 +192,14 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                     unique(check$comorbidity)))}
     }
   }
+  
+  #CHECK no gap day
+  if (length(unique(vaccination_history_permutations$time)) !=
+      length(seq(min(vaccination_history_permutations$time),max(vaccination_history_permutations$time)))){
+    stop("there is a time gap in the vaccination_history!")
+  }
+  
+  
     
   return (vaccination_history_permutations)
 }
