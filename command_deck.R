@@ -88,8 +88,9 @@ incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
 
 
 to_plot <- incidence_log_tidy %>%
-  group_by(time) %>%
+  group_by(time,phase,supply) %>%
   summarise(incidence = sum(incidence))
 ggplot(to_plot) + 
-  geom_point(aes(x=time,y=incidence))
+  geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
+  facet_grid(supply ~.)
 #_______________________________________________________________________________
