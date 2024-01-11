@@ -13,12 +13,13 @@ run_disease_model <- function(time_horizon = 365,
   skeleton_state <- this_inital_state %>% select(-individuals)
   
   if (nrow(vaccination_history) == 0){
+    #if no vaccines are delivered, run for entire time_horizon
     sol_log = as.data.frame(ode(y=state,
                             times=seq(0,time_horizon,by=1),
                             func=this_configure_ODEs,
                             parms=this_parameters)) %>%
-      mutate(phase = "100 day mission",
-             supply = NA)
+      mutate(phase = "no vaccine",
+             supply = 0)
   } else{
     
     ### PART 1/2: First 100 days of the outbreak, NB: COMEBACK to allow variation in time of detection
@@ -26,7 +27,7 @@ run_disease_model <- function(time_horizon = 365,
                             times=seq(0,min(vaccination_history$time),by=1),
                             func=this_configure_ODEs,
                             parms=this_parameters)) %>%
-      mutate(phase = "100 day mission",
+      mutate(phase = "no vaccine",
              supply = NA)
     #NB: ncol(sol) == 101 == 20 * (S + E + I + R + incidence) + phase
     
@@ -36,7 +37,6 @@ run_disease_model <- function(time_horizon = 365,
     time_sequence <- seq(max(sol_without_vaccine$time)+1, time_horizon, by = 1)
 
     for (this_phase in unique(vaccination_history$phase)){   
-      
       for (this_supply in unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])){
         for (this_time in time_sequence){
           
@@ -48,7 +48,7 @@ run_disease_model <- function(time_horizon = 365,
             
             # only run delivery to essential workers once (for first "supply" scenario)
             
-          }else if(this_phase != "essential_workers" & this_time < min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
+          } else if(this_phase != "essential_workers" & this_time < min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
             
             # skip if delivery to others but in essential worker delivery period
             
@@ -56,12 +56,12 @@ run_disease_model <- function(time_horizon = 365,
             
             # start
             if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
-              sol <- sol_delivery_to_essential_workers
+              sol <- sol_delivery_to_essential_workers #saved sol because only running once
             }
             
             #reconstruct 'tidy' state
             state_working = tail.matrix(sol, 1)
-            state_working = select(state_working, -time, -phase, - supply) #remove column with time
+            state_working = select(state_working, -time, -phase, - supply) #remove all other columns
             state_working = t(state_working)
             colnames(state_working) <- c("individuals")
             
@@ -70,10 +70,10 @@ run_disease_model <- function(time_horizon = 365,
             
             todays_vaccinations <- vaccination_history %>%
               filter(time == this_time &
-                       phase %in% c(this_phase,"essential_workers") &
-                       (supply == this_supply | is.na(supply))) %>%
+                       phase %in% c(this_phase,"essential_workers") & #include essential workers always to capture day of concurrent delivery with others
+                       (supply == this_supply | is.na(supply))) %>%   # is.na(supply) = NA when essential_workers
               select(-time,-phase) %>%
-              group_by(age_group,comorbidity) %>%
+              group_by(age_group,comorbidity) %>% #sum doses given to essential workers and general population
               summarise(doses_delivered = sum(doses_delivered), .groups = "keep")
             
             if (nrow(todays_vaccinations)>0){
@@ -90,6 +90,7 @@ run_disease_model <- function(time_horizon = 365,
                 pivot_longer(cols = c("S","E","I","R"),
                              names_to = "class",
                              values_to = "individuals") %>%
+                #distribute doses among SEIR classes
                 mutate(doses_delivered = case_when(
                   denominator == 0 ~ 0,
                   TRUE ~ doses_delivered * (individuals/denominator))) %>%
@@ -157,7 +158,7 @@ run_disease_model <- function(time_horizon = 365,
     relocate(c("phase","supply"), .after = "time")
   
   #select incidence columns only
-  sol_log <- sol_log[,c(1,2,3,
+  sol_log <- sol_log[,c(1,2,3, #(time,phase,supply)
                         (nrow(this_inital_state[this_inital_state$class == "S",])*4 +3+1):ncol(sol_log))]
 
   # make tidy
