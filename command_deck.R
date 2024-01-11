@@ -13,7 +13,7 @@ for (function_script in list.files(path="02_functions/", full.name = TRUE)){sour
 # user toggles
 age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 
-TOGGLE_setting = "Indonesia"
+TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
 
 # pathogen characteristics
 TOGGLE_time_horizon = 365 #scope of analysis to one year
@@ -25,8 +25,8 @@ TOGGLE_reduced_infectiousness_asymptomatic = 0.5
 TOGGLE_susceptibility = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_average_immune_period = 365*10
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
-                                   supply = c(0.2,0.5),
-                                   strategy = list(
+                                   supply = c(0.2,0.5), #list all supply scenarios
+                                   strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
                                      list("older adults followed by all adults",
                                           list(c("60 to 110"),c(0,1)),
                                           list(c("18 to 29","30 to 59"),c(0,1))),
