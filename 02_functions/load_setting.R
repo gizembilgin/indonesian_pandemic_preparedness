@@ -46,7 +46,7 @@ load_setting <- function(this_setting = "Indonesia",
   
   
   #(5/?) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
-  vaccine_acceptance = data.frame(phase = c(rep("essential_workers",2),rep("vaccination_strategy",2)),
+  vaccine_acceptance = data.frame(phase = c(rep("essential workers",2),rep("vaccination strategy",2)),
                                   comorbidity = rep(c(0,1),2),
                                   uptake = c(0.95,0.95,0.9,0.95))
   

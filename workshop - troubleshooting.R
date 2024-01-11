@@ -18,18 +18,18 @@
 # this_phase
 # [1] "older adults followed by all adults"
 # > unique(vaccination_history$phase)
-# [1] "essential_workers"                   "older adults followed by all adults" "all adults at the same time"        
+# [1] "essential workers"                   "older adults followed by all adults" "all adults at the same time"        
 # [4] "children before adults"   
 #i.e., first vaccination strategy
 
 # this_time
 # [1] 125
-# min(vaccination_history$time[vaccination_history$phase != "essential_workers"])
+# min(vaccination_history$time[vaccination_history$phase != "essential workers"])
 # [1] 97
 #i.e., much after delivery to essential workers
 
 vaccination_history %>%
-  filter(phase %in% c(this_phase,"essential_workers") & #include essential workers always to capture day of concurrent delivery with others
+  filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
            (supply == this_supply | is.na(supply))) %>%
   filter(age_group == "60 to 110") %>%
   group_by(age_group,comorbidity) %>%
@@ -47,7 +47,7 @@ loaded_setting_characteristics$population_by_comorbidity[loaded_setting_characte
 
 vaccination_history %>%
   filter(time <= this_time) %>%
-  filter(phase %in% c(this_phase,"essential_workers") & #include essential workers always to capture day of concurrent delivery with others
+  filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
            (supply == this_supply | is.na(supply))) %>%
   filter(age_group == "60 to 110") %>%
   group_by(age_group,comorbidity) %>%

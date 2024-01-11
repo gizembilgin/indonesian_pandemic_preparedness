@@ -36,7 +36,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
 
   
   ### DELIVER VACCINES TO ESSENTIAL WORKERS
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "essential_workers",-c(1)]
+  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "essential workers",-c(1)]
 
   essential_worker_target <- population_by_comorbidity %>%
     left_join(essential_workers, by = "age_group") %>%
@@ -58,14 +58,14 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
            time = LIST_vaccination_strategies$vaccine_delivery_start_date + essential_worker_timeframe)
   essential_worker_delivery <- rbind(essential_worker_delivery,final_row) %>%
     select(-proportion,-individuals) %>%
-    mutate(phase = "essential_workers")
+    mutate(phase = "essential workers")
   if(abs(sum(essential_worker_delivery$doses_delivered) - sum(essential_worker_target$individuals))>1) stop("doses delivered to essential workers does not align with essential worker target")
   if(nrow(essential_worker_delivery[essential_worker_delivery$doses_delivered<0,])>0) stop("negative doses delivered to essential workers")
   
   
   
   ### DELIVER VACCINES AS PER ALLOCATION STRATEGIES LISTED
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "essential_workers",-c(1)]
+  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "essential workers",-c(1)]
   
   remainder_of_population_target <- population_by_comorbidity %>%
     left_join(essential_workers, by = "age_group") %>%
@@ -179,7 +179,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     for (this_supply in unique(vaccination_history_permutations$supply)){
       
       check <- vaccination_history_permutations %>% 
-        filter(phase %in% c(this_phase,"essential_workers") &
+        filter(phase %in% c(this_phase,"essential workers") &
                  (supply == this_supply | is.na(supply))) %>%
         group_by(age_group,comorbidity) %>%
         summarise(doses_delivered = sum(doses_delivered), .groups = "keep") %>%
