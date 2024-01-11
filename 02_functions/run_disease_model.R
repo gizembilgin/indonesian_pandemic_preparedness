@@ -182,18 +182,7 @@ run_disease_model <- function(time_horizon = 365,
       TRUE ~ incidence
     ))
   #NB: 1774560 bytes
-  
-  #all share first 100 days and essential workers
-  workshop = sol_log %>%
-    filter(phase %in% c("no vaccine","essential workers")) %>%
-    ungroup() %>%
-    select(-supply) %>%
-    crossing(supply = unique(sol_log$supply[is.na(sol_log$supply) == FALSE])) %>%
-    filter(!(supply == 0 & phase != "no vaccine"))
-  sol_log = sol_log %>%
-    filter(!phase %in% c("no vaccine","essential workers"))
-  sol_log = rbind(sol_log,workshop)
-  
+
   #remove time 0 (incidence = NA)
   sol_log <- sol_log %>%
     filter(time>0)
