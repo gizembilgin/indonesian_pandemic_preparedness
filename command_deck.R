@@ -4,7 +4,7 @@
 ### (1/2) Setup                 
 ################################################################################
 # load libraries
-require(tidyverse);require(deSolve)
+require(tidyverse);require(deSolve); require(ggpubr)
 options(scipen = 1000)
 
 # load all functions
@@ -25,7 +25,7 @@ TOGGLE_reduced_infectiousness_asymptomatic = 0.5
 TOGGLE_susceptibility = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_average_immune_period = 365*10
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
-                                   supply = c(0.2,0.5), #list all supply scenarios
+                                   supply = c(0.1,0.2,0.3), #list all supply scenarios
                                    strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
                                      list("older adults followed by all adults",
                                           list(c("60 to 110"),c(0,1)),
@@ -88,30 +88,112 @@ incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
 
 
 ##### RUDIMENTARY PLOTTING #####################################################
-#PLOT daily incidence
-to_plot <- incidence_log_tidy %>%
-  group_by(time,phase,supply) %>%
-  summarise(incidence = sum(incidence))
-ggplot(to_plot) + 
-  geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
-  facet_grid(supply ~.)
+plot_list <- list()
 
-#PLOT cumulative incidence
+### PLOT daily incidence
 to_plot <- incidence_log_tidy %>%
   group_by(time,phase,supply) %>%
   summarise(incidence = sum(incidence)) %>%
-  group_by(phase,supply) %>%
-  mutate(incidence = cumsum(incidence))
-no_vax_cumulative <- unique(to_plot$incidence[to_plot$time == min(to_plot$time[to_plot$phase == "essential workers"])-1])
-essential_worker_cumulative <- max(to_plot$incidence[to_plot$phase == "essential workers"])
-to_plot <- to_plot %>%
-  mutate(incidence = case_when(
-    phase == "no vaccine" ~ incidence,
-    phase == "essential workers" ~ incidence + no_vax_cumulative,
-    TRUE ~ incidence + no_vax_cumulative + essential_worker_cumulative)
-  )
+  mutate(label = case_when(
+    ! phase %in% c("no vaccine", "essential workers") ~ paste0(phase," (",supply*100,"%)"),
+    TRUE ~ phase
+  ))
+order_labels <- c("no vaccine", "essential workers",
+                  unique(to_plot$label[!to_plot$label %in% c("no vaccine", "essential workers")]))
+to_plot$label <- factor(to_plot$label, levels = order_labels)
 ggplot(to_plot) + 
-  geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
-  facet_grid(supply ~.) +
-  ylab("cumulative incidence")
+  geom_point(aes(x=time,y=incidence,color=as.factor(label)))  +
+  labs(color="")
+ggplot(to_plot) + 
+  geom_line(aes(x=time,y=incidence,color=as.factor(label)),linewidth = 1.25)  +
+  labs(color="")
+plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
+  geom_line(aes(x=time,y=incidence,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
+  labs(color="", linetype = "") + 
+  geom_vline(mapping = NULL, xintercept = min(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed") + 
+  geom_vline(mapping = NULL, xintercept = max(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed")
+
+
+### PLOT cumulative incidence
+#all share first 100 days and essential workers
+workshop = incidence_log_tidy %>%
+  filter(phase %in% c("no vaccine","essential workers")) %>%
+  ungroup() %>%
+  select(-supply) %>%
+  crossing(supply = unique(incidence_log_tidy$supply[is.na(incidence_log_tidy$supply) == FALSE])) %>%
+  filter(!(supply == 0 & phase != "no vaccine"))
+to_plot = incidence_log_tidy %>%
+  filter(!phase %in% c("no vaccine","essential workers"))
+to_plot = rbind(to_plot,workshop)
+
+to_plot <- to_plot %>%
+  group_by(time,phase,supply) %>%
+  summarise(incidence = sum(incidence)) %>%
+  group_by(phase,supply) %>%
+  mutate(cumulative_incidence = cumsum(incidence))
+no_vax_cumulative <- unique(to_plot$cumulative_incidence[to_plot$time == min(to_plot$time[to_plot$phase == "essential workers"])-1])
+essential_worker_cumulative <- max(to_plot$cumulative_incidence[to_plot$phase == "essential workers"])
+to_plot <- to_plot %>%
+  mutate(cumulative_incidence = case_when(
+    phase == "no vaccine" ~ cumulative_incidence,
+    phase == "essential workers" ~ cumulative_incidence + no_vax_cumulative,
+    TRUE ~ cumulative_incidence + no_vax_cumulative + essential_worker_cumulative),
+    label = case_when(
+      ! phase %in% c("no vaccine", "essential workers") ~ paste0(phase," (",supply*100,"%)"),
+      TRUE ~ phase
+    )
+  )
+order_labels <- c("no vaccine", "essential workers",
+                  unique(to_plot$label[!to_plot$label %in% c("no vaccine", "essential workers")]))
+to_plot$label <- factor(to_plot$label, levels = order_labels)
+plot_list[[length(plot_list)+1]] <-ggplot(to_plot) + 
+  geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
+  labs(color="", linetype = "")+
+  ylab("cumulative incidence") + 
+  geom_vline(mapping = NULL, xintercept = min(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed") + 
+  geom_vline(mapping = NULL, xintercept = max(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed")
+
+
+### PLOT absolute effect of vaccine
+workshop = to_plot %>%
+  filter(label == "no vaccine" & supply == 0) %>%
+  ungroup() %>%
+  select(time,cumulative_incidence) %>%
+  rename(baseline = cumulative_incidence)
+to_plot <- to_plot %>%
+  #filter(phase != "no vaccine") %>%
+  left_join(workshop, by = "time", relationship = "many-to-many") %>%
+  mutate(vaccine_effect = baseline - cumulative_incidence)
+plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
+  geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
+  labs(color="", linetype = "") +
+  ylab("cumulative cases averted by vaccine") +
+  xlim(0,time_horizon) + 
+  geom_vline(mapping = NULL, xintercept = min(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed") + 
+  geom_vline(mapping = NULL, xintercept = max(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]), linetype="dashed")
+
+ggarrange(plot_list[[1]],plot_list[[2]],plot_list[[3]],
+          nrow = 3,
+          common.legend = TRUE)
+
+### TABULATE relative effect of vaccine
+to_tabulate <- to_plot %>%
+  filter(phase != "no vaccine" &
+           time == time_horizon) %>%
+  select(-time,-incidence,-cumulative_incidence) %>%
+  mutate(vaccine_effect = vaccine_effect/baseline)
+ggplot(to_tabulate) + 
+  geom_tile(aes(x=supply,y=phase,fill=vaccine_effect)) +
+  geom_text(aes(x=supply,y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
+  scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
+  ylab("strategy")
+
+#NB: max coverage within time horizon
+maximum_coverage = loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)*(time_horizon - max(vaccination_history_permutations$time[vaccination_history_permutations$phase == "essential workers"]))
+if (max(TOGGLE_vaccination_strategy$supply)>maximum_coverage){warning(paste("the maximum coverage in this scenario is",maximum_coverage*100,"%"))}
+  
+  
+
+
+
 #_______________________________________________________________________________
