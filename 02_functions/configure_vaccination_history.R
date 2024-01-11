@@ -103,6 +103,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       #ALIGN this_population_target with supply
       this_population_target <- this_population_target %>%
         filter(is.na(priority) == FALSE) 
+      if (this_supply_abs > sum(this_population_target$individuals)) this_supply_abs = sum(this_population_target$individuals)
+      
       while (round(sum(this_population_target$individuals)) > round(this_supply_abs)){
         #if df without last priority still > supply, remove last priority group
         if (sum(this_population_target$individuals[this_population_target$priority < max(this_population_target$priority)]) > this_supply_abs){
@@ -163,6 +165,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       #CHECK: delivery did not exceed supply
       check <- bind_rows(essential_worker_delivery,this_target_population_delivery) %>%
         summarise(total_daily_delivered = sum(doses_delivered)) %>%
+        filter(total_daily_delivered > this_supply * sum(population_by_comorbidity$individuals)) %>%
         filter(abs(total_daily_delivered - (this_supply * sum(population_by_comorbidity$individuals)))>1)
       if (nrow(check)>0) stop("vaccine delivery exceeded supply")
 
