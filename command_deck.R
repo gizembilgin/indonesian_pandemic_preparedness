@@ -87,10 +87,32 @@ incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
                                        vaccination_history = vaccination_history_permutations)
 
 
+##### RUDIMENTARY PLOTTING #####################################################
+#PLOT daily incidence
 to_plot <- incidence_log_tidy %>%
   group_by(time,phase,supply) %>%
   summarise(incidence = sum(incidence))
 ggplot(to_plot) + 
   geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
   facet_grid(supply ~.)
+
+#PLOT cumulative incidence
+to_plot <- incidence_log_tidy %>%
+  group_by(time,phase,supply) %>%
+  summarise(incidence = sum(incidence)) %>%
+  group_by(phase,supply) %>%
+  mutate(incidence = cumsum(incidence))
+workshop <- to_plot %>%
+  group_by(phase) %>%
+  summarise(max = max(incidence))
+to_plot <- to_plot %>%
+  mutate(incidence = case_when(
+    phase == "no vaccine" ~ incidence,
+    phase == "essential_workers" ~ incidence + workshop$max[workshop$phase == "no vaccine"],
+    TRUE ~ incidence + workshop$max[workshop$phase == "no vaccine"] + workshop$max[workshop$phase == "essential_workers"])
+  )
+ggplot(to_plot) + 
+  geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
+  facet_grid(supply ~.) +
+  ylab("cumulative incidence")
 #_______________________________________________________________________________
