@@ -12,50 +12,48 @@ run_disease_model <- function(time_horizon = 365,
   state = c(this_inital_state$individuals) 
   skeleton_state <- this_inital_state %>% select(-individuals)
   
-  if (nrow(vaccination_history) == 0){
-    #if no vaccines are delivered, run for entire time_horizon
-    sol_log = as.data.frame(ode(y=state,
-                            times=seq(0,time_horizon,by=1),
-                            func=this_configure_ODEs,
-                            parms=this_parameters)) %>%
-      mutate(phase = "no vaccine",
-             supply = 0)
-  } else{
+  
+  #first scenario: no vaccines -> run for entire time_horizon
+  sol_log = as.data.frame(ode(y=state,
+                          times=seq(0,time_horizon,by=1),
+                          func=this_configure_ODEs,
+                          parms=this_parameters)) %>%
+    mutate(phase = "no vaccine",
+           supply = 0)
+  
+  
+  if (nrow(vaccination_history) != 0){
     
     ### PART 1/2: First 100 days of the outbreak, NB: COMEBACK to allow variation in time of detection
-    sol_log = sol = as.data.frame(ode(y=state,
-                            times=seq(0,min(vaccination_history$time),by=1),
-                            func=this_configure_ODEs,
-                            parms=this_parameters)) %>%
-      mutate(phase = "no vaccine",
-             supply = NA)
-    #NB: ncol(sol) == 101 == 20 * (S + E + I + R + incidence) + phase
-    
+    sol <- sol_log %>%
+      filter(time <= min(vaccination_history$time)) %>%
+      mutate(supply = NA)
+     #NB: ncol(sol) == 101 == 20 * (S + E + I + R + incidence) + phase
     
     
     ### PART 2/2: Run with daily time steps when vaccine being delivered
-    time_sequence <- seq(max(sol_log$time)+1, time_horizon, by = 1)
+    time_sequence <- seq(max(sol$time)+1, time_horizon, by = 1)
 
     for (this_phase in unique(vaccination_history$phase)){   
       for (this_supply in unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])){
         for (this_time in time_sequence){
           
-          if (this_phase == "essential_workers" & this_time >= min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
+          if (this_phase == "essential workers" & this_time >= min(vaccination_history$time[vaccination_history$phase != "essential workers"])){
             
             # skip if after non-exclusive essential worker delivery period
             
-          } else if (this_phase == "essential_workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
+          } else if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
             
             # only run delivery to essential workers once (for first "supply" scenario)
             
-          } else if(this_phase != "essential_workers" & this_time < min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
+          } else if(this_phase != "essential workers" & this_time < min(vaccination_history$time[vaccination_history$phase != "essential workers"])){
             
             # skip if delivery to others but in essential worker delivery period
             
           } else {
             
             # start
-            if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential_workers"])){
+            if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential workers"])){
               sol <- sol_delivery_to_essential_workers #saved sol because only running once
             }
             
@@ -70,7 +68,7 @@ run_disease_model <- function(time_horizon = 365,
             
             todays_vaccinations <- vaccination_history %>%
               filter(time == this_time &
-                       phase %in% c(this_phase,"essential_workers") & #include essential workers always to capture day of concurrent delivery with others
+                       phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
                        (supply == this_supply | is.na(supply))) %>%   # is.na(supply) = NA when essential_workers
               select(-time,-phase) %>%
               group_by(age_group,comorbidity) %>% #sum doses given to essential workers and general population
@@ -142,7 +140,7 @@ run_disease_model <- function(time_horizon = 365,
             sol_log <- rbind(sol_log,sol)
             
             #only run essential workers the first time (nb: run multiple times depending on vax strategies being tested)
-            if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential_workers"])-1){
+            if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential workers"])-1){
               sol_delivery_to_essential_workers <- sol
             }
             
@@ -187,12 +185,13 @@ run_disease_model <- function(time_horizon = 365,
   
   #all share first 100 days and essential workers
   workshop = sol_log %>%
-    filter(phase %in% c("no vaccine","essential_workers")) %>%
+    filter(phase %in% c("no vaccine","essential workers")) %>%
     ungroup() %>%
     select(-supply) %>%
-    crossing(supply = unique(sol_log$supply[is.na(sol_log$supply) == FALSE]))
+    crossing(supply = unique(sol_log$supply[is.na(sol_log$supply) == FALSE])) %>%
+    filter(!(supply == 0 & phase != "no vaccine"))
   sol_log = sol_log %>%
-    filter(!phase %in% c("no vaccine","essential_workers"))
+    filter(!phase %in% c("no vaccine","essential workers"))
   sol_log = rbind(sol_log,workshop)
   
   #remove time 0 (incidence = NA)

@@ -102,14 +102,13 @@ to_plot <- incidence_log_tidy %>%
   summarise(incidence = sum(incidence)) %>%
   group_by(phase,supply) %>%
   mutate(incidence = cumsum(incidence))
-workshop <- to_plot %>%
-  group_by(phase) %>%
-  summarise(max = max(incidence))
+no_vax_cumulative <- unique(to_plot$incidence[to_plot$time == min(to_plot$time[to_plot$phase == "essential workers"])-1])
+essential_worker_cumulative <- max(to_plot$incidence[to_plot$phase == "essential workers"])
 to_plot <- to_plot %>%
   mutate(incidence = case_when(
     phase == "no vaccine" ~ incidence,
-    phase == "essential_workers" ~ incidence + workshop$max[workshop$phase == "no vaccine"],
-    TRUE ~ incidence + workshop$max[workshop$phase == "no vaccine"] + workshop$max[workshop$phase == "essential_workers"])
+    phase == "essential workers" ~ incidence + no_vax_cumulative,
+    TRUE ~ incidence + no_vax_cumulative + essential_worker_cumulative)
   )
 ggplot(to_plot) + 
   geom_point(aes(x=time,y=incidence,color=as.factor(phase))) +
