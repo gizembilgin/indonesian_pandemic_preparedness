@@ -34,7 +34,7 @@ run_disease_model <- function(time_horizon = 365,
     
     
     ### PART 2/2: Run with daily time steps when vaccine being delivered
-    time_sequence <- seq(max(sol_without_vaccine$time)+1, time_horizon, by = 1)
+    time_sequence <- seq(max(sol_log$time)+1, time_horizon, by = 1)
 
     for (this_phase in unique(vaccination_history$phase)){   
       for (this_supply in unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])){
@@ -175,6 +175,30 @@ run_disease_model <- function(time_horizon = 365,
     left_join(key,by="dummy") %>%
     select(-dummy) %>%
     relocate(incidence, .after = last_col())
+  
+  #correct to daily Incidence when "no vaccine"
+  sol_log = sol_log %>%
+    group_by(phase,supply,comorbidity,vaccination_status,age_group) %>%
+    mutate(incidence = case_when(
+      phase == "no vaccine" ~ incidence - lag(incidence),
+      TRUE ~ incidence
+    ))
+  #NB: 1774560 bytes
+  
+  #all share first 100 days and essential workers
+  workshop = sol_log %>%
+    filter(phase %in% c("no vaccine","essential_workers")) %>%
+    ungroup() %>%
+    select(-supply) %>%
+    crossing(supply = unique(sol_log$supply[is.na(sol_log$supply) == FALSE]))
+  sol_log = sol_log %>%
+    filter(!phase %in% c("no vaccine","essential_workers"))
+  sol_log = rbind(sol_log,workshop)
+  
+  #remove time 0 (incidence = NA)
+  sol_log <- sol_log %>%
+    filter(time>0)
+
   
   return(sol_log)
 }
