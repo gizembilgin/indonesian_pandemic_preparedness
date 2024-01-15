@@ -92,9 +92,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                     round(sum(essential_worker_target$individuals)/sum(population_by_comorbidity$individuals) * 100,digits=0), "%.",
                     " There is no point comparing vaccine prioritisation decisions without prioritisation decisions."))
       } 
-      if (this_supply > (time_horizon - TOGGLE_vaccination_strategy$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)){
+      if (this_supply > (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)){
         stop(paste0("This supply (",this_supply*100,"%) will not be delivered within the time horizon. Please specify a supply of at most ",
-                    round((time_horizon - TOGGLE_vaccination_strategy$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals) * 100,digits=0), "%.",
+                    round((time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals) * 100,digits=0), "%.",
                     " There is no point comparing the impact of different vaccine supplies when they aren't delivered within the time frame."))
       }
       this_supply_abs = this_supply * sum(population_by_comorbidity$individuals) - sum(essential_worker_target$individuals)
