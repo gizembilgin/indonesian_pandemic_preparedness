@@ -16,9 +16,8 @@ TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indones
 
 #simulation configuration
 TOGGLE_time_horizon = 365 #scope of analysis to one year
-TOGGLE_introduction_day = 0 #NB: just change length of run if later
-TOGGLE_introductions = 0.0001 #percentage of pop of introductions on day
-TOGGLE_NPI = 0.5
+TOGGLE_detection_prevalence = 0.0001 #percentage prevalence on day of detection
+TOGGLE_NPI = 0 #0 means no NPI
 
 # pathogen characteristics
 TOGGLE_R0_to_fit = 3
@@ -54,7 +53,7 @@ TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID
 loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
 
 inital_state <- configure_inital_state(
-  introduction = TOGGLE_introductions,
+  detection_prevalence = TOGGLE_detection_prevalence,
   average_symptomatic_period = TOGGLE_average_symptomatic_period,
   average_exposed_period  = TOGGLE_average_exposed_period 
 )

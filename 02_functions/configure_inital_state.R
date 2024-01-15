@@ -1,6 +1,6 @@
 
 
-configure_inital_state <- function(introduction,
+configure_inital_state <- function(detection_prevalence,
                                    average_symptomatic_period,
                                    average_exposed_period,
                                    age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
@@ -15,9 +15,9 @@ configure_inital_state <- function(introduction,
   # include SEIR classes
   inital_state <- crossing(class = c("S","E","I","R","Incid"), inital_state) %>%
     mutate(individuals = case_when(
-      class == "S" ~ individuals * (1-introduction),
-      class == "E" ~ individuals * introduction * average_exposed_period/(average_exposed_period + average_symptomatic_period),
-      class == "I" ~ individuals * introduction * average_symptomatic_period/(average_exposed_period + average_symptomatic_period),
+      class == "S" ~ individuals * (1-detection_prevalence),
+      class == "E" ~ individuals * detection_prevalence * average_exposed_period/(average_exposed_period + average_symptomatic_period),
+      class == "I" ~ individuals * detection_prevalence * average_symptomatic_period/(average_exposed_period + average_symptomatic_period),
       class == "R" ~ 0,
       class == "Incid" ~ 0 # empty rows for incidence tracker
     ))
