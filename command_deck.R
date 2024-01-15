@@ -17,23 +17,26 @@ TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indones
 #simulation configuration
 TOGGLE_time_horizon = 365 #scope of analysis to one year
 TOGGLE_detection_prevalence = 0.0001 #percentage prevalence on day of detection
-TOGGLE_NPI = 0 #0 means no NPI
+TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
 # pathogen characteristics
 TOGGLE_R0_to_fit = 3
+TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
-TOGGLE_prevalence_symptoms = rep(0.8,rep(length(age_group_labels)))
-TOGGLE_reduced_infectiousness_asymptomatic = 0.5
-TOGGLE_susceptibility = rep(0.8,rep(length(age_group_labels)))
+
+TOGGLE_reduced_infectiousness_asymptomatic = 1
+TOGGLE_prevalence_symptoms = rep(1,rep(length(age_group_labels)))
+TOGGLE_susceptibility = rep(1,rep(length(age_group_labels)))
+
 TOGGLE_average_immune_period = 365*10
-TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
 TOGGLE_infection_derived_immunity = 1
 
 #vaccination strategy
 TOGGLE_vaccine_derived_immunity = 0.8
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
+                                   rollout_modifier = 1,
                                    strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
                                      list("older adults followed by all adults",
                                           list(c("60 to 110"),c(0,1)),

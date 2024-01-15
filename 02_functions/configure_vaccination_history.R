@@ -31,6 +31,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   }
   rm(this_strategy,this_stage)
   
+  
+  ### MODIFY rollout
+  daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity * LIST_vaccination_strategies$rollout_modifier
 
   
   ### DELIVER VACCINES TO ESSENTIAL WORKERS
