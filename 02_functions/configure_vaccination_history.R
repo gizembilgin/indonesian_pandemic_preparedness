@@ -21,7 +21,6 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   for(this_strategy in check_configured_strategies){
     if(grepl('[0-9]', substr(this_strategy[[1]],1,1))){stop("the label of your vaccination strategies should start with character descriptions NOT digits")}
     this_strategy <- this_strategy[-1]
-    
     if (is.list(this_strategy) == FALSE) stop("vaccination strategies not provided as a list")
     for (this_stage in this_strategy){
       if (is.list(this_stage) == FALSE) stop("not all vaccination strategies entered as lists")
@@ -110,7 +109,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         filter(is.na(priority) == FALSE) 
       if (this_supply_abs > sum(this_population_target$individuals)) this_supply_abs = sum(this_population_target$individuals)
       
-      #calculate doses delivered to target population by age/comorbidity based on supply
+      #CALCULATE doses delivered to target population by age/comorbidity based on supply
       while (round(sum(this_population_target$individuals)) > round(this_supply_abs)){
         #if df without last priority still > supply, remove last priority group
         if (sum(this_population_target$individuals[this_population_target$priority < max(this_population_target$priority)]) > this_supply_abs){
@@ -130,6 +129,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       }
       if (round(sum(this_population_target$individuals)) != round(this_supply_abs)) stop("not as many vaccines delivered as possible")
       
+      #CALCULATE daily dose delivery by priority group
       this_population_target <- this_population_target %>%
         group_by(priority) %>%
         mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all target population
@@ -140,6 +140,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       this_vax_history <- essential_worker_delivery
       
+      #ALLOCATE doses by day
       for (this_priority in sort(unique(this_population_target$priority))){
         
         if (this_priority == 1){
@@ -149,7 +150,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         this_priority_target_population  <- this_population_target %>%
           filter(priority == this_priority)
         
-        # first day
+        # first day - partial delivery <-> align with previous phase
         first_day_target_population <- this_priority_target_population %>%
           mutate(doses_delivered = partial_dose_delivery_on_first_day * proportion,
                  time = max(this_vax_history$time))
@@ -160,14 +161,13 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         if(length(time_sequence) != priority_target_timeframe){stop("time sequence not aligning with timeframe for delivery of doses to the target population")}
         this_target_population_delivery = crossing(time = time_sequence,this_priority_target_population) 
         
-        # last day
+        # last day - partial delivery <-> align with doses left
         final_row_delivery =  sum(this_priority_target_population$individuals) - sum(this_target_population_delivery$doses_delivered) - sum(first_day_target_population$doses_delivered)
         final_row = this_priority_target_population %>%
           mutate(doses_delivered = proportion * final_row_delivery,
                  time = max(this_target_population_delivery$time) + 1)
         
         partial_dose_delivery_on_first_day = daily_vaccine_delivery_capacity - final_row_delivery
-        #NB: first iteration calculated during essential worker period
         
         this_target_population_delivery <- rbind(first_day_target_population,this_target_population_delivery,final_row) %>%
           ungroup() %>%
@@ -196,9 +196,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       this_target_population_delivery <- this_vax_history %>%
         filter(phase != "essential workers")
       
-      #CHECK delivery to target population
+      #CHECK: delivery to target population
       if(round(sum(this_target_population_delivery$doses_delivered)) != round(sum(this_population_target$individuals))){stop("delivery to target population not aligning with target population")}
-      if(nrow(this_target_population_delivery[this_target_population_delivery$doses_delivered<0,])>0){stop("negative doses delivered to essential workers")}
+      if(nrow(this_target_population_delivery[this_target_population_delivery$doses_delivered<0,])>0){stop("negative doses delivered to target population")}
       
       target_population_delivery = rbind(target_population_delivery,this_target_population_delivery)
       
@@ -207,7 +207,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   
   vaccination_history_permutations <- bind_rows(essential_worker_delivery,target_population_delivery)
   
-  #CHECK never deliver more doses than individuals
+  #CHECK: never deliver more doses than individuals
   for (this_phase in unique(vaccination_history_permutations$phase)){
     for (this_supply in unique(vaccination_history_permutations$supply)){
       
@@ -226,13 +226,13 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     }
   }
   
-  #CHECK no gap day
+  #CHECK: no gap day
   if (length(unique(vaccination_history_permutations$time)) !=
       length(seq(min(vaccination_history_permutations$time),max(vaccination_history_permutations$time)))){
     stop("there is a time gap in the vaccination_history!")
   }
   
-  #CHECK all supply levels have same middle-day delivery (to ensure cascade in run_disease_model)
+  #CHECK: all supply levels have same middle-period delivery (to ensure cascade in run_disease_model)
   for (this_phase in unique(vaccination_history_permutations$phase[vaccination_history_permutations$phase != "essential workers"])){
     check = vaccination_history_permutations %>% 
       filter(phase %in% c(this_phase)) %>% 
@@ -244,8 +244,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       filter(n>1) %>%
       group_by(time) %>%
       summarise(n = unique(n))
-    
-    if (nrow(check) != length(LIST_vaccination_strategies$supply) - 1){stop("cascade in run_disease_model will NOT work for this configured vaccination history")}
+    if (nrow(check) != length(LIST_vaccination_strategies$supply) - 1) stop("cascade in run_disease_model will NOT work for this configured vaccination history")
   }
 
     

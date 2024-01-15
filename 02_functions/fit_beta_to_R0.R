@@ -1,5 +1,3 @@
-
-
 fit_beta_to_R0 <- function(R0_to_fit = 2,
                           
                            this_average_symptomatic_period = average_symptomatic_period,
@@ -52,7 +50,7 @@ fit_beta_to_R0 <- function(R0_to_fit = 2,
   NGM_R0 <- contact_matrix_adjust %*% diag_matrix
   R0_beta <- abs(eigen(NGM_R0)$values[1])
   
-  if (! round(R0_beta,digits = 2) == round(R0_to_fit,digits = 2)){stop('beta fitting is not working!')}
+  if (! round(R0_beta,digits = 2) == round(R0_to_fit,digits = 2)) stop('fit_beta_to_R0: beta fitting is not working!')
   
   return(beta_optimised[1])
   

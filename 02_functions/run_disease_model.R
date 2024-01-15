@@ -1,5 +1,4 @@
 
-
 run_disease_model <- function(time_horizon = 365,
                               vaccination_history = data.frame(),
                               
@@ -20,8 +19,8 @@ run_disease_model <- function(time_horizon = 365,
                           parms=this_parameters)) %>%
     mutate(phase = "no vaccine",
            supply = 0,
-           cumulative_flag = 1)
-  #NB: ncol(sol) == 101 == 20 * (S + E + I + R + incidence) + phase
+           cumulative_flag = 1)0
+  #NB: ncol(sol) == 104 == time + 20 * (S + E + I + R + incidence) + phase + supply + cumulative flag = 1 + 100 + 3  
   
 if (nrow(vaccination_history) != 0){
 
@@ -52,15 +51,12 @@ if (nrow(vaccination_history) != 0){
           this_time_sequence <- this_time_sequence[this_time_sequence > sol$time]
         }
         
-        
         for (this_time in this_time_sequence){
           
           if (this_phase == "essential workers" & this_time >= min(vaccination_history$time[vaccination_history$phase != "essential workers"])){
             # skip if after non-exclusive essential worker delivery period, ensures that day of overlap not missed!
-            
           } else if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
             # only run delivery to essential workers once (for first "supply" scenario)
-            
           }  else {
             
             #reconstruct 'tidy' state
@@ -113,8 +109,7 @@ if (nrow(vaccination_history) != 0){
               if(nrow(next_state[round(next_state$individuals)<0,])>0){stop("negative individuals in next_state compartments")}
               rm(prev_state,todays_vaccinations,todays_vaccinations_by_class,state_working)
              
-              
-            ### INTENSIVE check that vaccination history aligns with next_state configuration
+            #CHECK: (INTENSIVE) vaccination history aligns with next_state configuration
             # expected_numbers <- vaccination_history %>%
             #   filter(time <= this_time) %>%
             #   filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
@@ -133,7 +128,6 @@ if (nrow(vaccination_history) != 0){
             #   filter(round(individuals) != round(doses_delivered))
             # if(nrow(check)>0){stop("vaccination misaligned here")}   
             
-            
               #order correctly
               next_state$class <- factor(next_state$class, levels = c("S","E","I","R"))
               next_state$age_group <- factor(next_state$age_group, levels = age_group_labels)
@@ -146,14 +140,10 @@ if (nrow(vaccination_history) != 0){
               if(abs(sum(next_state) - sum(this_inital_state$individuals))>1){stop(paste("next state at time step",this_time,"not equal to inital population size!"))}
               
             } else{
-              
               next_state <- c(as.numeric(prev_state$individuals[prev_state$class != "Incid"]),
                               rep(0,nrow(prev_state[prev_state$class == "S",]))) #blank Incidence tracker
-              
             }
 
-            
-            
             
             #next time step!
             sol <- as.data.frame(ode(y=next_state,
@@ -203,7 +193,6 @@ if (nrow(vaccination_history) != 0){
       }
     }
   }
-
   
   ### TRANSLATE sol of ODEs into incidence_log
   sol_log <- sol_log %>%
@@ -235,13 +224,11 @@ if (nrow(vaccination_history) != 0){
       cumulative_flag == 1 ~ incidence - lag(incidence),
       TRUE ~ incidence
     ))
-  #NB: 1774560 bytes
 
   #remove time 0 (incidence = NA)
   sol_log <- sol_log %>%
     filter(time>0) %>%
     select(-cumulative_flag)
 
-  
   return(sol_log)
 }

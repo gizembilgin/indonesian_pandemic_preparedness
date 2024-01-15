@@ -21,7 +21,7 @@ load_setting <- function(this_setting = "Indonesia",
     filter(name_english == this_setting | name_indonesian == this_setting) %>%
     select(age_of_individual, age_of_contact, contacts)
   rm(contact_matrix_MASTER)
-  if (nrow(contact_matrix) != length(age_group_labels)^2){stop("too many contact matrix rows!")}
+  if (nrow(contact_matrix) != length(age_group_labels)^2) stop("too many contact matrix rows!")
   
   # simplify tidy contact matrix to matrix form
   workshop <- contact_matrix %>%
@@ -78,8 +78,9 @@ load_setting <- function(this_setting = "Indonesia",
         )
     ) %>%
     select(-proportion)
-
+  if (abs(sum(population_by_comorbidity$individuals) - sum(population$individuals))>0) stop("population_by_comorbidity != population")
   
+
   loaded_setting_characteristics <- list(population = population,
                                          population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
@@ -89,7 +90,6 @@ load_setting <- function(this_setting = "Indonesia",
                                          comorbidities = comorbidities,
                                          access_to_care = access_to_care,
                                          R0_adjustement = R0_adjustement)
-  
   
   return(loaded_setting_characteristics)
   
