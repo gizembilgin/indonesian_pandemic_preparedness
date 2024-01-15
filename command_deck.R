@@ -78,7 +78,6 @@ parameters = list(
   delta=1/TOGGLE_average_symptomatic_period,
   omega=1/TOGGLE_average_immune_period,
   rho=TOGGLE_infection_derived_immunity,
-  age_group_labels=age_group_labels,
   VE=TOGGLE_vaccine_derived_immunity,
   num_age_groups=num_age_groups
 )
