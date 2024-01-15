@@ -37,10 +37,12 @@ configure_ODEs <- function(t, state, parameters){
         tau[i]=tau[i]+contact_matrix[i,j]*(total_infected_mod*(lota*(1-gamma[j])+gamma[j]))/(total)
         
       }
-      
-      tau[i]=tau[i]*(1-NPI)*beta*suscept[i]
-      tau[i]=max(min(1,tau[i]),0) #transmission can not be more than 1 (100%)
     }
+    
+    tau=tau*(1-NPI)*beta*suscept
+    tau[tau>1] <- 1 #transmission can not be more than 1 (100%)
+    tau[tau<0] <- 0
+    
     
     #system of ODEs
     for (r in 1:RISK){
