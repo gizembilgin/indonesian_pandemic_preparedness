@@ -4,7 +4,7 @@ load_setting <- function(this_setting = "Indonesia",
                          age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
   
   ### IMPORT
-  #(1/?) age-structure
+  #(1/8) age-structure
   load("01_inputs/population_MASTER.Rdata")
   if (! this_setting %in% unique(population_MASTER$name_english) || ! this_setting %in% unique(population_MASTER$name_indonesian)){  
     stop("this_setting does not exist in population_MASTER")
@@ -15,7 +15,7 @@ load_setting <- function(this_setting = "Indonesia",
   rm(population_MASTER)
   
   
-  #(2/?) contact patterns
+  #(2/8) contact patterns
   load("01_inputs/contact_matrix_MASTER.Rdata")
   contact_matrix <- contact_matrix_MASTER %>%
     filter(name_english == this_setting | name_indonesian == this_setting) %>%
@@ -36,32 +36,32 @@ load_setting <- function(this_setting = "Indonesia",
   contact_matrix <- as.matrix(workshop[,-c(1)])
   
   
-  #(3/?) % of essential workers (DUMMY VALUE) - COVID-19 vaccination data
+  #(3/8) % of essential workers (DUMMY VALUE) - COVID-19 vaccination data
   essential_workers <- data.frame(age_group = age_group_labels,
                                   proportion = c(0,rep(0.1,length(age_group_labels)-2),0))
   
   
-  #(4/?) daily_vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
+  #(4/8) daily_vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
   daily_vaccine_delivery_capacity = 0.00163*sum(population$individuals)
   
   
-  #(5/?) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
+  #(5/8) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
   vaccine_acceptance = data.frame(phase = c(rep("essential workers",2),rep("vaccination strategy",2)),
                                   comorbidity = rep(c(0,1),2),
                                   uptake = c(0.95,0.95,0.9,0.95))
   
   
-  #(6/?) % comorb (DUMMY VALUE) - Basic Health Survey
+  #(6/8) % comorb (DUMMY VALUE) - Basic Health Survey
   comorbidities <- data.frame(age_group = age_group_labels) %>%
     mutate(proportion = (row_number()-1)*1/length(age_group_labels))
   
   
-  #(7/?) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
+  #(7/8) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
   access_to_care <- crossing(age_group = age_group_labels,
                              proportion = 0.8)
   
   
-  #(8/?) modification on R0 based on province (DUMMY) - seroprevalence survey
+  #(8/8) modification on R0 based on province (DUMMY) - seroprevalence survey
   R0_adjustement = 1
   
   
