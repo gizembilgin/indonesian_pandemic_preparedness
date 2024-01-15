@@ -10,7 +10,7 @@ configure_ODEs <- function(t, state, parameters){
     RISK = 2 #num_risk_groups
     num_disease_classes = 4
     
-    A=RISK*J*(D+1) # +1 is unvax
+    A=J*(D+1)*RISK # +1 is unvax
     
     S=state[1:A]
     E=state[(A+1):(2*A)]
