@@ -19,7 +19,7 @@ run_disease_model <- function(time_horizon = 365,
                           parms=this_parameters)) %>%
     mutate(phase = "no vaccine",
            supply = 0,
-           cumulative_flag = 1)0
+           cumulative_flag = 1)
   #NB: ncol(sol) == 104 == time + 20 * (S + E + I + R + incidence) + phase + supply + cumulative flag = 1 + 100 + 3  
   
 if (nrow(vaccination_history) != 0){
