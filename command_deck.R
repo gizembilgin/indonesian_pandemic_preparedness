@@ -17,11 +17,11 @@ TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indones
 #simulation configuration
 TOGGLE_time_horizon = 365 #scope of analysis to one year
 TOGGLE_introduction_day = 0 #NB: just change length of run if later
-TOGGLE_introductions = 0.00001 #percentage of pop of introductions on day
+TOGGLE_introductions = 0.0001 #percentage of pop of introductions on day
 TOGGLE_NPI = 0.5
 
 # pathogen characteristics
-TOGGLE_R0_to_fit = 2
+TOGGLE_R0_to_fit = 8
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
 TOGGLE_prevalence_symptoms = rep(0.8,rep(length(age_group_labels)))
