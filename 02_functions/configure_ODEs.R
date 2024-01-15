@@ -18,8 +18,6 @@ configure_ODEs <- function(t, state, parameters){
     R=state[(3*A+1):(4*A)]
     
     dS = dE = dI = dR = dIncidence  <- numeric(length=A)
-    #dExposed_S = dExposed_R         <- numeric(length=J)
-    
     tau =(rep(0,J)) 
     
     #calculating transmission to each age group
