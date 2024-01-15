@@ -21,7 +21,7 @@ TOGGLE_introductions = 0.0001 #percentage of pop of introductions on day
 TOGGLE_NPI = 0.5
 
 # pathogen characteristics
-TOGGLE_R0_to_fit = 8
+TOGGLE_R0_to_fit = 3
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
 TOGGLE_prevalence_symptoms = rep(0.8,rep(length(age_group_labels)))
