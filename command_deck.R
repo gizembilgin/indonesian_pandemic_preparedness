@@ -1,7 +1,7 @@
 ### The 'command deck' runs all sub-scripts of the model
 
 
-### (1/2) Setup                 
+### Setup                 
 ################################################################################
 # load libraries
 require(tidyverse);require(deSolve); require(ggpubr)
@@ -12,11 +12,15 @@ for (function_script in list.files(path="02_functions/", full.name = TRUE)){sour
 
 # user toggles
 age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
-
 TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
 
-# pathogen characteristics
+#simulation configuration
 TOGGLE_time_horizon = 365 #scope of analysis to one year
+TOGGLE_introduction_day = 0 #NB: just change length of run if later
+TOGGLE_introductions = 0.00001 #percentage of pop of introductions on day
+TOGGLE_NPI = 0.5
+
+# pathogen characteristics
 TOGGLE_R0_to_fit = 2
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
@@ -24,6 +28,11 @@ TOGGLE_prevalence_symptoms = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_reduced_infectiousness_asymptomatic = 0.5
 TOGGLE_susceptibility = rep(0.8,rep(length(age_group_labels)))
 TOGGLE_average_immune_period = 365*10
+TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
+TOGGLE_infection_derived_immunity = 1
+
+#vaccination strategy
+TOGGLE_vaccine_derived_immunity = 0.8
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
                                    strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
@@ -36,19 +45,11 @@ TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID
                                           list(c("0 to 4","5 to 17"),c(0,1)), 
                                           list(c("18 to 29","30 to 59","60 to 110"),c(0,1)))                                                     )
 )
-
-TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
-TOGGLE_NPI = 0.5
-TOGGLE_infection_derived_immunity = 1
-TOGGLE_vaccine_derived_immunity = 0.8
-
-TOGGLE_introduction_day = 0 #NB: just change length of run if later
-TOGGLE_introductions = 0.00001 #percentage of pop of introductions on day
-
 #_______________________________________________________________________________
 
 
-### (2/2) Run model            
+
+### Run model            
 ################################################################################
 loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
 
@@ -56,7 +57,7 @@ inital_state <- configure_inital_state(
   introduction = TOGGLE_introductions,
   average_symptomatic_period = TOGGLE_average_symptomatic_period,
   average_exposed_period  = TOGGLE_average_exposed_period 
-  )
+)
 
 fitted_beta <- fit_beta_to_R0(
   R0_to_fit = TOGGLE_R0_to_fit,
@@ -79,15 +80,18 @@ parameters = list(
   rho=TOGGLE_infection_derived_immunity,
   age_group_labels=age_group_labels,
   VE=TOGGLE_vaccine_derived_immunity,
-  num_age_groups=num_age_groups)
+  num_age_groups=num_age_groups
+)
 
 vaccination_history_permutations <- configure_vaccination_history(LIST_vaccination_strategies = TOGGLE_vaccination_strategy)
 
 incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
                                        vaccination_history = vaccination_history_permutations)
+#_______________________________________________________________________________
 
 
-##### RUDIMENTARY PLOTTING #####################################################
+
+### RUDIMENTARY PLOTTING #######################################################
 plot_list <- list()
 
 ### PLOT daily incidence
@@ -101,12 +105,9 @@ to_plot <- incidence_log_tidy %>%
 order_labels <- c("no vaccine", "essential workers",
                   unique(to_plot$label[!to_plot$label %in% c("no vaccine", "essential workers")]))
 to_plot$label <- factor(to_plot$label, levels = order_labels)
-ggplot(to_plot) + 
-  geom_point(aes(x=time,y=incidence,color=as.factor(label)))  +
-  labs(color="")
-ggplot(to_plot) + 
-  geom_line(aes(x=time,y=incidence,color=as.factor(label)),linewidth = 1.25)  +
-  labs(color="")
+# ggplot(to_plot) + 
+#   geom_line(aes(x=time,y=incidence,color=as.factor(label)),linewidth = 1.25)  +
+#   labs(color="")
 plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
   geom_line(aes(x=time,y=incidence,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
   labs(color="", linetype = "") + 
@@ -159,14 +160,6 @@ for (this_supply in TOGGLE_vaccination_strategy$supply[TOGGLE_vaccination_strate
   
 }
 
-to_plot <- to_plot %>%
-  mutate(label = case_when(
-    ! phase %in% c("no vaccine", "essential workers") ~ paste0(phase," (",supply*100,"%)"),
-    TRUE ~ phase
-  ))
-order_labels <- c("no vaccine", "essential workers",
-                  unique(to_plot$label[!to_plot$label %in% c("no vaccine", "essential workers")]))
-to_plot$label <- factor(to_plot$label, levels = order_labels)
 plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
   geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
   labs(color="", linetype = "")+
@@ -178,12 +171,11 @@ plot_list[[length(plot_list)+1]] <- ggplot(to_plot) +
 
 ### PLOT absolute effect of vaccine
 workshop = to_plot %>%
-  filter(label == "no vaccine" & supply == 0) %>%
+  filter(phase == "no vaccine" & supply == 0) %>%
   ungroup() %>%
   select(time,cumulative_incidence) %>%
   rename(baseline = cumulative_incidence)
 to_plot <- to_plot %>%
-  #filter(phase != "no vaccine") %>%
   left_join(workshop, by = "time", relationship = "many-to-many") %>%
   mutate(vaccine_effect = baseline - cumulative_incidence)
 plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
@@ -210,9 +202,4 @@ ggplot(to_tabulate) +
   geom_text(aes(x=supply,y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
   scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
   ylab("strategy")
-
- 
-
-
-
 #_______________________________________________________________________________
