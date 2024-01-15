@@ -29,11 +29,11 @@ configure_ODEs <- function(t, state, parameters){
           total = total+state[j+(interval-1)*J] 
         }
         
-        total_infected_mod = 0 #total infected in age j
+        total_infected_mod = 0 #total infected in age j: (2 x 2 = 4 compartments (vax/unvax * comorb))
         for (r in 1:RISK){
-          total_infected_mod = total_infected_mod + I[j+(r-1)*A/RISK] #unvax
+          total_infected_mod = total_infected_mod + I[j+(r-1)*J*(D+1)] #unvax
           for (d in 1:D){
-              B = j + J*(d-1)+(r-1)*A/RISK
+              B = j + J*(d-1)+(r-1)*J*(D+1)
               #total_infected_mod=total_infected_mod + (1-VE_onwards[t,d])*I[B]
               total_infected_mod=total_infected_mod + I[B]
           }
