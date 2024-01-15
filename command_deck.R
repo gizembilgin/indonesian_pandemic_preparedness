@@ -20,7 +20,7 @@ TOGGLE_detection_prevalence = 0.0001 #percentage prevalence on day of detection
 TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
 # pathogen characteristics
-TOGGLE_R0_to_fit = 3
+TOGGLE_R0_to_fit = 2
 TOGGLE_increased_risk = 2 #NOT CURRENTLY USED
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
