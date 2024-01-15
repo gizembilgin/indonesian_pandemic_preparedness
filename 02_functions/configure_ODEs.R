@@ -18,9 +18,9 @@ configure_ODEs <- function(t, state, parameters){
     R=state[(3*A+1):(4*A)]
     
     dS = dE = dI = dR = dIncidence  <- numeric(length=A)
-    tau =(rep(0,J)) 
     
     #calculating transmission to each age group
+    tau =(rep(0,J)) 
     for (i in 1:J){
       for (j in 1:J){
         
@@ -46,7 +46,7 @@ configure_ODEs <- function(t, state, parameters){
     for (r in 1:RISK){
       for (i in 1:J){
         #unvaccinated
-        unvax = i + (r-1)*J*(D+1)
+        unvax = i + (r-1) *J*(D+1)
         dS[unvax] = omega*R[unvax]  - tau[i]*S[unvax] 
         dE[unvax] = tau[i]*S[unvax] - lambda*E[unvax] + tau[i]*(1-rho)*R[unvax]
         dI[unvax] = lambda*E[unvax] - delta*I[unvax]
@@ -54,7 +54,7 @@ configure_ODEs <- function(t, state, parameters){
         dIncidence[unvax] = lambda*E[unvax]
         
         #vaccinated
-        B = i + J + (r-1)*J*(D+1)
+        B = unvax + J
         dS[B] = omega*R[B]              - tau[i]*(1-VE)*S[B] 
         dE[B] = tau[i]*(1-VE)*S[B] - lambda*E[B] + tau[i]*(1-VE)*(1-rho)*R[B]
         dI[B] = lambda*E[B]             - delta*I[B]
@@ -68,8 +68,7 @@ configure_ODEs <- function(t, state, parameters){
     dI = as.numeric(dI)
     dR = as.numeric(dR)
     list(c(dS,dE,dI,dR,dIncidence))
+    
   })
 }
-
-
 
