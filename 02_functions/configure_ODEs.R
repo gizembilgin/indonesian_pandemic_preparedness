@@ -1,8 +1,7 @@
 ### This function configures the system of ordinary differential equations (ODEs) for transmission
 
 configure_ODEs <- function(t, state, parameters){
-  require(deSolve)
-  
+
   with(as.list(c(state,parameters)),{
     
     D = 1 #num_vax_doses
@@ -20,9 +19,11 @@ configure_ODEs <- function(t, state, parameters){
     
     #calculating transmission to each age group
     tau =rep(0,J) 
+    total_sequence <- ((1:(num_disease_classes*RISK*(D+1)))-1)*J
+    total_infected_mod_sequence <- ((1:(RISK*(D+1)))-1)*J
     for (j in 1:J){
-      total = sum(state[((1:(num_disease_classes*RISK*(D+1)))-1)*J+j]) #total in contact age j
-      total_infected_mod = sum(I    [((1:(RISK*(D+1)))-1)*J+j])        #total infected in contact age j
+      total = sum(state[total_sequence+j]) #total in contact age j
+      total_infected_mod = sum(I[total_infected_mod_sequence+j])        #total infected in contact age j
       tau = tau + contact_matrix[,j]*(total_infected_mod*(lota*(1-gamma[j])+gamma[j]))/(total)
     }
     
@@ -33,9 +34,11 @@ configure_ODEs <- function(t, state, parameters){
     
     #system of ODEs
     for (r in 1:RISK){
+      unvax_risk = (r-1)*J*(D+1)
+      #unvax_risk = (unvax_risk+1):(unvax_risk+J)
       for (i in 1:J){
         #unvaccinated
-        unvax = i + (r-1) *J*(D+1)
+        unvax = unvax_risk + i
         dS[unvax] = omega*R[unvax]  - tau[i]*S[unvax] 
         dE[unvax] = tau[i]*S[unvax] - lambda*E[unvax] + tau[i]*(1-rho)*R[unvax]
         dI[unvax] = lambda*E[unvax] - delta*I[unvax]
