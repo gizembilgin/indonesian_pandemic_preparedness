@@ -20,22 +20,14 @@ configure_ODEs <- function(t, state, parameters){
     dS = dE = dI = dR = dIncidence  <- numeric(length=A)
     
     #calculating transmission to each age group
-    tau =(rep(0,J)) 
+    tau =rep(0,J) 
     for (i in 1:J){
       for (j in 1:J){
-        
-        total=0 #total in contact age j
-        for(interval in 1:(num_disease_classes*RISK*(D+1))){
-          total = total+state[j+(interval-1)*J] 
-        }
-   
-        total_infected_mod = 0 #total infected in age j: (2 x 2 = 4 compartments (vax/unvax * comorb))
-        for(interval in 1:(RISK*(D+1))){
-          total_infected_mod = total_infected_mod+I[j+(interval-1)*J] 
-        }
+
+        total = sum(state[((1:(num_disease_classes*RISK*(D+1)))-1)*J+j]) #total in contact age j
+        total_infected_mod = sum(I    [((1:(RISK*(D+1)))-1)*J+j])        #total infected in contact age j
 
         tau[i]=tau[i]+contact_matrix[i,j]*(total_infected_mod*(lota*(1-gamma[j])+gamma[j]))/(total)
-        
       }
     }
     
