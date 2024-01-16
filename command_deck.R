@@ -81,7 +81,7 @@ parameters = list(
   omega=1/TOGGLE_average_immune_period,
   rho=TOGGLE_infection_derived_immunity,
   VE=TOGGLE_vaccine_derived_immunity,
-  num_age_groups=num_age_groups
+  J=num_age_groups
 )
 
 vaccination_history_permutations <- configure_vaccination_history(LIST_vaccination_strategies = TOGGLE_vaccination_strategy)
