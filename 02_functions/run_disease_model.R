@@ -1,6 +1,6 @@
 
 run_disease_model <- function(time_horizon = 365,
-                              vaccination_history = data.frame(),
+                              vaccination_strategies = list(),
                               
                               this_inital_state = inital_state,
                               this_configure_ODEs = configure_ODEs,
@@ -8,19 +8,29 @@ run_disease_model <- function(time_horizon = 365,
                               this_age_group_labels = age_group_labels) {
   
   
+  vaccination_history <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies)
+  
   state = c(this_inital_state$individuals) 
   skeleton_state <- this_inital_state %>% select(-individuals)
   
   
   # run for entire time_horizon without vaccination (baseline)
-  sol_log = as.data.frame(ode(y=state,
+  sol_no_vaccine = as.data.frame(ode(y=state,
                           times=seq(0,time_horizon,by=1),
                           func=this_configure_ODEs,
-                          parms=this_parameters)) %>%
+                          parms=this_parameters)) 
+  
+  #select incidence columns only
+  incidence_column_locations <- c(1, #(time)
+                                  (nrow(this_inital_state[this_inital_state$class == "S",])*4 + 1 + 1):ncol(sol_no_vaccine))
+  #NB: ncol(sol) == 104 == time + 20 * (S + E + I + R + incidence) + phase + supply + cumulative flag = 1 + 100 + 3    
+  
+  #start sol_log
+  sol_log <- sol_no_vaccine[,incidence_column_locations]%>%
     mutate(phase = "no vaccine",
            supply = 0,
            cumulative_flag = 1)
-  #NB: ncol(sol) == 104 == time + 20 * (S + E + I + R + incidence) + phase + supply + cumulative flag = 1 + 100 + 3  
+
   
 if (nrow(vaccination_history) != 0){
 
@@ -37,9 +47,8 @@ if (nrow(vaccination_history) != 0){
         
         # load cascade point (see: 99_scanned schematics/2023_01_15 cascade of simulations.pdf)
         if (this_phase == "essential workers"){
-          sol <- sol_log %>%
-            filter(time == min(this_time_sequence) -1) %>%
-            mutate(supply = NA)
+          sol <- sol_no_vaccine %>%
+            filter(time == min(this_time_sequence) -1)
           
           this_time_sequence = this_time_sequence[this_time_sequence < min(vaccination_history$time[vaccination_history$phase != "essential workers"])]
           # skip if after non-exclusive essential worker delivery period, ensures that day of overlap not missed!
@@ -63,7 +72,7 @@ if (nrow(vaccination_history) != 0){
             #reconstruct 'tidy' state
             state_working = sol %>%
               filter(time == max(sol$time)) %>%
-              select(-time,-phase,-supply,-cumulative_flag)
+              select(-time)
             state_working = t(state_working)
             colnames(state_working) <- c("individuals")
             
@@ -155,10 +164,12 @@ if (nrow(vaccination_history) != 0){
             #collect
             sol[,1] <- sol[,1]+(this_time-1) #make times correct
             sol <- sol[2,] #remove interim next_state with 0 rows for incidence
-            sol <- sol %>% mutate(phase = this_phase,
-                                  supply = this_supply,
-                                  cumulative_flag = 0)
-            sol_log <- rbind(sol_log,sol)
+
+            this_sol_log <- sol[,incidence_column_locations] %>% 
+              mutate(phase = this_phase,
+                     supply = this_supply,
+                     cumulative_flag = 0)
+            sol_log <- rbind(sol_log,this_sol_log)
             
             #only run essential workers the first time (nb: run multiple times depending on vax strategies being tested)
             if (this_phase == "essential workers" & this_time == max(this_time_sequence)){
@@ -181,11 +192,12 @@ if (nrow(vaccination_history) != 0){
           sol <- sol[-c(1,2),]
           
           #add to solution log
-          sol <- sol %>% mutate(phase = this_phase,
-                                supply = this_supply,
-                                cumulative_flag = 1)
+          this_sol_log <- sol[,incidence_column_locations] %>% 
+            mutate(phase = this_phase,
+                   supply = this_supply,
+                   cumulative_flag = 1)
           
-          sol_log <- rbind(sol_log,sol)
+          sol_log <- rbind(sol_log,this_sol_log)
 
         }
       }
@@ -197,9 +209,6 @@ if (nrow(vaccination_history) != 0){
   sol_log <- sol_log %>%
     relocate(c("phase","supply","cumulative_flag"), .after = "time")
   
-  #select incidence columns only
-  sol_log <- sol_log[,c(1,2,3,4, #(time,phase,supply,cumulative_flag)
-                        (nrow(this_inital_state[this_inital_state$class == "S",])*4 + 4 + 1):ncol(sol_log))]
 
   # make tidy
   key = crossing(comorbidity = c(0,1),
