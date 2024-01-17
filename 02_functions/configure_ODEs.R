@@ -26,34 +26,29 @@ configure_ODEs <- function(t, state, parameters){
       total_infected_mod = sum(I[total_infected_mod_sequence+j])        #total infected in contact age j
       tau = tau + contact_matrix[,j]*(total_infected_mod*(lota*(1-gamma[j])+gamma[j]))/(total)
     }
-    
     tau=tau*(1-NPI)*beta*suscept
     tau[tau>1] <- 1 #transmission can not be more than 1 (100%)
     tau[tau<0] <- 0
     
+
+    #construct ODEs
+    unvax = 1:J
+    for (r in 2:RISK){
+      unvax = c(unvax, 
+                ((1:(r-1))*J*(D+1)+1):((1:(r-1))*J*(D+1)+J)
+      )}
+    vax   = unvax + J
     
-    #system of ODEs
-    for (r in 1:RISK){
-      unvax_risk = (r-1)*J*(D+1)
-      #unvax_risk = (unvax_risk+1):(unvax_risk+J)
-      for (i in 1:J){
-        #unvaccinated
-        unvax = unvax_risk + i
-        dS[unvax] = omega*R[unvax]  - tau[i]*S[unvax] 
-        dE[unvax] = tau[i]*S[unvax] - lambda*E[unvax] + tau[i]*(1-rho)*R[unvax]
-        dI[unvax] = lambda*E[unvax] - delta*I[unvax]
-        dR[unvax] = delta*I[unvax]  - omega*R[unvax]  - tau[i]*(1-rho)*R[unvax]
-        dIncidence[unvax] = lambda*E[unvax]
-        
-        #vaccinated
-        B = unvax + J
-        dS[B] = omega*R[B]              - tau[i]*(1-VE)*S[B] 
-        dE[B] = tau[i]*(1-VE)*S[B] - lambda*E[B] + tau[i]*(1-VE)*(1-rho)*R[B]
-        dI[B] = lambda*E[B]             - delta*I[B]
-        dR[B] = delta*I[B]              - omega*R[B]  - tau[i]*(1-VE)*(1-rho)*R[B]
-        dIncidence[B] = lambda*E[B] 
-      }
-    }
+    dS[unvax] = omega*R[unvax]  - tau*S[unvax] 
+    dE[unvax] = tau*S[unvax] - lambda*E[unvax] + tau*(1-rho)*R[unvax]
+    dR[unvax] = delta*I[unvax]  - omega*R[unvax]  - tau*(1-rho)*R[unvax]
+    
+    dS[vax] = omega*R[vax]              - tau*(1-VE)*S[vax] 
+    dE[vax] = tau*(1-VE)*S[vax] - lambda*E[vax] + tau*(1-VE)*(1-rho)*R[vax]
+    dR[vax] = delta*I[vax]              - omega*R[vax]  - tau*(1-VE)*(1-rho)*R[vax]
+    
+    dI = lambda*E - delta*I
+    dIncidence = lambda*E
     
     dS = as.numeric(dS)
     dE = as.numeric(dE)
