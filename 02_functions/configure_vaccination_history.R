@@ -19,7 +19,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   #NB: checking that a label has been provided for each vaccination strategy, and that age groups and comorbidity statuses provided are valid values
   check_configured_strategies <- LIST_vaccination_strategies$strategy
   for(this_strategy in check_configured_strategies){
-    if(grepl('[0-9]', substr(this_strategy[[1]],1,1))){stop("the label of your vaccination strategies should start with character descriptions NOT digits")}
+    if(grepl('[0-9]', substr(this_strategy[[1]],1,1))) stop("the label of your vaccination strategies should start with character descriptions NOT digits")
     this_strategy <- this_strategy[-1]
     if (is.list(this_strategy) == FALSE) stop("vaccination strategies not provided as a list")
     for (this_stage in this_strategy){
@@ -54,11 +54,11 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     select(-uptake) %>%
     mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all essential workers
     mutate(doses_delivered = proportion * daily_vaccine_delivery_capacity) #calculate doses_delivered on a day of full capacity delivery to essential workers
-  if(round(sum(essential_worker_target$proportion),digits=2) != 1){stop("proportion calculation on essential_worker_target not EQ 100%")}
+  if(round(sum(essential_worker_target$proportion),digits=2) != 1) stop("proportion calculation on essential_worker_target not EQ 100%")
   
   essential_worker_timeframe = floor(sum(essential_worker_target$individuals)/daily_vaccine_delivery_capacity) #create sequence of days for full capacity delivery to essential workers
   time_sequence = seq(LIST_vaccination_strategies$vaccine_delivery_start_date,LIST_vaccination_strategies$vaccine_delivery_start_date+essential_worker_timeframe-1,by=1)
-  if(length(time_sequence) != essential_worker_timeframe){stop("time sequence not aligning with timeframe for delivery of doses to essential workers")}
+  if(length(time_sequence) != essential_worker_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to essential workers")
   
   essential_worker_delivery = crossing(time = time_sequence,essential_worker_target) 
   final_row_delivery =  sum(essential_worker_target$individuals) - sum(essential_worker_delivery$doses_delivered)
@@ -72,7 +72,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   if(nrow(essential_worker_delivery[essential_worker_delivery$doses_delivered<0,])>0) stop("negative doses delivered to essential workers")
   
   partial_dose_delivery_on_first_day_essential_workers = daily_vaccine_delivery_capacity - final_row_delivery
-  if (partial_dose_delivery_on_first_day_essential_workers<0){stop("first day of delivery for people who aren't essential workers is negative")}
+  if (partial_dose_delivery_on_first_day_essential_workers<0) stop("first day of delivery for people who aren't essential workers is negative")
   
   
   ### DELIVER VACCINES AS PER ALLOCATION STRATEGIES LISTED
@@ -163,7 +163,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         # full delivery days
         priority_target_timeframe = floor((sum(this_priority_target_population$individuals)-partial_dose_delivery_on_first_day)/daily_vaccine_delivery_capacity) 
         time_sequence = seq(max(this_vax_history$time)+1,max(this_vax_history$time)+priority_target_timeframe,by=1)
-        if(length(time_sequence) != priority_target_timeframe){stop("time sequence not aligning with timeframe for delivery of doses to the target population")}
+        if(length(time_sequence) != priority_target_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to the target population")
         this_target_population_delivery = crossing(time = time_sequence,this_priority_target_population) 
         
         # last day - partial delivery <-> align with doses left
@@ -189,7 +189,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         group_by(time) %>%
         summarise(total_daily_delivered = sum(doses_delivered)) %>%
         filter(round(total_daily_delivered) > daily_vaccine_delivery_capacity)
-      if (nrow(check)>0){stop(paste("daily capacity of vaccine delivery exceeded at time step",check$time[1]))}
+      if (nrow(check)>0) stop(paste("daily capacity of vaccine delivery exceeded at time step",check$time[1]))
       
       #CHECK: delivery did not exceed supply
       check <- this_vax_history %>%
@@ -202,8 +202,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         filter(phase != "essential workers")
       
       #CHECK: delivery to target population
-      if(round(sum(this_target_population_delivery$doses_delivered)) != round(sum(this_population_target$individuals))){stop("delivery to target population not aligning with target population")}
-      if(nrow(this_target_population_delivery[round(this_target_population_delivery$doses_delivered,digits=2)<0,])>0){stop("negative doses delivered to target population")}
+      if(round(sum(this_target_population_delivery$doses_delivered)) != round(sum(this_population_target$individuals))) stop("delivery to target population not aligning with target population")
+      if(nrow(this_target_population_delivery[round(this_target_population_delivery$doses_delivered,digits=2)<0,])>0)   stop("negative doses delivered to target population")
       
       target_population_delivery = rbind(target_population_delivery,this_target_population_delivery)
       
