@@ -80,6 +80,10 @@ for (setting in LIST_setting){
   }
 }
 
+time_of_result = Sys.time()
+time_of_result = gsub(':','-',time_of_result)
+save(ship_log,file = paste0("04_shiny/x_results/ship_log",time_of_result,".Rdata"))
+
 rm(FLEET_ADMIRAL_OVERRIDE)
 #_______________________________________________________________________________
 
