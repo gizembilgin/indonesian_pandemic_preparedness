@@ -60,8 +60,9 @@ if (nrow(vaccination_history) != 0){
           }  else {
             
             #reconstruct 'tidy' state
-            state_working = tail.matrix(sol, 1)
-            state_working = select(state_working, -time, -phase, - supply, - cumulative_flag) #remove all other columns
+            state_working = sol %>%
+              filter(time == max(sol$time)) %>%
+              select(-time,-phase,-supply,-cumulative_flag)
             state_working = t(state_working)
             colnames(state_working) <- c("individuals")
             
