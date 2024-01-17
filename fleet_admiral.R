@@ -14,8 +14,9 @@ LIST_R0_to_fit = c(1,2,4,6,8)
 LIST_infection_derived_immunity = c(0.75,1)
 
 #vaccination strategies
-LIST_supply = c(0.2,0.5,0.8)
 LIST_rollout_modifier = c(0.5,1,2)
+LIST_vaccine_derived_immunity = c(0.75,1)
+LIST_supply = c(0.2,0.5,0.8)
 LIST_strategy = list(
   #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
   list("older adults followed by all adults",
@@ -27,7 +28,6 @@ LIST_strategy = list(
        list(c("0 to 4","5 to 17"),c(0,1)), 
        list(c("18 to 29","30 to 59","60 to 110"),c(0,1)))                                                     
   )
-LIST_vaccine_derived_immunity = c(0.75,1)
 #_______________________________________________________________________________
 
 
@@ -81,3 +81,40 @@ for (setting in LIST_setting){
 
 rm(FLEET_ADMIRAL_OVERRIDE)
 #_______________________________________________________________________________
+
+
+
+
+###
+#require(parallel); require(foreach)
+# CLUSTER <- parallel::makeCluster(TOGGLE_clusterNumber) # create cluster
+# doParallel::registerDoParallel(CLUSTER) # activate cluster
+# 
+# CommandDeck_result_long <- foreach::foreach(
+#   model_run_number = c(1:TOGGLE_clusterNumber),
+#   .packages = c("tidyverse","ids"),
+#   .combine = rbind,
+#   .inorder = FALSE
+# )  %dopar% {
+#   
+#   CEA_worker(
+#     numberOfRunsPerCluster,
+#     CEA_risk_group,
+#     LIST_CEA_settings,
+#     LIST_perspectives,
+#     LIST_booster_vax_scenarios,
+#     LIST_antiviral_elig_groups,
+#     LIST_antiviral_types,
+#     DECISION_sampling_strategy,
+#     DECISION_include_net,
+#     TOGGLE_uncertainty,
+#     TOGGLE_longCOVID,
+#     LIST_discounting_rate,
+#     LIST_antiviral_cost_scenario,
+#     TORNADO_PLOT_OVERRIDE
+#   )
+#   
+# }
+# })
+# 
+# parallel::stopCluster(CLUSTER)
