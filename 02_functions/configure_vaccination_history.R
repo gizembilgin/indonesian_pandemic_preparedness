@@ -188,7 +188,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       check <- this_vax_history %>%
         group_by(time) %>%
         summarise(total_daily_delivered = sum(doses_delivered)) %>%
-        filter(round(total_daily_delivered) > daily_vaccine_delivery_capacity)
+        filter(round(total_daily_delivered-daily_vaccine_delivery_capacity)>0)
       if (nrow(check)>0) stop(paste("daily capacity of vaccine delivery exceeded at time step",check$time[1]))
       
       #CHECK: delivery did not exceed supply
