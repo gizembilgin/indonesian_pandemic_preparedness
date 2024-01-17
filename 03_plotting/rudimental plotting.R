@@ -1,3 +1,5 @@
+#This plotting script is designed for one run of the command_deck
+
 ### RUDIMENTARY PLOTTING #######################################################
 plot_list <- list()
 
