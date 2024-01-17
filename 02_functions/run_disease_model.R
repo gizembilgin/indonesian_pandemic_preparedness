@@ -161,14 +161,11 @@ if (nrow(vaccination_history) != 0){
             sol_log <- rbind(sol_log,sol)
             
             #only run essential workers the first time (nb: run multiple times depending on vax strategies being tested)
-            if (this_time == min(vaccination_history$time[vaccination_history$phase != "essential workers"])-1){
+            if (this_phase == "essential workers" & this_time == max(this_time_sequence)){
               sol_handover_essential_workers <- sol
-            }
-            #save and use as start point for next supply in this phase
-            if (this_phase != "essential workers" & this_time == max(this_time_sequence)-1){
+            } else if (this_phase != "essential workers" & this_time == max(this_time_sequence)-1){ #save and use as start point for next supply in this phase
               sol_handover <- sol
             }
-            #NB: for both using -1 max date, because not at full capacity on final day
             
           }
         }
