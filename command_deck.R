@@ -84,10 +84,8 @@ parameters = list(
   J=num_age_groups
 )
 
-vaccination_history_permutations <- configure_vaccination_history(LIST_vaccination_strategies = TOGGLE_vaccination_strategy)
-
 incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_time_horizon,
-                                       vaccination_history = vaccination_history_permutations)
+                                       vaccination_strategies = TOGGLE_vaccination_strategy)
 #_______________________________________________________________________________
 
 
