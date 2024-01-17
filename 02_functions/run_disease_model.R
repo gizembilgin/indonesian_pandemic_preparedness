@@ -34,13 +34,16 @@ if (nrow(vaccination_history) != 0){
           filter(phase == this_phase &
                    (supply == this_supply | is.na(supply)))
         this_time_sequence = time_sequence[time_sequence %in% unique(this_vaccination_history$time)]
-        rm(this_vaccination_history)
         
         # load cascade point (see: 99_scanned schematics/2023_01_15 cascade of simulations.pdf)
         if (this_phase == "essential workers"){
           sol <- sol_log %>%
             filter(time == min(this_time_sequence) -1) %>%
             mutate(supply = NA)
+          
+          this_time_sequence = this_time_sequence[this_time_sequence < min(vaccination_history$time[vaccination_history$phase != "essential workers"])]
+          # skip if after non-exclusive essential worker delivery period, ensures that day of overlap not missed!
+          
         } else if (this_supply == unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
           sol <- sol_handover_essential_workers
         } else {
@@ -51,14 +54,12 @@ if (nrow(vaccination_history) != 0){
           this_time_sequence <- this_time_sequence[this_time_sequence > sol$time]
         }
         
-        for (this_time in this_time_sequence){
+        if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
+          # only run delivery to essential workers once (for first "supply" scenario)
+        }  else {
           
-          if (this_phase == "essential workers" & this_time >= min(vaccination_history$time[vaccination_history$phase != "essential workers"])){
-            # skip if after non-exclusive essential worker delivery period, ensures that day of overlap not missed!
-          } else if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
-            # only run delivery to essential workers once (for first "supply" scenario)
-          }  else {
-            
+          for (this_time in this_time_sequence){
+          
             #reconstruct 'tidy' state
             state_working = sol %>%
               filter(time == max(sol$time)) %>%
@@ -108,8 +109,7 @@ if (nrow(vaccination_history) != 0){
                 select(-doses_delivered)
               if(abs(sum(next_state$individuals[next_state$class != "Incid"]) - sum(this_inital_state$individuals))>1){stop(paste("next state at time step",this_time,"not equal to inital population size!"))}
               if(nrow(next_state[round(next_state$individuals)<0,])>0){stop("negative individuals in next_state compartments")}
-              rm(prev_state,todays_vaccinations,todays_vaccinations_by_class,state_working)
-             
+
             #CHECK: (INTENSIVE) vaccination history aligns with next_state configuration
             # expected_numbers <- vaccination_history %>%
             #   filter(time <= this_time) %>%
@@ -193,7 +193,8 @@ if (nrow(vaccination_history) != 0){
         }
       }
     }
-  }
+}
+  rm(prev_state,todays_vaccinations,todays_vaccinations_by_class,state_working)
   
   ### TRANSLATE sol of ODEs into incidence_log
   sol_log <- sol_log %>%
