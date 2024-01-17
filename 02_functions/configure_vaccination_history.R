@@ -34,6 +34,13 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   
   ### MODIFY rollout
   daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity * LIST_vaccination_strategies$rollout_modifier
+  
+  ### MODIFY supply
+  max_supply <- (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)
+  if (length(LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply>max_supply])>0){
+    LIST_vaccination_strategies$supply = LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply<max_supply]
+    LIST_vaccination_strategies$supply = c(LIST_vaccination_strategies$supply,max_supply)
+  }
 
   
   ### DELIVER VACCINES TO ESSENTIAL WORKERS
@@ -94,11 +101,6 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                     round(sum(essential_worker_target$individuals)/sum(population_by_comorbidity$individuals) * 100,digits=0), "%.",
                     " There is no point comparing vaccine prioritisation decisions without prioritisation decisions."))
       } 
-      if (this_supply > (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)){
-        stop(paste0("This supply (",this_supply*100,"%) will not be delivered within the time horizon. Please specify a supply of at most ",
-                    round((time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals) * 100,digits=0), "%.",
-                    " There is no point comparing the impact of different vaccine supplies when they aren't delivered within the time frame."))
-      }
       this_supply_abs = this_supply * sum(population_by_comorbidity$individuals) - sum(essential_worker_target$individuals)
       
       #ASSIGN priority number
@@ -201,7 +203,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       #CHECK: delivery to target population
       if(round(sum(this_target_population_delivery$doses_delivered)) != round(sum(this_population_target$individuals))){stop("delivery to target population not aligning with target population")}
-      if(nrow(this_target_population_delivery[this_target_population_delivery$doses_delivered<0,])>0){stop("negative doses delivered to target population")}
+      if(nrow(this_target_population_delivery[round(this_target_population_delivery$doses_delivered,digits=2)<0,])>0){stop("negative doses delivered to target population")}
       
       target_population_delivery = rbind(target_population_delivery,this_target_population_delivery)
       
