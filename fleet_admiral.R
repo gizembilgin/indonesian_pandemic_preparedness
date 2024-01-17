@@ -69,6 +69,7 @@ for (setting in LIST_setting){
                      rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier,
                      vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity)
             #NB: object.size(this_simulation)/object.size(incidence_log_tidy) -> x 2 size
+            #OPTION: to save in a different format, e.g., JSON to save memory BUT requires more complex format
             
             ship_log = rbind(ship_log,this_simulation)
             
