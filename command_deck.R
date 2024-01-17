@@ -53,7 +53,7 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
   if ("vaccine_delivery_start_date" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date
   
   if ("R0_to_fit" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_R0_to_fit = FLEET_ADMIRAL_OVERRIDE$R0
-  if ("infection_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_R0_to_fit = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity
+  if ("infection_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) infection_derived_immunity = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity
   
   if ("supply" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$supply = FLEET_ADMIRAL_OVERRIDE$supply
   if ("rollout_modifier" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier
