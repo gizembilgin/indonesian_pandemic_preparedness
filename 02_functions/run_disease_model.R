@@ -235,8 +235,7 @@ if (nrow(vaccination_history) != 0){
 
   #remove time 0 (incidence = NA)
   sol_log <- sol_log %>%
-    filter(time>0) %>%
-    select(-cumulative_flag)
+    filter(time>0) 
 
   return(sol_log)
 }
