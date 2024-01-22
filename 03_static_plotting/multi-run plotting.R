@@ -48,7 +48,7 @@ multiscenario_facet_plot <- function(data,
       facet_grid(.data[[this_var]] ~.)+
       labs(title = this_var)
     
-  } else if (yaxis_title == "cumulative_incidence"){
+  } else if (yaxis_title %in% c("cumulative_incidence","absolute_effect")){
     
     to_plot <- to_plot %>%
       group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
@@ -85,17 +85,38 @@ multiscenario_facet_plot <- function(data,
         filter(! phase %in% c("essential workers"))
     }
     
-    ggplot(to_plot) + 
-      geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
-      labs(color="", linetype = "")+
-      ylab("cumulative incidence") + 
-      guides(color = guide_legend(nrow = 2)) +
-      theme(legend.position="bottom") +
-      facet_grid(.data[[this_var]] ~.)+
-      labs(title = this_var)
-    
+    if (yaxis_title == "cumulative_incidence"){
+      ggplot(to_plot) + 
+        geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
+        labs(color="", linetype = "")+
+        ylab("cumulative incidence") + 
+        guides(color = guide_legend(nrow = 2)) +
+        theme(legend.position="bottom") +
+        facet_grid(.data[[this_var]] ~.)+
+        labs(title = this_var)
+      
+    } else if (yaxis_title == "absolute_effect"){
+      workshop = to_plot %>%
+        filter(phase == "no vaccine" & supply == 0) %>%
+        ungroup() %>%
+        select(time,cumulative_incidence) %>%
+        rename(baseline = cumulative_incidence)
+      to_plot <- to_plot %>%
+        filter(phase != "no vaccine") %>%
+        left_join(workshop, by = "time", relationship = "many-to-many") %>%
+        mutate(vaccine_effect = baseline - cumulative_incidence)
+      ggplot(to_plot) + 
+        geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
+        labs(color="", linetype = "") +
+        ylab("cumulative cases averted by vaccine") +
+        xlim(0,time_horizon) + 
+        guides(color = guide_legend(nrow = 2))+
+        theme(legend.position="bottom") +
+        facet_grid(.data[[this_var]] ~.)+
+        labs(title = this_var)
+    }
 
-  }
+  } 
 
 }
 
