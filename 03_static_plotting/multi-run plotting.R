@@ -33,14 +33,14 @@ multiscenario_facet_plot <- function(data,
   if (yaxis_title == "incidence"){
     
     if (include_cascade == 0){
-      to_plot <- to_plot %>% 
+      left_plot <- to_plot %>% 
         filter(flag_reconstructed == 0)
     } else if (include_cascade == 1){
-      to_plot <- to_plot %>%
+      left_plot <- to_plot %>%
         filter(! phase %in% c("essential workers"))
     }
     
-    ggplot(to_plot) +
+    left_plot <- ggplot(left_plot) +
       geom_line(aes(x=time,y=incidence,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
       guides(color = guide_legend(nrow = 2)) +
@@ -48,76 +48,91 @@ multiscenario_facet_plot <- function(data,
       facet_grid(.data[[this_var]] ~.)+
       labs(title = this_var)
     
-  } else if (yaxis_title %in% c("cumulative_incidence","cumulative_incidence_averted")){
-    
-    to_plot <- to_plot %>%
-      group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
-      arrange(time) %>%
-      mutate(cumulative_incidence = cumsum(incidence))
-    
-    if (include_cascade == 0){
-      #remove strategy before essential workers
-      max_essential_workers_time = to_plot %>%
-        filter(phase == "essential workers") %>%
-        summarise(max_time = max(time), .groups = "keep")%>%
-        ungroup() %>%
-        select(-phase,-supply)
-      cumulative_no_vax = to_plot %>%
-        filter(time == vaccine_delivery_start_date - 1 & 
-                 phase == "no vaccine") %>%
-        summarise(cum_no_vax = cumulative_incidence, .groups = "keep") %>%
-        ungroup() %>%
-        select(-phase,-supply)
-        
-      to_plot <- to_plot %>% 
-        left_join(max_essential_workers_time, by = join_by(setting, vaccine_delivery_start_date,
-                                                           R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-        left_join(cumulative_no_vax, by = join_by(setting, vaccine_delivery_start_date,
-                                                  R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-        filter(!(time <= max_time & ! phase %in% c("no vaccine","essential workers"))) %>%
-        mutate(cumulative_incidence = case_when(
-          phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
-          TRUE ~ cumulative_incidence
-        ))
-      
-    } else if (include_cascade == 1){
-      to_plot <- to_plot %>%
-        filter(! phase %in% c("essential workers"))
-    }
-    
-    if (yaxis_title == "cumulative_incidence"){
-      ggplot(to_plot) + 
-        geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
-        labs(color="", linetype = "")+
-        ylab("cumulative incidence") + 
-        guides(color = guide_legend(nrow = 2)) +
-        theme(legend.position="bottom") +
-        facet_grid(.data[[this_var]] ~.)+
-        labs(title = this_var)
-      
-    } else if (yaxis_title == "cumulative_incidence_averted"){
-      workshop = to_plot %>%
-        filter(phase == "no vaccine" & supply == 0) %>%
-        ungroup() %>%
-        select(time,cumulative_incidence) %>%
-        rename(baseline = cumulative_incidence)
-      to_plot <- to_plot %>%
-        filter(phase != "no vaccine") %>%
-        left_join(workshop, by = "time", relationship = "many-to-many") %>%
-        mutate(vaccine_effect = baseline - cumulative_incidence)
-      ggplot(to_plot) + 
-        geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
-        labs(color="", linetype = "") +
-        ylab("cumulative cases averted by vaccine") +
-        xlim(0,time_horizon) + 
-        guides(color = guide_legend(nrow = 2))+
-        theme(legend.position="bottom") +
-        facet_grid(.data[[this_var]] ~.)+
-        labs(title = this_var)
-    }
-
   } 
 
+  to_plot <- to_plot %>%
+    group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
+    arrange(time) %>%
+    mutate(cumulative_incidence = cumsum(incidence))
+  
+  if (include_cascade == 0){
+    #remove strategy before essential workers
+    max_essential_workers_time = to_plot %>%
+      filter(phase == "essential workers") %>%
+      summarise(max_time = max(time), .groups = "keep")%>%
+      ungroup() %>%
+      select(-phase,-supply)
+    cumulative_no_vax = to_plot %>%
+      filter(time == vaccine_delivery_start_date - 1 & 
+               phase == "no vaccine") %>%
+      summarise(cum_no_vax = cumulative_incidence, .groups = "keep") %>%
+      ungroup() %>%
+      select(-phase,-supply)
+      
+    to_plot <- to_plot %>% 
+      left_join(max_essential_workers_time, by = join_by(setting, vaccine_delivery_start_date,
+                                                         R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
+      left_join(cumulative_no_vax, by = join_by(setting, vaccine_delivery_start_date,
+                                                R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
+      filter(!(time <= max_time & ! phase %in% c("no vaccine","essential workers"))) %>%
+      mutate(cumulative_incidence = case_when(
+        phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
+        TRUE ~ cumulative_incidence
+      ))
+    
+  } else if (include_cascade == 1){
+    to_plot <- to_plot %>%
+      filter(! phase %in% c("essential workers"))
+  }
+  
+  if (yaxis_title == "cumulative_incidence"){
+    left_plot <- ggplot(to_plot) + 
+      geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
+      labs(color="", linetype = "")+
+      ylab("cumulative incidence") + 
+      guides(color = guide_legend(nrow = 2)) +
+      theme(legend.position="bottom") +
+      facet_grid(.data[[this_var]] ~.)+
+      labs(title = this_var)
+    
+  }
+  workshop = to_plot %>%
+    filter(phase == "no vaccine" & supply == 0) %>%
+    ungroup() %>%
+    select(time,cumulative_incidence) %>%
+    rename(baseline = cumulative_incidence)
+  to_plot <- to_plot %>%
+    filter(phase != "no vaccine") %>%
+    left_join(workshop, by = "time", relationship = "many-to-many") %>%
+    mutate(vaccine_effect = baseline - cumulative_incidence)
+  
+  if (yaxis_title == "cumulative_incidence_averted"){
+    
+    left_plot <- ggplot(to_plot) + 
+      geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
+      labs(color="", linetype = "") +
+      ylab("cumulative cases averted by vaccine") +
+      xlim(0,time_horizon) + 
+      guides(color = guide_legend(nrow = 2))+
+      theme(legend.position="bottom") +
+      facet_grid(.data[[this_var]] ~.)+
+      labs(title = this_var)
+  }
+  
+  to_plot <- to_plot %>%
+    filter(phase != "no vaccine" &
+             time == time_horizon) %>%
+    select(-time,-incidence,-cumulative_incidence) %>%
+    mutate(vaccine_effect = vaccine_effect/baseline)
+  right_plot <-  ggplot(to_plot) + 
+    geom_tile(aes(x=.data[[this_var]],y=phase,fill=vaccine_effect)) +
+    geom_text(aes(x=.data[[this_var]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
+    scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
+    ylab("strategy")+
+    theme(legend.position="bottom")
+  
+  ggarrange(left_plot,right_plot,
+            nrow = 1)
 }
 
 
