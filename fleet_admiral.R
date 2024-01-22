@@ -8,7 +8,7 @@ LIST_setting = c("Indonesia")
 LIST_vaccine_delivery_start_date = c(50,100)
 
 #pathogen characteristics
-LIST_R0_to_fit = c(1,2,4,6,8)
+LIST_R0_to_fit = c(1,2,4,6,8)  #  c(1,2,4,6,8) 
 #LIST_severity_scenario
 #LIST_prior_immunity_scenario
 LIST_infection_derived_immunity = c(0.75,1)
@@ -88,7 +88,93 @@ rm(FLEET_ADMIRAL_OVERRIDE)
 #_______________________________________________________________________________
 
 
+### MANIPULATE DATA
+################################################################################
+### reconstruct complete incidence from cascade of simulation
 
+#first let's collapse to daily incidence
+workshop <- ship_log %>%
+  group_by(time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
+  summarise(incidence = sum(incidence), .groups = "keep")  %>%
+  mutate(flag_reconstructed = 0) #NB: include as flag so option to not include in incidence plot
+
+additional_rows = data.frame()
+for (this_vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
+  for (this_rollout_modifier in LIST_rollout_modifier){
+    
+    this_workshop <- workshop %>% 
+      filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+               rollout_modifier == this_rollout_modifier &
+               ! phase %in% c("no vaccine","essential workers"))
+    
+    #Part 1/2: no vaccine and essential worker phases
+    this_before_strategy = workshop %>% 
+      filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+               rollout_modifier == this_rollout_modifier) %>%
+      filter((phase == "no vaccine" & time < vaccine_delivery_start_date) |
+               phase %in% c("essential workers")) %>% #CHECKED: unique(to_propogate$supply) == 0 for no vax and 0.2 for essential workers
+      ungroup() %>%
+      select(-phase,-supply)
+    before_strategy_contribution = this_workshop %>%
+      ungroup() %>%
+      select(phase,supply) %>%
+      unique() %>%
+      crossing(this_before_strategy) %>%
+      mutate(flag_reconstructed = 1)
+    additional_rows = rbind(additional_rows,before_strategy_contribution)
+    
+    #Part 2/2: strategy specific phases - cascade!
+    supply_loop = unique(this_workshop$supply)
+    supply_loop = supply_loop[supply_loop>0]
+    supply_loop = as.numeric(sort(supply_loop))
+  
+    for (this_supply in supply_loop[supply_loop != max(supply_loop)]){
+    
+    next_supply = supply_loop[which(supply_loop == this_supply)+1]
+    next_supply_times = this_workshop %>% 
+      filter(supply == next_supply) 
+    check = next_supply_times %>% 
+      group_by(time,phase) %>% 
+      summarise(n=n(), .groups = "keep") %>%
+      ungroup() %>%
+      select(n) %>%
+      unique()
+    if (nrow(check)>1){stop("fleet_admiral: next_supply_times has unequal entries across phases")}
+    next_supply_times = next_supply_times %>%
+      ungroup() %>%
+      select(time) %>%
+      unique()
+    
+    cascade_contribution <- this_workshop %>%
+      filter(supply == this_supply &
+               phase != "essential workers" &
+               !(time %in% next_supply_times$time)) %>%
+      ungroup() %>%
+      select(-supply) %>%
+      crossing(supply = supply_loop[supply_loop > this_supply])  %>%
+      mutate(flag_reconstructed = 1)
+    
+    additional_rows = rbind(additional_rows,cascade_contribution)
+  
+    }
+  }
+}
+
+#Combine and check
+ship_log_completed = rbind(workshop, additional_rows)
+
+object.size(ship_log_completed)/object.size(workshop) #= 1.8
+nrow(ship_log_completed)/nrow(workshop) #= 1.8
+
+check = ship_log_completed %>%
+  filter(! phase %in% c("essential workers", "no vaccine")) %>% 
+  group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
+  summarise(n=n(), .groups = "keep") %>%
+  filter(n != TOGGLE_time_horizon)
+if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in ship_log_completed")}
+rm(workshop,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
+
+save(ship_log_completed,file = paste0("04_shiny/x_results/ship_log_completed",time_of_result,".Rdata"))
 
 ###
 #require(parallel); require(foreach)
