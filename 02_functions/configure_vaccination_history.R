@@ -36,7 +36,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity * LIST_vaccination_strategies$rollout_modifier
   
   ### MODIFY supply
-  max_supply <- (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*loaded_setting_characteristics$daily_vaccine_delivery_capacity/sum(population$individuals)
+  max_supply <- (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*daily_vaccine_delivery_capacity/sum(population$individuals)
   if (length(LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply>max_supply])>0){
     LIST_vaccination_strategies$supply = LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply<max_supply]
     LIST_vaccination_strategies$supply = c(LIST_vaccination_strategies$supply,max_supply)
