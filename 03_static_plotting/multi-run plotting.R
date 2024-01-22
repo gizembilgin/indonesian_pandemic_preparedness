@@ -48,7 +48,7 @@ multiscenario_facet_plot <- function(data,
       facet_grid(.data[[this_var]] ~.)+
       labs(title = this_var)
     
-  } else if (yaxis_title %in% c("cumulative_incidence","absolute_effect")){
+  } else if (yaxis_title %in% c("cumulative_incidence","cumulative_incidence_averted")){
     
     to_plot <- to_plot %>%
       group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
@@ -95,7 +95,7 @@ multiscenario_facet_plot <- function(data,
         facet_grid(.data[[this_var]] ~.)+
         labs(title = this_var)
       
-    } else if (yaxis_title == "absolute_effect"){
+    } else if (yaxis_title == "cumulative_incidence_averted"){
       workshop = to_plot %>%
         filter(phase == "no vaccine" & supply == 0) %>%
         ungroup() %>%
