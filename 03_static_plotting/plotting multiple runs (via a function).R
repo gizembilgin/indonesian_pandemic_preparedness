@@ -34,7 +34,11 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   # subset data to this_configuration
   this_configuration <- default_configuration[! names(default_configuration) %in% {{this_var}}]
   to_plot <-  configuration_filter(data,this_configuration)
-    
+  to_plot$phase <- factor(to_plot$phase, levels = c("older adults followed by all adults",
+                                                    "children before adults",
+                                                    "all adults at the same time",
+                                                    "essential workers" ,
+                                                    "no vaccine" ))  
   # make incidence vs time plot
   if (yaxis_title == "incidence"){
     
@@ -119,6 +123,11 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   
   # make cumulative_incidence_averted vs time plot
   if (yaxis_title == "cumulative_incidence_averted"){
+    to_plot$phase <- factor(to_plot$phase, levels = c("no vaccine" , 
+                                                      "essential workers" ,
+                                                      "older adults followed by all adults",
+                                                      "all adults at the same time",
+                                                      "children before adults"))
     left_plot <- ggplot(to_plot) + 
       geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
@@ -129,6 +138,17 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       facet_grid(.data[[this_var]] ~.)+
       labs(title = this_var)
   }
+  
+  #uniform colour
+  left_plot <- left_plot  +
+    scale_colour_manual(values = 
+                          c("no vaccine" = "#F8766D", 
+                            "older adults followed by all adults" =  "#A3A500",
+                            "essential workers" = "#00BF7D" ,
+                            "all adults at the same time" = "#00B0F6",
+                            "children before adults"  = "#E76BF3"))
+  #NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
+  
   
   # function output
   if (display_impact_heatmap == 1){
@@ -149,7 +169,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
     ggarrange(left_plot,right_plot,nrow = 1)
     
   } else{
-    left_plot
+    left_plot  
   }
 
 }
