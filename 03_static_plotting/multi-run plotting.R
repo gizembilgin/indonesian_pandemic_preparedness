@@ -84,7 +84,8 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       mutate(cumulative_incidence = case_when(
         phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
         TRUE ~ cumulative_incidence
-      ))
+      )) %>%
+      select(-max_time, - cum_no_vax)
     
   } else if (display_essential_workers_phase == 0){
     to_plot <- to_plot %>%
@@ -108,7 +109,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   workshop = to_plot %>%
     filter(phase == "no vaccine" & supply == 0) %>%
     ungroup() %>%
-    select(-phase,-supply,-flag_reconstructed,-max_time,-cum_no_vax,-incidence) %>%
+    select(-phase,-supply,-flag_reconstructed,-incidence) %>%
     rename(baseline = cumulative_incidence)
   to_plot <- to_plot %>%
     filter(phase != "no vaccine") %>%
