@@ -1,4 +1,4 @@
-#This plotting script is designed for multiple runs of the command_deck
+#Functional plotting for multiple runs of the command_deck (e.g., fleet_admiral)
 
 default_configuration = 
   list(
