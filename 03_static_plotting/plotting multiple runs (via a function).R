@@ -29,8 +29,8 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                      yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
                                      display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
                                      display_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
-                                     display_vaccine_availability = 0, #options: 0 (no), 1 (yes)
-                                     display_end_of_essential_worker_delivery = 0  #options: 0 (no), 1 (yes)
+                                     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
+                                     display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
                                      ){
   
   # subset data to this_configuration
@@ -40,7 +40,12 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                                     "children before adults",
                                                     "all adults at the same time",
                                                     "essential workers" ,
-                                                    "no vaccine" ))  
+                                                    "no vaccine" ))
+  vline_data2 <- to_plot %>%
+    filter(phase == "essential workers") %>%
+    group_by(.data[[this_var]]) %>%
+    summarise(end_of_essential_workers_phase = max(time)) 
+  
   # make incidence vs time plot
   if (yaxis_title == "incidence"){
     
@@ -159,11 +164,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   }
   #dashed line for last day of essential worker delivery
   if (display_end_of_essential_worker_delivery == 1){
-    vline_data <- to_plot %>%
-      filter(phase == "essential workers") %>%
-      group_by({{this_var}}) %>%
-      summarise(end_of_essential_workers_phase = max(time)) 
-    left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = end_of_essential_workers_phase), linetype = "dashed")
+    left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_essential_workers_phase), linetype = "dashed")
   }
 
   
@@ -199,16 +200,16 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
 #display_vaccine_availability = 0, 
 #display_end_of_essential_worker_delivery = 0
 
-multiscenario_facet_plot(ship_log_completed,"R0","incidence")
+multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
 multiscenario_facet_plot(ship_log_completed,"vaccine_delivery_start_date","incidence")
-#multiscenario_facet_plot(ship_log,"supply","incidence")
+#multiscenario_facet_plot(ship_log_completed,"supply","incidence")
 multiscenario_facet_plot(ship_log_completed,"infection_derived_immunity","incidence")
 multiscenario_facet_plot(ship_log_completed,"rollout_modifier","incidence")
 multiscenario_facet_plot(ship_log_completed,"vaccine_derived_immunity","incidence")
 
 multiscenario_facet_plot(ship_log_completed,"R0","cumulative_incidence")
 multiscenario_facet_plot(ship_log_completed,"vaccine_delivery_start_date","cumulative_incidence")
-#multiscenario_facet_plot(ship_log,"supply","cumulative_incidence")
+#multiscenario_facet_plot(ship_log_completed,"supply","cumulative_incidence")
 multiscenario_facet_plot(ship_log_completed,"infection_derived_immunity","cumulative_incidence")
 multiscenario_facet_plot(ship_log_completed,"rollout_modifier","cumulative_incidence")
 multiscenario_facet_plot(ship_log_completed,"vaccine_derived_immunity","cumulative_incidence")
