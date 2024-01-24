@@ -71,7 +71,7 @@ ui <- fluidPage(
                                     choices = CHOICES$supply,
                                     selected = 0.2), 
                   radioGroupButtons(inputId = "INPUT_rollout_modifier",
-                                    label = "Rollout speed:", #COMEBACK need to explain
+                                    label = "Rollout speed:",
                                     choices = CHOICES$rollout_modifier,
                                     selected = 1), 
                   radioGroupButtons(inputId = "INPUT_infection_derived_immunity",
@@ -106,7 +106,7 @@ ui <- fluidPage(
                     fill = TRUE
                   ),
                   prettySwitch(
-                    label = "colour essential worker delivery", #COMEBACK better names for these switches
+                    label = "colour essential worker delivery",
                     inputId = "INPUT_display_essential_workers_phase",
                     value = TRUE,
                     status = "success",
