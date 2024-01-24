@@ -5,8 +5,6 @@ options(scipen = 1000) #turn off scientific notation
 
 
 
-
-
 ##### CONFIGURE CHOICES ########################################################
 CHOICES = list(
   R0 = c(1,2,4,6,8) ,
@@ -17,10 +15,6 @@ CHOICES = list(
   vaccine_derived_immunity = c(0.75,1)
 )
 ################################################################################
-
-
-
-
 
 
 
@@ -46,7 +40,7 @@ ui <- fluidPage(
                   radioGroupButtons(inputId = "INPUT_supply",
                                     label = "Vaccine supply (% population):",
                                     choices = CHOICES$supply,
-                                    selected = 0.5), #COMEBACK have this display as a percentage
+                                    selected = 0.2), #COMEBACK have this display as a percentage
                   radioGroupButtons(inputId = "INPUT_rollout_modifier",
                                     label = "Roll out modifier:", #COMEBACK need to explain
                                     choices = CHOICES$rollout_modifier,
@@ -59,13 +53,19 @@ ui <- fluidPage(
                                     label = "Strength of vaccine derived immunity (%):",
                                     choices = CHOICES$vaccine_derived_immunity,
                                     selected = 1),   #COMEBACK have this display as a percentage
+                  
     ),
+    
+    
     
     ### Outputs ################################################################
     mainPanel( width = 9,
                
                waiter::useWaiter(),
-              
+               
+               textOutput("test"),
+               tableOutput("test2"),
+               
                plotOutput("OUTPUT_plot", height = "800px")
                #COMEBACK provide error message if no simulation available
     )
@@ -79,20 +79,18 @@ ui <- fluidPage(
 #### SERVER DEFINITION ########################################################
 server <- function(input, output, session) {
   
-  ### Set default values of model configuration parameters
-  default_configuration <- reactive({
-    list(
-      R0 = input$INPUT_R0,
-      vaccine_delivery_start_date = input$INPUT_vaccine_delivery_start_date,
-      supply = c(0,input$INPUT_supply), #include 0 for no vaccine scenario
-      infection_derived_immunity = input$INPUT_infection_derived_immunity,
-      rollout_modifier = input$INPUT_rollout_modifier,
-      vaccine_derived_immunity = input$INPUT_vaccine_derived_immunity
-    )
-  }) 
-  #____________________________________________________________
+  # output$test <- renderText({
+  #   #"test"
+  #   #multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
+  #   print(c(0,as.numeric(input$INPUT_supply)))
+  #   })
+  # 
+  # output$test2 <- renderTable({
+  #   #"test"
+  #   multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
+  # })
   
-  
+
   ### Apply configuration to subset data to desired scenario
   configuration_filter <- function(data,configuration){
     for (i in 1:length(configuration)){
@@ -113,6 +111,16 @@ server <- function(input, output, session) {
                                        display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
   ){
     
+    # set default values of model configuration parameters
+    default_configuration <- list(
+        R0 = as.numeric(input$INPUT_R0),
+        vaccine_delivery_start_date = as.numeric(input$INPUT_vaccine_delivery_start_date),
+        supply = c(0,as.numeric(input$INPUT_supply)), #include 0 for no vaccine scenario
+        infection_derived_immunity = as.numeric(input$INPUT_infection_derived_immunity),
+        rollout_modifier = as.numeric(input$INPUT_rollout_modifier),
+        vaccine_derived_immunity = as.numeric(input$INPUT_vaccine_derived_immunity)
+      )
+
     # subset data to this_configuration
     this_configuration <- default_configuration[! names(default_configuration) %in% {{this_var}}]
     to_plot <-  configuration_filter(data,this_configuration)
@@ -121,6 +129,7 @@ server <- function(input, output, session) {
                                                       "all adults at the same time",
                                                       "essential workers" ,
                                                       "no vaccine" ))
+    
     vline_data2 <- to_plot %>%
       filter(phase == "essential workers") %>%
       group_by(.data[[this_var]]) %>%
@@ -183,6 +192,7 @@ server <- function(input, output, session) {
         filter(! phase %in% c("essential workers"))
     }
     
+    
     # make cumulative_incidence vs time plot
     if (yaxis_title == "cumulative_incidence"){
       left_plot <- ggplot(to_plot) + 
@@ -225,6 +235,7 @@ server <- function(input, output, session) {
         facet_grid(.data[[this_var]] ~.)+
         labs(title = this_var)
     }
+    
     
     #uniform colour
     #NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
@@ -269,12 +280,16 @@ server <- function(input, output, session) {
     } else{
       left_plot  
     }
-    
+
   }
   
-
+  PLOT_multipanel <- reactive ({
+    multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
+  })
   
-  output$plotOutput <- renderPlot({multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)})
+  #COMEBACK need function options as well on Shiny
+  output$OUTPUT_plot <- renderPlot({multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)},
+    res = 96)
   
 }
 
