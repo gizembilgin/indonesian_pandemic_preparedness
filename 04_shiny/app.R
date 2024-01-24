@@ -7,6 +7,14 @@ options(scipen = 1000) #turn off scientific notation
 
 ##### CONFIGURE CHOICES ########################################################
 CHOICES = list(
+  variable = c("basic reproduction number" = "R0",
+               "vaccine delivery start date" = "vaccine_delivery_start_date",
+               "infection derived immunity" = "infection_derived_immunity",
+               "rollout modifier" = "rollout_modifier",
+               "vaccine derived immunity" = "vaccine_derived_immunity"),
+  incidence_statistic = c("incidence" = "incidence",
+                          "cumulative incidence" = "cumulative_incidence",
+                          "cumulative incidence averted" = "cumulative_incidence_averted"),
   R0 = c(1,2,4,6,8) ,
   vaccine_delivery_start_date = c(50,100),
   supply = c(0.2,0.5,0.8), #COMEBACK need to include 0 automatically later
@@ -28,6 +36,15 @@ ui <- fluidPage(
     
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
+                  
+                  selectInput(inputId = "INPUT_variable",
+                                    label = "Which variable to vary:",
+                                    choices = CHOICES$variable,
+                                    selected = "R0"),
+                  selectInput(inputId = "INPUT_yaxis_title",
+                              label = "Which incidence statistic:",
+                              choices = CHOICES$incidence_statistic,
+                              selected = "incidence"),
                   
                   radioGroupButtons(inputId = "INPUT_R0",
                                     label = "Basic reproduction number:",
@@ -53,6 +70,28 @@ ui <- fluidPage(
                                     label = "Strength of vaccine derived immunity (%):",
                                     choices = CHOICES$vaccine_derived_immunity,
                                     selected = 1),   #COMEBACK have this display as a percentage
+                  
+                  switchInput(
+                    label = "display impact heatmap?",
+                    inputId = "INPUT_display_impact_heatmap",
+                    value = TRUE
+                  ),
+                  switchInput(
+                    label = "display essential worker delivery?", #COMEBACK better names for these switches
+                    inputId = "INPUT_display_essential_workers_phase",
+                    value = TRUE
+                  ),
+                  switchInput(
+                    label = "display dashed line of vaccine availability?",
+                    inputId = "INPUT_display_vaccine_availability",
+                    value = TRUE
+                  ),
+                  switchInput(
+                    label = "display dashed line of end of essential worker delivery?",
+                    inputId = "INPUT_display_end_of_essential_worker_delivery",
+                    value = TRUE
+                  ),
+                  
                   
     ),
     
@@ -283,12 +322,19 @@ server <- function(input, output, session) {
 
   }
   
-  PLOT_multipanel <- reactive ({
-    multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
-  })
-  
+
   #COMEBACK need function options as well on Shiny
-  output$OUTPUT_plot <- renderPlot({multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)},
+  output$OUTPUT_plot <- renderPlot({
+    multiscenario_facet_plot(
+      data = ship_log_completed,
+      this_var = input$INPUT_variable, 
+      yaxis_title = input$INPUT_yaxis_title,
+      display_impact_heatmap = input$INPUT_display_impact_heatmap,
+      display_essential_workers_phase = input$INPUT_display_essential_workers_phase, 
+      display_vaccine_availability = input$INPUT_display_vaccine_availability,
+      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
+      )
+    },
     res = 96)
   
 }
