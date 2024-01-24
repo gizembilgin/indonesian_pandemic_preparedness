@@ -7,20 +7,32 @@ options(scipen = 1000) #turn off scientific notation
 
 ##### CONFIGURE CHOICES ########################################################
 CHOICES = list(
-  variable = c("basic reproduction number" = "R0",
-               "vaccine delivery start date" = "vaccine_delivery_start_date",
-               "infection derived immunity" = "infection_derived_immunity",
-               "rollout modifier" = "rollout_modifier",
-               "vaccine derived immunity" = "vaccine_derived_immunity"),
-  incidence_statistic = c("incidence" = "incidence",
-                          "cumulative incidence" = "cumulative_incidence",
-                          "cumulative incidence averted" = "cumulative_incidence_averted"),
+  variable = 
+    c("basic reproduction number" = "R0",
+      "vaccine delivery start date" = "vaccine_delivery_start_date",
+      "infection derived immunity" = "infection_derived_immunity",
+      "rollout modifier" = "rollout_modifier",
+      "vaccine derived immunity" = "vaccine_derived_immunity"), 
+  incidence_statistic = 
+    c("incidence" = "incidence",
+      "cumulative incidence" = "cumulative_incidence",
+      "cumulative incidence averted" = "cumulative_incidence_averted"), 
   R0 = c(1,2,4,6,8) ,
   vaccine_delivery_start_date = c(50,100),
-  supply = c(0.2,0.5,0.8), #COMEBACK need to include 0 automatically later
-  infection_derived_immunity = c(0.75,1),
-  rollout_modifier = c(0.5,1,2),
-  vaccine_derived_immunity = c(0.75,1)
+  supply = 
+    c("20%" = 0.2,
+      "50%" = 0.5,
+      "80%" = 0.8), 
+  infection_derived_immunity = 
+    c("75%" = 0.75,
+      "100%" = 1.0), 
+  rollout_modifier = 
+    c("x0.5 capacity" = 0.5,
+      "at capacity" = 1,
+      "x2.0 capacity" = 2),
+  vaccine_derived_immunity =
+    c("75%" = 0.75,
+      "100%" = 1.0)
 )
 ################################################################################
 
@@ -30,7 +42,7 @@ CHOICES = list(
 ##### USER INTERFACE DEFINITION ################################################
 ui <- fluidPage(
   
-  titlePanel("Interactive mathematical modelling of future pandemics to assist with Indonesian pandemic preparedness "),
+  titlePanel("Mathematical modelling of future pandemics to assist with Indonesian pandemic preparedness "),
   
   sidebarLayout(
     
@@ -38,11 +50,11 @@ ui <- fluidPage(
     sidebarPanel( width = 3,
                   
                   selectInput(inputId = "INPUT_variable",
-                                    label = "Which variable to vary:",
+                                    label = "Variable to vary:",
                                     choices = CHOICES$variable,
                                     selected = "R0"),
                   selectInput(inputId = "INPUT_yaxis_title",
-                              label = "Which incidence statistic:",
+                              label = "Incidence statistic:",
                               choices = CHOICES$incidence_statistic,
                               selected = "incidence"),
                   
@@ -57,41 +69,49 @@ ui <- fluidPage(
                   radioGroupButtons(inputId = "INPUT_supply",
                                     label = "Vaccine supply (% population):",
                                     choices = CHOICES$supply,
-                                    selected = 0.2), #COMEBACK have this display as a percentage
+                                    selected = 0.2), 
                   radioGroupButtons(inputId = "INPUT_rollout_modifier",
-                                    label = "Roll out modifier:", #COMEBACK need to explain
+                                    label = "Rollout speed:", #COMEBACK need to explain
                                     choices = CHOICES$rollout_modifier,
                                     selected = 1), 
                   radioGroupButtons(inputId = "INPUT_infection_derived_immunity",
-                                    label = "Infection-derived immunity (%):",
+                                    label = "Protection from infection-derived immunity:",
                                     choices = CHOICES$infection_derived_immunity,
-                                    selected = 1),   #COMEBACK have this display as a percentage
+                                    selected = 1),   
                   radioGroupButtons(inputId = "INPUT_vaccine_derived_immunity",
-                                    label = "Strength of vaccine derived immunity (%):",
+                                    label = "Protection from vaccine-derived immunity:",
                                     choices = CHOICES$vaccine_derived_immunity,
-                                    selected = 1),   #COMEBACK have this display as a percentage
+                                    selected = 1),   
                   
-                  switchInput(
-                    label = "display impact heatmap?",
+                  h5(strong("Display:")),
+                  prettySwitch(
+                    label = "heatmap",
                     inputId = "INPUT_display_impact_heatmap",
-                    value = TRUE
+                    value = TRUE,
+                    status = "success",
+                    fill = TRUE
                   ),
-                  switchInput(
-                    label = "display essential worker delivery?", #COMEBACK better names for these switches
-                    inputId = "INPUT_display_essential_workers_phase",
-                    value = TRUE
-                  ),
-                  switchInput(
-                    label = "display dashed line of vaccine availability?",
+                  prettySwitch(
+                    label = "date of vaccine availability",
                     inputId = "INPUT_display_vaccine_availability",
-                    value = TRUE
+                    value = TRUE,
+                    status = "success",
+                    fill = TRUE
                   ),
-                  switchInput(
-                    label = "display dashed line of end of essential worker delivery?",
+                  prettySwitch(
+                    label = "end of essential worker delivery",
                     inputId = "INPUT_display_end_of_essential_worker_delivery",
-                    value = TRUE
+                    value = TRUE,
+                    status = "success",
+                    fill = TRUE
                   ),
-                  
+                  prettySwitch(
+                    label = "colour essential worker delivery", #COMEBACK better names for these switches
+                    inputId = "INPUT_display_essential_workers_phase",
+                    value = TRUE,
+                    status = "success",
+                    fill = TRUE
+                  ),
                   
     ),
     
@@ -107,7 +127,7 @@ ui <- fluidPage(
                
                textOutput("WARNING_no_plot"),
                plotOutput("OUTPUT_plot", height = "800px")
-               #COMEBACK provide error message if no simulation available
+               
     )
   )
 )
