@@ -105,6 +105,7 @@ ui <- fluidPage(
                textOutput("test"),
                tableOutput("test2"),
                
+               textOutput("WARNING_no_plot"),
                plotOutput("OUTPUT_plot", height = "800px")
                #COMEBACK provide error message if no simulation available
     )
@@ -168,6 +169,10 @@ server <- function(input, output, session) {
                                                       "all adults at the same time",
                                                       "essential workers" ,
                                                       "no vaccine" ))
+    
+    if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
+      return()
+    }
     
     vline_data2 <- to_plot %>%
       filter(phase == "essential workers") %>%
@@ -322,8 +327,23 @@ server <- function(input, output, session) {
 
   }
   
-
-  #COMEBACK need function options as well on Shiny
+  #text to display when hospitalisation for molnupiravir
+  output$WARNING_no_plot <- renderText({
+    if(is.null(
+      multiscenario_facet_plot(
+        data = ship_log_completed,
+        this_var = input$INPUT_variable,
+        yaxis_title = input$INPUT_yaxis_title,
+        display_impact_heatmap = input$INPUT_display_impact_heatmap,
+        display_essential_workers_phase = input$INPUT_display_essential_workers_phase,
+        display_vaccine_availability = input$INPUT_display_vaccine_availability,
+        display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
+      ))) {
+      validate("\nNote: The underlying simulation for this plot does not exist ")
+    }
+  })
+  
+  #output plot
   output$OUTPUT_plot <- renderPlot({
     multiscenario_facet_plot(
       data = ship_log_completed,
