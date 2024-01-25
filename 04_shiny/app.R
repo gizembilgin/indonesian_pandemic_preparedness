@@ -150,6 +150,25 @@ server <- function(input, output, session) {
   #   multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
   # })
   
+  
+  ### Load simulation
+  list_poss_Rdata = list.files(
+    path = "x_results/",
+    pattern = "ship_log_completed*"
+  )
+  if (length(list_poss_Rdata) > 0) {
+    list_poss_Rdata_details = double()
+    for (j in 1:length(list_poss_Rdata)) {
+      list_poss_Rdata_details = rbind(list_poss_Rdata_details,
+                                      file.info(paste0("x_results/", list_poss_Rdata[[j]]))$mtime)
+    }
+    latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
+    load(file = paste0("x_results/",latest_file)) #loading ICER table
+  } else{
+    stop("shiny: can't find underlying simulation to load!")
+  }
+  #____________________________________________________________
+  
 
   ### Apply configuration to subset data to desired scenario
   configuration_filter <- function(data,configuration){
