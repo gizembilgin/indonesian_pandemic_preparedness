@@ -1,22 +1,20 @@
 #Functional plotting for multiple runs of the command_deck (e.g., fleet_admiral)
 
-### Set default values of model configuration parameters
-default_configuration = 
-  list(
-    R0 = 2,
-    vaccine_delivery_start_date = 100,
-    supply = c(0,0.2), #include 0 for no vaccine scenario
-    infection_derived_immunity = 1,
-    rollout_modifier = 1,
-    vaccine_derived_immunity = 1
-  )
-#____________________________________________________________
-
 
 ### Apply configuration to subset data to desired scenario
-configuration_filter <- function(data,configuration){
+configuration_filter <- function(data,configuration,warning_search = 0){
   for (i in 1:length(configuration)){
-    data = data %>% filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]])
+    if (names(configuration)[i] == "supply"){
+      data = data %>% 
+        filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]] | 
+                 phase %in% c("no vaccine", "essential workers"))
+    } else{
+      data = data %>% 
+        filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]]) 
+    }
+    if (warning_search == 1 & nrow(data[data$supply != 0,]) == 0){
+      return(names(configuration)[[i]])
+    }
   }
   return(data)
 }
@@ -33,6 +31,17 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                      display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
                                      ){
   
+  # set default values of model configuration parameters
+  default_configuration = 
+    list(
+      R0 = 2,
+      vaccine_delivery_start_date = 100,
+      supply = c(0.2), #include 0 for no vaccine scenario
+      infection_derived_immunity = 1,
+      rollout_modifier = 1,
+      vaccine_derived_immunity = 1
+    )
+  
   # subset data to this_configuration
   this_configuration <- default_configuration[! names(default_configuration) %in% {{this_var}}]
   to_plot <-  configuration_filter(data,this_configuration)
@@ -41,6 +50,11 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                                     "all adults at the same time",
                                                     "essential workers" ,
                                                     "no vaccine" ))
+  
+  if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
+    return(configuration_filter(data,this_configuration,warning_search = 1))
+  }
+  
   vline_data2 <- to_plot %>%
     filter(phase == "essential workers") %>%
     group_by(.data[[this_var]]) %>%
@@ -159,7 +173,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   if (display_vaccine_availability == 1){
     vline_data <- to_plot %>%
       group_by({{this_var}}) %>%
-      summarise(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
+      reframe(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
     left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = vaccine_delivery_start_date), linetype = "dashed")
   }
   #dashed line for last day of essential worker delivery
