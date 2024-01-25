@@ -26,7 +26,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                      this_var, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
                                      yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
                                      display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
-                                     display_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
+                                     colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
                                      display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
                                      display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
                                      ){
@@ -36,9 +36,9 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
     list(
       R0 = 2,
       vaccine_delivery_start_date = 100,
-      supply = c(0.2), #include 0 for no vaccine scenario
+      supply = c(0.8), #include 0 for no vaccine scenario
       infection_derived_immunity = 1,
-      rollout_modifier = 1,
+      rollout_modifier = 2,
       vaccine_derived_immunity = 1
     )
   
@@ -63,10 +63,9 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   # make incidence vs time plot
   if (yaxis_title == "incidence"){
     
-    if (display_essential_workers_phase == 1){
-      left_plot <- to_plot %>% 
-        filter(flag_reconstructed == 0)
-    } else if (display_essential_workers_phase == 0){
+    if (colour_essential_workers_phase == 1){
+      left_plot <- to_plot
+    } else if (colour_essential_workers_phase == 0){
       left_plot <- to_plot %>%
         filter(! phase %in% c("essential workers"))
     }
@@ -86,7 +85,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
     arrange(time) %>%
     mutate(cumulative_incidence = cumsum(incidence))
   
-  if (display_essential_workers_phase == 1){
+  if (colour_essential_workers_phase == 1){
     #remove strategy before essential workers
     max_essential_workers_time = to_plot %>%
       filter(phase == "essential workers") %>%
@@ -112,7 +111,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       )) %>%
       select(-max_time, - cum_no_vax)
     
-  } else if (display_essential_workers_phase == 0){
+  } else if (colour_essential_workers_phase == 0){
     to_plot <- to_plot %>%
       filter(! phase %in% c("essential workers"))
   }
@@ -210,7 +209,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
 # this_var #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
 # yaxis_title #options: incidence, cumulative_incidence, cumulative_incidence_averted
 # display_impact_heatmap = 1 #options: 0 (no), 1 (yes)
-# display_essential_workers_phase = 1 
+# colour_essential_workers_phase = 1 
 #display_vaccine_availability = 0, 
 #display_end_of_essential_worker_delivery = 0
 
