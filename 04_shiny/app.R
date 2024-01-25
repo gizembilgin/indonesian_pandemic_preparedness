@@ -171,9 +171,19 @@ server <- function(input, output, session) {
   
 
   ### Apply configuration to subset data to desired scenario
-  configuration_filter <- function(data,configuration){
+  configuration_filter <- function(data,configuration,warning_search = 0){
     for (i in 1:length(configuration)){
-      data = data %>% filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]])
+      if (names(configuration)[i] == "supply"){
+        data = data %>% 
+          filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]] | 
+                   phase %in% c("no vaccine", "essential workers"))
+      } else{
+        data = data %>% 
+          filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]]) 
+      }
+      if (warning_search == 1 & nrow(data[data$supply != 0,]) == 0){
+        return(names(configuration)[[i]])
+      }
     }
     return(data)
   }
@@ -194,7 +204,7 @@ server <- function(input, output, session) {
     default_configuration <- list(
         R0 = as.numeric(input$INPUT_R0),
         vaccine_delivery_start_date = as.numeric(input$INPUT_vaccine_delivery_start_date),
-        supply = c(0,as.numeric(input$INPUT_supply)), #include 0 for no vaccine scenario
+        supply = as.numeric(input$INPUT_supply),
         infection_derived_immunity = as.numeric(input$INPUT_infection_derived_immunity),
         rollout_modifier = as.numeric(input$INPUT_rollout_modifier),
         vaccine_derived_immunity = as.numeric(input$INPUT_vaccine_derived_immunity)
@@ -209,8 +219,8 @@ server <- function(input, output, session) {
                                                       "essential workers" ,
                                                       "no vaccine" ))
     
-    if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
-      return()
+    if (nrow(to_plot[! to_plot$phase %in% c("no vaccine","essential workers"),]) == 0){
+      return(configuration_filter(data,this_configuration,warning_search = 1))
     }
     
     vline_data2 <- to_plot %>%
@@ -333,7 +343,7 @@ server <- function(input, output, session) {
     if (display_vaccine_availability == 1){
       vline_data <- to_plot %>%
         group_by({{this_var}}) %>%
-        summarise(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
+        reframe(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
       left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = vaccine_delivery_start_date), linetype = "dashed")
     }
     #dashed line for last day of essential worker delivery
@@ -368,17 +378,17 @@ server <- function(input, output, session) {
   
   #text to display when hospitalisation for molnupiravir
   output$WARNING_no_plot <- renderText({
-    if(is.null(
-      multiscenario_facet_plot(
-        data = ship_log_completed,
-        this_var = input$INPUT_variable,
-        yaxis_title = input$INPUT_yaxis_title,
-        display_impact_heatmap = input$INPUT_display_impact_heatmap,
-        display_essential_workers_phase = input$INPUT_display_essential_workers_phase,
-        display_vaccine_availability = input$INPUT_display_vaccine_availability,
-        display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
-      ))) {
-      validate("\nNote: The underlying simulation for this plot does not exist ")
+    check_plot_exists <- multiscenario_facet_plot(
+      data = ship_log_completed,
+      this_var = input$INPUT_variable,
+      yaxis_title = input$INPUT_yaxis_title,
+      display_impact_heatmap = input$INPUT_display_impact_heatmap,
+      display_essential_workers_phase = input$INPUT_display_essential_workers_phase,
+      display_vaccine_availability = input$INPUT_display_vaccine_availability,
+      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
+    )
+    if(is.character(check_plot_exists)) {
+      validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
     }
   })
   
