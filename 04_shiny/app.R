@@ -107,7 +107,7 @@ ui <- fluidPage(
                   ),
                   prettySwitch(
                     label = "colour essential worker delivery",
-                    inputId = "INPUT_display_essential_workers_phase",
+                    inputId = "INPUT_colour_essential_workers_phase",
                     value = TRUE,
                     status = "success",
                     fill = TRUE
@@ -195,7 +195,7 @@ server <- function(input, output, session) {
                                        this_var, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
                                        yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
                                        display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
-                                       display_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
+                                       colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
                                        display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
                                        display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
   ){
@@ -231,10 +231,9 @@ server <- function(input, output, session) {
     # make incidence vs time plot
     if (yaxis_title == "incidence"){
       
-      if (display_essential_workers_phase == 1){
-        left_plot <- to_plot %>% 
-          filter(flag_reconstructed == 0)
-      } else if (display_essential_workers_phase == 0){
+      if (colour_essential_workers_phase == 1){
+        left_plot <- to_plot 
+      } else if (colour_essential_workers_phase == 0){
         left_plot <- to_plot %>%
           filter(! phase %in% c("essential workers"))
       }
@@ -254,7 +253,7 @@ server <- function(input, output, session) {
       arrange(time) %>%
       mutate(cumulative_incidence = cumsum(incidence))
     
-    if (display_essential_workers_phase == 1){
+    if (colour_essential_workers_phase == 1){
       #remove strategy before essential workers
       max_essential_workers_time = to_plot %>%
         filter(phase == "essential workers") %>%
@@ -280,7 +279,7 @@ server <- function(input, output, session) {
         )) %>%
         select(-max_time, - cum_no_vax)
       
-    } else if (display_essential_workers_phase == 0){
+    } else if (colour_essential_workers_phase == 0){
       to_plot <- to_plot %>%
         filter(! phase %in% c("essential workers"))
     }
@@ -383,7 +382,7 @@ server <- function(input, output, session) {
       this_var = input$INPUT_variable,
       yaxis_title = input$INPUT_yaxis_title,
       display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      display_essential_workers_phase = input$INPUT_display_essential_workers_phase,
+      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
       display_vaccine_availability = input$INPUT_display_vaccine_availability,
       display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
     )
@@ -399,7 +398,7 @@ server <- function(input, output, session) {
       this_var = input$INPUT_variable, 
       yaxis_title = input$INPUT_yaxis_title,
       display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      display_essential_workers_phase = input$INPUT_display_essential_workers_phase, 
+      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
       display_vaccine_availability = input$INPUT_display_vaccine_availability,
       display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
       )
