@@ -252,7 +252,7 @@ server <- function(input, output, session) {
       if (length(input$TOGGLE_severe_disease_age_distribution) == length(unique(to_plot$age_group))){
         to_plot <- project_severe_disease(
           point_estimate        = input$TOGGLE_severe_disease_point_estimate/100, #input requested as percentage in shiny
-          age_distribution      = input$TOGGLE_severe_disease_age_distribution,
+          age_distribution      =  as.numeric(unlist(strsplit(input$TOGGLE_severe_disease_age_distribution,","))),
           VE                    = input$INPUT_vaccine_derived_immunity,
           comorb_increased_risk = input$TOGGLE_severe_disease_comorb_increased_risk,
           this_incidence_log_tidy = to_plot,
