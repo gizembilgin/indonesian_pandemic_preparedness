@@ -48,7 +48,13 @@ ui <- fluidPage(
     
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
-                  
+                  radioGroupButtons(inputId = "INPUT_outcome",
+                                    label = "",
+                                    choices = c("cases","severe disease"),
+                                    justified = TRUE),
+                  uiOutput("severe_disease_pt_est_input"),
+                  uiOutput("severe_disease_age_dn_input"),
+                  uiOutput("severe_disease_comorb_increased_risk"),
                   selectInput(inputId = "INPUT_variable",
                                     label = "Variable to vary:",
                                     choices = CHOICES$variable,
@@ -150,6 +156,23 @@ server <- function(input, output, session) {
   #   multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
   # })
   
+  ### Conditional UI components
+  output$severe_disease_pt_est_input <- renderUI({
+    if(input$INPUT_outcome == "severe disease"){
+      numericInput(inputId = "TOGGLE_severe_disease_point_estimate", label = "Population-level estimate (%):", value = 1)
+    } 
+  })
+  output$severe_disease_age_dn_input <- renderUI({
+    if(input$INPUT_outcome == "severe disease"){
+      textInput(inputId = "TOGGLE_severe_disease_age_distribution",label = "Age distribution:")
+    } 
+  })
+  output$severe_disease_comorb_increased_risk <- renderUI({
+    if(input$INPUT_outcome == "severe disease"){
+      numericInput(inputId = "TOGGLE_severe_disease_comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
+    } 
+  })
+
   
   ### Load simulation
   list_poss_Rdata = list.files(
@@ -169,7 +192,7 @@ server <- function(input, output, session) {
   }
   #____________________________________________________________
   
-
+  
   ### Apply configuration to subset data to desired scenario
   configuration_filter <- function(data,configuration,warning_search = 0){
     for (i in 1:length(configuration)){
@@ -222,6 +245,22 @@ server <- function(input, output, session) {
     if (nrow(to_plot[! to_plot$phase %in% c("no vaccine","essential workers"),]) == 0){
       return(configuration_filter(data,this_configuration,warning_search = 1))
     }
+    
+    # ### Calculate severe outcomes if requested 
+    ### COLLAPSED BECAUSE WE PREVIOUSLY REMOVED THE AGE STRUCTURE IN TO PLOT
+    if(input$INPUT_outcome == "severe disease"){
+      if (length(input$TOGGLE_severe_disease_age_distribution) == length(unique(to_plot$age_group))){
+        to_plot <- project_severe_disease(
+          point_estimate        = input$TOGGLE_severe_disease_point_estimate/100, #input requested as percentage in shiny
+          age_distribution      = input$TOGGLE_severe_disease_age_distribution,
+          VE                    = input$INPUT_vaccine_derived_immunity,
+          comorb_increased_risk = input$TOGGLE_severe_disease_comorb_increased_risk,
+          this_incidence_log_tidy = to_plot,
+          this_pop = loaded_setting_characteristics$population_by_comorbidity
+        )
+      }
+    }
+    #____________________________________________________________
     
     vline_data2 <- to_plot %>%
       filter(phase == "essential workers") %>%
