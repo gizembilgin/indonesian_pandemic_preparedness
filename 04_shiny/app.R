@@ -186,7 +186,7 @@ server <- function(input, output, session) {
                                       file.info(paste0("x_results/", list_poss_Rdata[[j]]))$mtime)
     }
     latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-    load(file = paste0("x_results/",latest_file)) #loading ICER table
+    load(file = paste0("x_results/",latest_file))
   } else{
     stop("shiny: can't find underlying simulation to load!")
   }
