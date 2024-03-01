@@ -176,6 +176,8 @@ rm(workshop,cascade_contribution,additional_rows,this_before_strategy,before_str
 
 save(ship_log_completed,file = paste0("04_shiny/x_results/ship_log_completed",time_of_result,".Rdata"))
 save.image(file = paste0("04_shiny/x_results/workspace_image_",time_of_result,".Rdata"))
+
+
 ###
 #require(parallel); require(foreach)
 # CLUSTER <- parallel::makeCluster(TOGGLE_clusterNumber) # create cluster
