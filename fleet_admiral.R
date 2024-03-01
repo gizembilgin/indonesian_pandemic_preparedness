@@ -5,10 +5,10 @@
 ################################################################################
 #scenario configuration
 LIST_setting = c("Indonesia")
-LIST_vaccine_delivery_start_date = c(50,100)
+LIST_vaccine_delivery_start_date = c(50,100,200)
 
 #pathogen characteristics
-LIST_R0_to_fit = c(1,2,4,6,8)  #  c(1,2,4,6,8) 
+LIST_R0_to_fit = c(1,1.5,2,3,4,6)  #  c(1,2,4,6,8) 
 #LIST_severity_scenario
 #LIST_prior_immunity_scenario
 LIST_infection_derived_immunity = c(0.75,1)
@@ -175,7 +175,7 @@ if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have
 rm(workshop,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
 
 save(ship_log_completed,file = paste0("04_shiny/x_results/ship_log_completed",time_of_result,".Rdata"))
-
+save.image(file = paste0("04_shiny/x_results/workspace_image_",time_of_result,".Rdata"))
 ###
 #require(parallel); require(foreach)
 # CLUSTER <- parallel::makeCluster(TOGGLE_clusterNumber) # create cluster
