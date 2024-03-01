@@ -232,7 +232,8 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
  left_plot <- left_plot  +
     scale_colour_manual(values = defined_colour_palette) +
    theme_bw() +
-   theme(legend.position="bottom")
+   theme(legend.position="bottom") +
+   xlab("days since detection")
  if (display_var_1 == 1) left_plot <- left_plot + labs(title = var_1) 
  
  ### Apply plotting options (vlines)
@@ -350,7 +351,7 @@ multiscenario_facet_plot(data = ship_log_completed,
                                        "essential workers",
                                        "no vaccine" ),
                              supply = c(0.8), #include 0 for no vaccine scenario
-                             infection_derived_immunity = 1,
+                             infection_derived_immunity = 0.75,
                              rollout_modifier = 2,
                              vaccine_derived_immunity = 1
                            ),
