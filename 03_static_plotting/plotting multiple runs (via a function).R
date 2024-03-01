@@ -58,7 +58,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                          vaccine_derived_immunity = 1
                                        ),
                                      display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
-                                     display_var_1 = TRUE,
+                                     display_var_1 = 1,
                                      colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
                                      display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
                                      display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
@@ -233,7 +233,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
     scale_colour_manual(values = defined_colour_palette) +
    theme_bw() +
    theme(legend.position="bottom")
- if (display_var_1 == TRUE) left_plot <- left_plot + labs(title = var_1) 
+ if (display_var_1 == 1) left_plot <- left_plot + labs(title = var_1) 
  
  ### Apply plotting options (vlines)
   #dashed line for first day of vaccine availability 
@@ -332,7 +332,7 @@ multiscenario_facet_plot(data = to_plot,
                            vaccine_derived_immunity = 1
                          ),
                          colour_essential_workers_phase = 0,
-                         display_var_1 = FALSE,
+                         display_var_1 = 0,
                          display_vaccine_availability = 1, 
                          display_end_of_essential_worker_delivery = 0)
 
