@@ -58,16 +58,19 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                          vaccine_derived_immunity = 1
                                        ),
                                      display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
+                                     display_var_1 = TRUE,
                                      colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
                                      display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
                                      display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
                                      ){
   
-  # subset data to this_configuration
+  ### Subset data to this_configuration
   this_configuration <- default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
   to_plot <-  configuration_filter(data,this_configuration)
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("essential workers","no vaccine" )]
   
+  
+  ### Rename phase to include var_2 in plot if relevant
   if (is.na(var_2) == FALSE){
     if (length(include_strategies)>1){
       to_plot <- to_plot %>%
@@ -76,12 +79,21 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
           TRUE ~ paste(phase,"(",var_2,.data[[var_2]],")")
         ))
     } else{
-      to_plot <- to_plot %>%
-        mutate(phase = case_when(
-          phase %in% c("no vaccine","essential workers") ~ phase,
-          TRUE ~ paste(var_2,.data[[var_2]])
-        ))
       
+      if (var_2 != "vaccine_delivery_start_date"){ # general case
+        to_plot <- to_plot %>%
+          mutate(phase = case_when(
+            phase %in% c("no vaccine","essential workers") ~ phase,
+            TRUE ~ paste(var_2,.data[[var_2]])
+          ))
+      } else if (var_2 == "vaccine_delivery_start_date"){
+        to_plot <- to_plot %>%
+          mutate(phase = case_when(
+            phase %in% c("no vaccine","essential workers") ~ phase,
+            TRUE ~ paste("vaccine delivery starting at",.data[[var_2]],"days")
+          ))
+      }
+
       to_plot$phase <- factor(to_plot$phase, levels = c(unique(to_plot$phase[to_plot$phase != "no vaccine"]) ,
                                                             "no vaccine" ))
     }
@@ -93,16 +105,21 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
                                                       "no vaccine" ))
   }
   
+  
+  ### Send error if no simulations selected
   if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
     return(configuration_filter(data,this_configuration,warning_search = 1))
   }
   
+  
+  ### Collect information on the last date of essential worker rollout in case the explicit labelling of this phase is dropped later
   vline_data2 <- to_plot %>%
     filter(phase == "essential workers") %>%
     group_by(.data[[var_1]]) %>%
     summarise(end_of_essential_workers_phase = max(time), .groups = "keep") 
   
-  # make incidence vs time plot
+  
+  ### Making plot option 1/3: Incidence vs time
   if (yaxis_title == "incidence"){
     
     if (colour_essential_workers_phase == 1){
@@ -116,16 +133,19 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       geom_line(aes(x=time,y=incidence,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)+
-      labs(title = var_1)  
+      facet_grid(.data[[var_1]] ~.)
   } 
 
+  
+  ### Calculate cumulative_incidence
   # manipulate data to cumulative data set - NB: can move to run_disease_model to save time for Shiny
   to_plot <- to_plot %>%
     group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
     arrange(time) %>%
     mutate(cumulative_incidence = cumsum(incidence))
   
+  
+  ### Isolate essential worker period if colour_essential_workers_phase == 1 
   if (colour_essential_workers_phase == 1){
     #remove strategy before essential workers
     max_essential_workers_time = to_plot %>%
@@ -157,7 +177,8 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       filter(! phase %in% c("essential workers"))
   }
   
-  # make cumulative_incidence vs time plot
+  
+  ### Making plot option 2/3: Cumulative incidence vs time
   if (yaxis_title == "cumulative_incidence"){
     to_plot_left_plot <- to_plot
     left_plot <- ggplot(to_plot_left_plot) + 
@@ -165,12 +186,11 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       labs(color="", linetype = "")+
       ylab("cumulative incidence") + 
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)+
-      labs(title = var_1)
-    
+      facet_grid(.data[[var_1]] ~.)
   }
   
-  # manipulate data to cumulative incidence averted data set 
+  
+  ### Calculate cumulative incidence averted
   workshop = to_plot %>%
     filter(phase == "no vaccine" & supply == 0) %>%
     ungroup() %>%
@@ -182,13 +202,9 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
               vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
     mutate(vaccine_effect = baseline - cumulative_incidence)
   
-  # make cumulative_incidence_averted vs time plot
+  
+  ### Making plot option 3/3: Cumulative incidence averted vs time
   if (yaxis_title == "cumulative_incidence_averted"){
-    # to_plot$phase <- factor(to_plot$phase, levels = c("no vaccine" , 
-    #                                                   "essential workers" ,
-    #                                                   "older adults followed by all adults",
-    #                                                   "all adults at the same time",
-    #                                                   "children before adults"))
     to_plot_left_plot <- to_plot
     left_plot <- ggplot(to_plot_left_plot) + 
       geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
@@ -196,12 +212,12 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       ylab("cumulative cases averted by vaccine") +
       xlim(0,time_horizon) + 
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)+
-      labs(title = var_1)
+      facet_grid(.data[[var_1]] ~.)
   }
   
-  #uniform colour
-  #NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
+  
+  ### Apply plotting visuals
+  #uniform colours, NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
   defined_colour_palette <-  c("no vaccine" = "#F8766D", 
                               "older adults followed by all adults" =  "#A3A500",
                               "essential workers" = "#00BF7D" ,
@@ -217,7 +233,9 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
     scale_colour_manual(values = defined_colour_palette) +
    theme_bw() +
    theme(legend.position="bottom")
-  
+ if (display_var_1 == TRUE) left_plot <- left_plot + labs(title = var_1) 
+ 
+ ### Apply plotting options (vlines)
   #dashed line for first day of vaccine availability 
   if (display_vaccine_availability == 1){
     vline_data <- to_plot %>%
@@ -233,7 +251,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   }
 
   
-  # function output
+  ### Make heatmap & output plot!
   if (display_impact_heatmap == 1){
     
     to_plot <- to_plot %>%
@@ -243,22 +261,25 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
       mutate(vaccine_effect = vaccine_effect/baseline)
     
     if (is.na(var_2) == FALSE & length(include_strategies) == 1){
-      to_plot$phase <- as.numeric(gsub(var_2,"",to_plot$phase))
+      to_plot$phase <- parse_number(as.character(to_plot$phase))
+      to_plot <- to_plot %>%
+        arrange(phase) %>%
+        mutate(phase = as.factor(phase))
     }
     
     right_plot <-  ggplot(to_plot) + 
       geom_tile(aes(x=.data[[var_1]],y=phase,fill=vaccine_effect)) +
       geom_text(aes(x=.data[[var_1]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
       scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
-      ylab("strategy")+
-      theme(legend.position="bottom") +
+      ylab("strategy") +
       scale_x_reverse() +
       coord_flip() +
-      theme_bw()
+      theme_bw() +
+      theme(legend.position="bottom")
     
     if (is.na(var_2) == FALSE){
       right_plot <- right_plot + 
-        ylab(var_2)
+        ylab(gsub("_"," ",var_2))
     }
     
     ggarrange(left_plot,right_plot,nrow = 1)
@@ -292,8 +313,9 @@ multiscenario_facet_plot(ship_log_completed,"rollout_modifier", yaxis_title ="cu
 multiscenario_facet_plot(ship_log_completed,"vaccine_derived_immunity", yaxis_title ="cumulative_incidence")
 #NB: caution this only is plotting the phase of delivery you are in at this cumulative incidence level, NOT NECCESSARY the difference in the effect of vaccines to essential workers vs the general public
 
-
-multiscenario_facet_plot(data = ship_log_completed,
+to_plot <- ship_log_completed %>%
+  filter(R0 %in% c(2,3,4))
+multiscenario_facet_plot(data = to_plot,
                          var_1 = "R0",
                          var_2 = "vaccine_delivery_start_date",
                          yaxis_title = "incidence",
@@ -310,6 +332,7 @@ multiscenario_facet_plot(data = ship_log_completed,
                            vaccine_derived_immunity = 1
                          ),
                          colour_essential_workers_phase = 0,
+                         display_var_1 = FALSE,
                          display_vaccine_availability = 1, 
                          display_end_of_essential_worker_delivery = 0)
 
