@@ -1,5 +1,6 @@
 
 require(tidyverse); require(ggpubr)
+options(scipen = 1000)
 
 load(file = "01_inputs/population_MASTER_single_age_groups.Rdata")
 workshop_RAW <- read.csv("01_inputs/age_specific_severity_known_pathogens.csv", header = TRUE)
@@ -55,18 +56,90 @@ for (this_pathogen in unique(workshop$pathogen)){
     mutate(individuals = individuals/sum(individuals),
            value = value * individuals) %>%
     group_by(statistic,pathogen,name_english,name_indonesian,age_group) %>%
-    summarise(value = sum(value), .groups = "keep")
+    summarise(incidence_severe_disease = sum(value), .groups = "keep")
   
   workshop_model_age_groups = rbind(workshop_model_age_groups,this_workshop)
 }
 workshop = workshop_model_age_groups
 rm(this_workshop, workshop_model_age_groups, this_workshop_expanded)
 
-ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=value)) + 
+ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=incidence_severe_disease)) + 
   #ylim(0,1)+
-  geom_point() +
+  geom_col() +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
 
-age_specific_severity_MASTER <- workshop
+age_specific_severity_MASTER <- workshop %>% ungroup()
 save(age_specific_severity_MASTER, file = "01_inputs/age_specific_severity_MASTER.Rdata")
+################################################################################
+
+
+### CHECK applied ##############################################################
+#Option 1: specify pt est and age dn
+project_severe_disease(
+  point_estimate =  0.05/100,
+  age_distribution = data.frame(age_group = age_group_labels,
+                                relative_risk = c(0.1, 0.5, 1.4, 2.7, 10.4)), 
+  VE = 0,
+  comorb_increased_risk = 1,
+  this_incidence_log_tidy = incidence_log_tidy,
+  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  return_severity = TRUE
+) %>%
+  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  ggplot() +
+  geom_col(aes(x=age_group,y=incidence_severe_disease))
+
+#Option 2: specify pt est and select age dn
+project_severe_disease(
+  point_estimate =  0.05/100,
+  age_distribution = "Plague", 
+  VE = 0,
+  comorb_increased_risk = 1,
+  this_incidence_log_tidy = incidence_log_tidy,
+  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  return_severity = TRUE
+) %>%
+  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  ggplot() +
+  geom_col(aes(x=age_group,y=incidence_severe_disease))
+
+#Option 3: select severity profile of a known pathogen
+project_severe_disease(
+  point_estimate =  NA,
+  age_distribution = "Plague", 
+  VE = 0,
+  comorb_increased_risk = 1,
+  this_incidence_log_tidy = incidence_log_tidy,
+  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  return_severity = TRUE
+) %>%
+  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  ggplot() +
+  geom_col(aes(x=age_group,y=incidence_severe_disease))
+
+#CHECK: plot all pathogen shapes with fixed severity point estimate
+to_plot = data.frame()
+for (this_pathogen in unique(age_specific_severity_MASTER$pathogen)){
+  
+  this_workshop <- project_severe_disease(
+    point_estimate =  1/100,
+    age_distribution = this_pathogen,
+    VE = 0,
+    comorb_increased_risk = 1,
+    this_incidence_log_tidy = incidence_log_tidy,
+    this_pop = loaded_setting_characteristics$population_by_comorbidity,
+    return_severity = TRUE
+  ) %>%
+    filter(vaccination_status == 0 & comorbidity == 0) %>%
+    mutate(pathogen = this_pathogen)
+  
+  to_plot = rbind(to_plot,this_workshop) 
+  
+}
+rm(this_workshop)
+
+to_plot %>%
+  ggplot() +
+  geom_col(aes(x=age_group,y=incidence_severe_disease)) +
+  facet_wrap(~ pathogen, ncol = 3,scales = "free")
 ################################################################################
