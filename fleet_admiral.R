@@ -92,10 +92,13 @@ rm(FLEET_ADMIRAL_OVERRIDE)
 ################################################################################
 ### reconstruct complete incidence from cascade of simulation
 
-#first let's collapse to daily incidence
+#first let's collapse to daily incidence, i.e., removing comorbidity, vaccination_status,age_group
+# workshop <- ship_log %>%
+#   group_by(time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
+#   summarise(incidence = sum(incidence), .groups = "keep")  %>%
+#   mutate(flag_reconstructed = 0) #NB: include as flag so option to not include in incidence plot
+
 workshop <- ship_log %>%
-  group_by(time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
-  summarise(incidence = sum(incidence), .groups = "keep")  %>%
   mutate(flag_reconstructed = 0) #NB: include as flag so option to not include in incidence plot
 
 additional_rows = data.frame()
@@ -161,7 +164,8 @@ for (this_vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
 }
 
 #Combine and check
-ship_log_completed = rbind(workshop, additional_rows)
+ship_log_completed = rbind(workshop, additional_rows) %>%
+  select(-flag_reconstructed) #not currently used
 
 object.size(ship_log_completed)/object.size(workshop) #= 1.8
 nrow(ship_log_completed)/nrow(workshop) #= 1.8
@@ -170,12 +174,13 @@ check = ship_log_completed %>%
   filter(! phase %in% c("essential workers", "no vaccine")) %>% 
   group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
   summarise(n=n(), .groups = "keep") %>%
-  filter(n != TOGGLE_time_horizon)
+  filter(n != TOGGLE_time_horizon * length(age_group_labels) * 2 * 2)
 if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in ship_log_completed")}
 rm(workshop,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
 
 save(ship_log_completed,file = paste0("04_shiny/x_results/ship_log_completed",time_of_result,".Rdata"))
 save.image(file = paste0("04_shiny/x_results/workspace_image_",time_of_result,".Rdata"))
+rm(ship_log)
 
 
 ###
