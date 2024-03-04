@@ -78,6 +78,7 @@ load_setting <- function(this_setting = "Indonesia",
         )
     ) %>%
     select(-proportion)
+  population_by_comorbidity$age_group <- factor(population_by_comorbidity$age_group, levels = age_group_labels)
   if (abs(sum(population_by_comorbidity$individuals) - sum(population$individuals))>0) stop("population_by_comorbidity != population")
   
 
