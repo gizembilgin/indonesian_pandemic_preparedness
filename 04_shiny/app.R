@@ -341,7 +341,7 @@ server <- function(input, output, session) {
     workshop = to_plot %>%
       filter(phase == "no vaccine" & supply == 0) %>%
       ungroup() %>%
-      select(-phase,-supply,-flag_reconstructed,-incidence) %>%
+      select(-phase,-supply,-incidence) %>%
       rename(baseline = cumulative_incidence)
     to_plot <- to_plot %>%
       filter(phase != "no vaccine") %>%

@@ -194,7 +194,7 @@ multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_comp
   workshop = to_plot %>%
     filter(phase == "no vaccine" & supply == 0) %>%
     ungroup() %>%
-    select(-phase,-supply,-flag_reconstructed,-incidence) %>%
+    select(-phase,-supply,-incidence) %>%
     rename(baseline = cumulative_incidence)
   to_plot <- to_plot %>%
     filter(phase != "no vaccine") %>%
