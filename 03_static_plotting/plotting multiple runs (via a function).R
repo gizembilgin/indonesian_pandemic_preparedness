@@ -338,12 +338,15 @@ multiscenario_facet_plot(data = to_plot,
                          display_end_of_essential_worker_delivery = 0)
 
 #SM fig 1
-multiscenario_facet_plot(data = ship_log_completed,
+to_plot <- ship_log_completed %>%
+  filter(R0 %in% c(2,3,4) &
+           vaccine_delivery_start_date %in% c(50,100))
+multiscenario_facet_plot(data = to_plot,
                          var_1 = "vaccine_delivery_start_date",
-                         yaxis_title = "cumulative_incidence",
+                         yaxis_title = "incidence", #cumulative_incidence, incidence
                          default_configuration = 
                            list(
-                             R0 = 4,
+                             R0 = 2,
                              vaccine_delivery_start_date = 100,
                              phase = c("older adults followed by all adults",
                                        "children before adults",
@@ -351,17 +354,18 @@ multiscenario_facet_plot(data = ship_log_completed,
                                        "essential workers",
                                        "no vaccine" ),
                              supply = c(0.8), #include 0 for no vaccine scenario
-                             infection_derived_immunity = 0.75,
+                             infection_derived_immunity = 1,
                              rollout_modifier = 2,
                              vaccine_derived_immunity = 1
                            ),
                          colour_essential_workers_phase = 0,
                          display_vaccine_availability = 1, 
-                         display_end_of_essential_worker_delivery = 0,
+                         display_var_1 = 0,
+                         display_end_of_essential_worker_delivery = 1,
                          display_impact_heatmap = 0)
 
 #SM fig 2
-multiscenario_facet_plot(data = ship_log_completed,
+multiscenario_facet_plot(data = to_plot,
                          var_1 = "R0",
                          var_2 = "rollout_modifier",
                          yaxis_title = "incidence",
@@ -372,7 +376,7 @@ multiscenario_facet_plot(data = ship_log_completed,
                              "all adults at the same time",
                              "essential workers",
                              "no vaccine" ),
-                           supply = c(0.2), #Nb: can't be 80% because then no results for rollout = 1 and 0.5, but maybe there should be....
+                           supply = c(0.8), #Nb: can't be 80% because then no results for rollout = 1 and 0.5, but maybe there should be....
                            infection_derived_immunity = 1,
                            rollout_modifier = 2,
                            vaccine_derived_immunity = 1
@@ -380,3 +384,4 @@ multiscenario_facet_plot(data = ship_log_completed,
                          colour_essential_workers_phase = 0,
                          display_vaccine_availability = 1, 
                          display_end_of_essential_worker_delivery = 0)
+ 
