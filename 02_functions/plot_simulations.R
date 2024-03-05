@@ -2,6 +2,7 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
                                      var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
                                      var_2 = NA,
                                      yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
+                                     free_yaxis = FALSE,
                                      default_configuration = 
                                        list(
                                          R0 = 2,
@@ -26,22 +27,23 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
   
   ### Load simulation
   if (load_simulations == TRUE){
-    list_poss_Rdata = list.files(
-      path = "04_shiny/x_results/",
-      pattern = "ship_log_completed*"
-    )
-    if (length(list_poss_Rdata) > 0) {
-      list_poss_Rdata_details = double()
-      for (j in 1:length(list_poss_Rdata)) {
-        list_poss_Rdata_details = rbind(list_poss_Rdata_details,
-                                        file.info(paste0("04_shiny/x_results/", list_poss_Rdata[[j]]))$mtime)
-      }
-      latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-      load(file = paste0("04_shiny/x_results/",latest_file))
-    } else{
-      stop("shiny: can't find underlying simulation to load!")
-    }
+    # list_poss_Rdata = list.files(
+    #   path = "04_shiny/x_results/",
+    #   pattern = "ship_log_completed*"
+    # )
+    # if (length(list_poss_Rdata) > 0) {
+    #   list_poss_Rdata_details = double()
+    #   for (j in 1:length(list_poss_Rdata)) {
+    #     list_poss_Rdata_details = rbind(list_poss_Rdata_details,
+    #                                     file.info(paste0("04_shiny/x_results/", list_poss_Rdata[[j]]))$mtime)
+    #   }
+    #   latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
+    #   load(file = paste0("04_shiny/x_results/",latest_file))
+    # } else{
+    #   stop("shiny: can't find underlying simulation to load!")
+    # }
   }
+  #NB: need new function to subset
   
   ### Subset data to this_configuration
   this_configuration <- default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
@@ -118,8 +120,10 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
   
   ### Calculate cumulative_incidence
   # manipulate data to cumulative data set - NB: can move to run_disease_model to save time for Shiny
+  to_plot <- to_plot %>% ungroup()
+  if ("pathogen" %in% names(to_plot)) to_plot <- to_plot %>% group_by(pathogen)
   to_plot <- to_plot %>%
-    group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
+    group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity, .add = TRUE) %>%
     arrange(time) %>%
     mutate(cumulative_incidence = cumsum(incidence))
   
@@ -175,10 +179,13 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
     ungroup() %>%
     select(-phase,-supply,-incidence) %>%
     rename(baseline = cumulative_incidence)
+  
+  join_by_list <- c("time", "setting","vaccine_delivery_start_date", "R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity")
+  if("pathogen" %in% colnames(to_plot)) join_by_list = c("pathogen",join_by_list)
+  
   to_plot <- to_plot %>%
     filter(phase != "no vaccine") %>%
-    left_join(workshop, relationship = "many-to-many", by = join_by(time, setting, 
-                                                                    vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
+    left_join(workshop, relationship = "many-to-many", by = join_by_list) %>%
     mutate(vaccine_effect = baseline - cumulative_incidence)
   
   
@@ -229,6 +236,8 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
   if (display_end_of_essential_worker_delivery == 1){
     left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_essential_workers_phase), linetype = "dashed")
   }
+  #free y-axis
+  if (free_yaxis) left_plot <- left_plot + facet_grid(.data[[var_1]] ~. , scales = "free_y")
   
   
   ### Make heatmap & output plot!
@@ -247,15 +256,19 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
         mutate(phase = as.factor(phase))
     }
     
+    var_1_type <- data.frame(to_plot)
+    var_1_type <- typeof(var_1_type[,{{var_1}}])
+    if (var_1_type == "character") to_plot$pathogen <- factor(to_plot$pathogen, levels = rev(unique(to_plot$pathogen)))
+    
     right_plot <-  ggplot(to_plot) + 
       geom_tile(aes(x=.data[[var_1]],y=phase,fill=vaccine_effect)) +
       geom_text(aes(x=.data[[var_1]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
       scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
       ylab("strategy") +
-      scale_x_reverse() +
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom")
+    if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse()
     
     if (is.na(var_2) == FALSE){
       right_plot <- right_plot + 
