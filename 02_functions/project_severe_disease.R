@@ -27,11 +27,13 @@ project_severe_disease <- function(
   
   if (is.character(age_distribution)){
     load(file = "01_inputs/age_specific_severity_MASTER.Rdata")
-    if (! age_distribution %in% unique(age_specific_severity_MASTER$pathogen)) stop("project_severe_disease: you have specified the age distribution of a known pathogen, but not one included in age_specific_severity_MASTER")
+    if (length(unique(age_specific_severity_MASTER$pathogen)[unique(age_specific_severity_MASTER$pathogen) %in% age_distribution]) == 0){
+      stop("project_severe_disease: you have specified the age distribution of a known pathogen, but not one included in pathogen in age_specific_severity_MASTER")
+    } 
     age_distribution = age_specific_severity_MASTER %>%
-      filter(pathogen == age_distribution &
+      filter(pathogen %in% age_distribution &
                (name_english == this_setting | name_indonesian == this_setting)) %>%
-      select(age_group,incidence_severe_disease)
+      select(pathogen,age_group,incidence_severe_disease)
     
     #if point_estimate explicitly specified, than we are using the imported age_distribution as relative_risk not the given incidence
     if(is.na(point_estimate) == FALSE) age_distribution <- age_distribution %>% rename(relative_risk = incidence_severe_disease)
@@ -79,7 +81,7 @@ project_severe_disease <- function(
                 values_from = "individuals",
                 names_prefix = "comorb_")
   matrix_of_severe_disease <- matrix_of_severe_disease %>%
-    select(age_group, individuals, incidence_severe_disease) %>% #CHECKED: individuals = comorb_0 + comorb_1
+    select(-relative_risk,-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
     left_join(workshop, by = "age_group") %>%
     mutate(incidence_severe_disease_0 = incidence_severe_disease*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
            incidence_severe_disease_1 = incidence_severe_disease*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
@@ -89,7 +91,7 @@ project_severe_disease <- function(
       ))
   #wrangle to tidy structure
   matrix_of_severe_disease <- matrix_of_severe_disease %>%
-    select(age_group,incidence_severe_disease_0,incidence_severe_disease_1) %>%
+    select(-individuals,-incidence_severe_disease,-comorb_0,-comorb_1) %>%
     pivot_longer(cols = c("incidence_severe_disease_0", "incidence_severe_disease_1"),
                  names_to = "comorbidity",
                  values_to = "incidence_severe_disease",
@@ -100,7 +102,8 @@ project_severe_disease <- function(
   check <- matrix_of_severe_disease %>%
     left_join(this_pop,by = join_by(age_group, comorbidity)) %>%
     mutate(interim = incidence_severe_disease * individuals/sum(individuals))
-  check <- sum(check$interim)
+  if("pathogen" %in% names(check)) check_multiplier = length(unique(check$pathogen)) else check_multiplier = 1
+  check <- sum(check$interim) * check_multiplier
   if (round(check, digits = 6) != point_estimate & is.na(point_estimate) == FALSE ) stop("project_severe_disease: age or comorbidity distribution not applied correctly  - point estimate NOT retained")
 
   
@@ -121,7 +124,8 @@ project_severe_disease <- function(
   
   ### Step Two: apply matrix_of_severe_disease to this_incidence_log_tidy
   severe_disease_log_tidy <- this_incidence_log_tidy %>%
-    left_join(matrix_of_severe_disease, by = c("age_group","comorbidity","vaccination_status")) %>%
+    left_join(matrix_of_severe_disease, by = c("age_group","comorbidity","vaccination_status"),
+              relationship = "many-to-many") %>% # if multiple pathogens
     mutate(incidence_severe_disease = incidence * incidence_severe_disease) 
   #_____________________________________________________________________________
   
