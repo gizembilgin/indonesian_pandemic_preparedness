@@ -268,7 +268,8 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom") +
-      scale_y_discrete(labels = label_wrap(20)) 
+      scale_y_discrete(labels = label_wrap(20)) +
+      scale_x_discrete(labels = label_wrap(20)) 
     if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse()
     
     if (is.na(var_2) == FALSE){
