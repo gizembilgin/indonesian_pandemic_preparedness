@@ -106,7 +106,7 @@ project_severe_disease <- function(
   
   ## (3/3) by vaccination_status
   workshop = data.frame()
-  for (this_VE_severe_disease in VE_severe_disease){
+  for (this_VE_severe_disease in VE_severe_disease){ #allowing multiple values of VE_severe_disease
     this_matrix_of_severe_disease <- crossing(matrix_of_severe_disease,
                                          vaccination_status = c(0,1)) %>%
       mutate(
@@ -119,7 +119,8 @@ project_severe_disease <- function(
     workshop = rbind(workshop,this_matrix_of_severe_disease)
   }
   matrix_of_severe_disease <- workshop
-
+  
+  #put back in levels for age_group for plotting
   matrix_of_severe_disease$age_group <- factor(matrix_of_severe_disease$age_group, levels = levels(this_pop$age_group))
   
   if(return_severity) return(matrix_of_severe_disease) #for checking purposes
