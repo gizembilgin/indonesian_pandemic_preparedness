@@ -18,13 +18,14 @@ workshop = workshop_RAW %>%
   mutate(value = case_when(
     value > 1 ~ 1,
     TRUE ~ value
-  ))
+  )) %>%
+  rename(case_fatality_rate = value)
 ################################################################################
 
 
 
 ### PLOT imported data #########################################################
-ggplot(workshop,aes(x=age,y=value)) + 
+ggplot(workshop,aes(x=age,y=case_fatality_rate)) + 
   #ylim(0,1)+
   geom_point() +
   geom_smooth(method = "loess")+
@@ -43,7 +44,7 @@ for (this_pathogen in unique(workshop$pathogen)){
   this_workshop_expanded = data.frame()
   for (this_row_index in 1:nrow(this_workshop)){
     this_row = this_workshop[this_row_index,]
-    this_row = crossing(this_row[,c("statistic","pathogen","value")],
+    this_row = crossing(this_row[,c("statistic","pathogen","case_fatality_rate")],
                         age_group_single  = seq(this_row$age_start,this_row$age_end))
     this_workshop_expanded = rbind(this_workshop_expanded,this_row)
   }
@@ -54,16 +55,16 @@ for (this_pathogen in unique(workshop$pathogen)){
     mutate(age_group= cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_group_labels)) %>%
     group_by(statistic,pathogen,name_english,name_indonesian,age_group) %>%
     mutate(individuals = individuals/sum(individuals),
-           value = value * individuals) %>%
+           case_fatality_rate = case_fatality_rate * individuals) %>%
     group_by(statistic,pathogen,name_english,name_indonesian,age_group) %>%
-    summarise(incidence_severe_disease = sum(value), .groups = "keep")
+    summarise(case_fatality_rate = sum(case_fatality_rate), .groups = "keep")
   
   workshop_model_age_groups = rbind(workshop_model_age_groups,this_workshop)
 }
 workshop = workshop_model_age_groups
 rm(this_workshop, workshop_model_age_groups, this_workshop_expanded)
 
-ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=incidence_severe_disease)) + 
+ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=case_fatality_rate)) + 
   #ylim(0,1)+
   geom_col() +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
@@ -87,7 +88,7 @@ project_severe_disease(
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=incidence_severe_disease))
+  geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #Option 2: specify pt est and select age dn
 project_severe_disease(
@@ -101,7 +102,7 @@ project_severe_disease(
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=incidence_severe_disease))
+  geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #Option 3: select severity profile of a known pathogen
 project_severe_disease(
@@ -115,31 +116,20 @@ project_severe_disease(
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=incidence_severe_disease))
+  geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #CHECK: plot all pathogen shapes with fixed severity point estimate
-to_plot = data.frame()
-for (this_pathogen in unique(age_specific_severity_MASTER$pathogen)){
-  
-  this_workshop <- project_severe_disease(
-    point_estimate =  1/100,
-    age_distribution = this_pathogen,
-    VE = 0,
-    comorb_increased_risk = 1,
-    this_incidence_log_tidy = incidence_log_tidy,
-    this_pop = loaded_setting_characteristics$population_by_comorbidity,
-    return_severity = TRUE
-  ) %>%
-    filter(vaccination_status == 0 & comorbidity == 0) %>%
-    mutate(pathogen = this_pathogen)
-  
-  to_plot = rbind(to_plot,this_workshop) 
-  
-}
-rm(this_workshop)
-
-to_plot %>%
+project_severe_disease(
+  point_estimate =  1/100,
+  age_distribution = unique(age_specific_severity_MASTER$pathogen),
+  VE = 0,
+  comorb_increased_risk = 1,
+  this_incidence_log_tidy = incidence_log_tidy,
+  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  return_severity = TRUE
+) %>%
+  filter(vaccination_status == 0 & comorbidity == 0) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=incidence_severe_disease)) +
+  geom_col(aes(x=age_group,y=case_fatality_rate)) +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
 ################################################################################

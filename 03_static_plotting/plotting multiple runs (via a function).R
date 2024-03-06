@@ -110,7 +110,7 @@ to_plot_severe_outcomes <-
   filter(R0 %in% c(2,3,4)  &
            vaccine_delivery_start_date %in% c(50,100)) %>%
   group_by(pathogen,time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
-  summarise(incidence = sum(incidence_severe_disease), .groups = "keep") 
+  summarise(incidence = sum(deaths), .groups = "keep") 
 
 plot_simulations(data = to_plot_severe_outcomes,
                          var_1 = "pathogen",
