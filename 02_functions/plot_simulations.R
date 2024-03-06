@@ -1,3 +1,6 @@
+
+require(scales)
+
 plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rdata
                                      var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
                                      var_2 = NA,
