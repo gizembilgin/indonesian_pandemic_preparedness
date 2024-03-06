@@ -19,12 +19,6 @@ project_severe_disease <- function(
     return_severity = FALSE #option to output severity matrix instead of severe_disease_log_tidy
     ) {
   
-  if ("vaccine_derived_immunity" %in% colnames(this_incidence_log_tidy)){
-    #NB: simple assumption the VE transmission == VE severe outcomes, could allow variation here instead
-    this_incidence_log_tidy <- this_incidence_log_tidy %>% filter(vaccine_derived_immunity == VE)
-    if (nrow(this_incidence_log_tidy) == 0) stop("project_severe_disease: this VE scenario does not exist")
-  }
-  
   if (is.character(age_distribution)){
     load(file = "01_inputs/age_specific_severity_MASTER.Rdata")
     if (length(unique(age_specific_severity_MASTER$pathogen)[unique(age_specific_severity_MASTER$pathogen) %in% age_distribution]) == 0){
