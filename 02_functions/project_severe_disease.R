@@ -9,7 +9,7 @@ project_severe_disease <- function(
     point_estimate = TOGGLE_severe_disease_point_estimate,
     age_distribution = TOGGLE_severe_disease_age_distribution,
     
-    VE = TOGGLE_severe_disease_VE,
+    VE_severe_disease = TOGGLE_severe_disease_VE,
     comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk, #NB: assume flat RR across age groups
     
     this_incidence_log_tidy = incidence_log_tidy,
@@ -105,12 +105,21 @@ project_severe_disease <- function(
 
   
   ## (3/3) by vaccination_status
-  matrix_of_severe_disease <- crossing(matrix_of_severe_disease,
-                                       vaccination_status = c(0,1)) %>%
-    mutate(case_fatality_rate = case_when(
-      vaccination_status == 0 ~ case_fatality_rate,
-      vaccination_status == 1 ~ case_fatality_rate * (1-VE)
-    ))
+  workshop = data.frame()
+  for (this_VE_severe_disease in VE_severe_disease){
+    this_matrix_of_severe_disease <- crossing(matrix_of_severe_disease,
+                                         vaccination_status = c(0,1)) %>%
+      mutate(
+        case_fatality_rate = case_when(
+          vaccination_status == 0 ~ case_fatality_rate,
+          vaccination_status == 1 ~ case_fatality_rate * (1 - this_VE_severe_disease)
+        ), 
+        VE_severe_disease = this_VE_severe_disease
+      )
+    workshop = rbind(workshop,this_matrix_of_severe_disease)
+  }
+  matrix_of_severe_disease <- workshop
+
   matrix_of_severe_disease$age_group <- factor(matrix_of_severe_disease$age_group, levels = levels(this_pop$age_group))
   
   if(return_severity) return(matrix_of_severe_disease) #for checking purposes
