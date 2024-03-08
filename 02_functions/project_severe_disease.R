@@ -4,21 +4,33 @@
 ### These incidence of severe disease is modified by age, vaccination status, and comorbidity
 ### The setting's population structure is required to scale these incidence rates appropriately to retain the desired popuation-level severity rate
 
-project_severe_disease <- function(
-    
-    point_estimate = TOGGLE_severe_disease_point_estimate,
-    age_distribution = TOGGLE_severe_disease_age_distribution,
-    
-    VE_severe_disease = TOGGLE_severe_disease_VE,
-    comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk, #NB: assume flat RR across age groups
-    
-    this_incidence_log_tidy = incidence_log_tidy,
-    this_pop = loaded_setting_characteristics$population_by_comorbidity,
-    this_setting = TOGGLE_setting,
-    
-    return_severity = FALSE #option to output severity matrix instead of severe_disease_log_tidy
-    ) {
+project_severe_disease <- function(data,
+                                   TOGGLES_project_severe_disease = 
+                                     list(
+                                       point_estimate = TOGGLES_project_severe_disease$point_estimate,
+                                       age_distribution = TOGGLES_project_severe_disease$age_distribution,
+                                       
+                                       VE_severe_disease = TOGGLES_project_severe_disease$VE_severe_disease,
+                                       comorb_increased_risk = TOGGLES_project_severe_disease$comorb_increased_risk
+                                       #NB: assume flat RR across age groups
+                                       
+                                     ),
+                                   
+                                   this_pop = loaded_setting_characteristics$population_by_comorbidity,
+                                   this_setting = TOGGLE_setting,
+                                   
+                                   return_severity = FALSE #option to output severity matrix instead of severe_disease_log_tidy)
+) {
   
+  
+  ### unfurl TOGGLES_project_severe_disease
+  point_estimate = TOGGLES_project_severe_disease$point_estimate
+  age_distribution = TOGGLES_project_severe_disease$age_distribution
+  VE_severe_disease = TOGGLES_project_severe_disease$VE_severe_disease
+  comorb_increased_risk = TOGGLES_project_severe_disease$comorb_increased_risk
+  
+  
+  ### Load age-specific severity of specified pathogen
   if (is.character(age_distribution)){
     load(file = "01_inputs/age_specific_severity_MASTER.Rdata")
     if (length(unique(age_specific_severity_MASTER$pathogen)[unique(age_specific_severity_MASTER$pathogen) %in% age_distribution]) == 0){
@@ -33,6 +45,8 @@ project_severe_disease <- function(
     #if point_estimate explicitly specified, than we are using the imported age_distribution as relative_risk not the given incidence
     if(is.na(point_estimate) == FALSE) age_distribution <- age_distribution %>% rename(relative_risk = case_fatality_rate)
   }
+  
+  
   
   ### Step One: create matrix of incidence -> severe disease by age_group, vaccination_status, comorbidity
   ## (1/3) by age_group
@@ -129,8 +143,8 @@ project_severe_disease <- function(
   
   
   
-  ### Step Two: apply matrix_of_severe_disease to this_incidence_log_tidy
-  severe_disease_log_tidy <- this_incidence_log_tidy %>%
+  ### Step Two: apply matrix_of_severe_disease to data
+  severe_disease_log_tidy <- data %>%
     left_join(matrix_of_severe_disease, by = c("age_group","comorbidity","vaccination_status"),
               relationship = "many-to-many") %>% # if multiple pathogens
     mutate(deaths = incidence * case_fatality_rate) %>%
