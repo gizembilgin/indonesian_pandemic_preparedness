@@ -21,15 +21,20 @@ TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
 # pathogen characteristics
 TOGGLE_R0_to_fit = 2
-TOGGLE_severe_disease_comorb_increased_risk = 2 #NOT CURRENTLY USED
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
 
-TOGGLE_severe_disease_point_estimate = 0.05/100
-TOGGLE_severe_disease_age_distribution = data.frame(
-  age_group = age_group_labels,
-  relative_risk = c(0.1,0.5,1.4,2.7,10.4)
-  )
+TOGGLES_project_severe_disease = list(
+  point_estimate = 0.05/100,
+  # age_distribution = data.frame(
+  #   age_group = age_group_labels,
+  #   relative_risk = c(0.1,0.5,1.4,2.7,10.4)
+  # )
+  age_distribution = "Plague",
+  VE_severe_disease = 1,
+  comorb_increased_risk = 2
+  
+)
 
 TOGGLE_reduced_infectiousness_asymptomatic = 1
 TOGGLE_prevalence_symptoms = rep(1,rep(length(age_group_labels)))
@@ -39,7 +44,7 @@ TOGGLE_average_immune_period = 365*10
 TOGGLE_infection_derived_immunity = 1
 
 #vaccination strategy
-TOGGLE_vaccine_derived_immunity = TOGGLE_severe_disease_VE = 0.8
+TOGGLE_vaccine_derived_immunity = 0.8
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
                                    rollout_modifier = 1,
