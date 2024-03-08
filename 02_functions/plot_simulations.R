@@ -1,57 +1,57 @@
 
 require(scales)
 
-plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rdata
-                                     var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
-                                     var_2 = NA,
-                                     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-                                     free_yaxis = FALSE,
-                                     default_configuration = 
-                                       list(
-                                         R0 = 2,
-                                         vaccine_delivery_start_date = 100,
-                                         phase = c("older adults followed by all adults",
-                                                   "children before adults",
-                                                   "all adults at the same time",
-                                                   "essential workers",
-                                                   "no vaccine" ),
-                                         supply = c(0.2), #include 0 for no vaccine scenario
-                                         infection_derived_immunity = 1,
-                                         rollout_modifier = 2,
-                                         vaccine_derived_immunity = 1
-                                       ),
-                                     load_simulations = TRUE, #load simulations for each run
-                                     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
-                                     display_var_1 = 1,
-                                     colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
-                                     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
-                                     display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
+plot_simulations <- function(
+    var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
+    var_2 = NA,
+    yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
+    this_output = "cases",
+    TOGGLES_project_severe_disease = list(),
+    free_yaxis = FALSE,
+    var_1_range = NA,
+    var_2_range = NA,
+    default_configuration =
+      list(
+        R0 = 2,
+        vaccine_delivery_start_date = 100,
+        phase = c(
+          "older adults followed by all adults",
+          "children before adults",
+          "all adults at the same time",
+          "essential workers",
+          "no vaccine"
+        ),
+        supply = c(0.2),
+        infection_derived_immunity = 1,
+        rollout_modifier = 2,
+        vaccine_derived_immunity = 1
+      ),
+    load_simulations = TRUE, #load simulations for each run
+    display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
+    display_var_1 = 1,
+    colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
+    display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
+    display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
 ){
   
-  ### Load simulation
-  if (load_simulations == TRUE){
-    # list_poss_Rdata = list.files(
-    #   path = "04_shiny/x_results/",
-    #   pattern = "ship_log_completed*"
-    # )
-    # if (length(list_poss_Rdata) > 0) {
-    #   list_poss_Rdata_details = double()
-    #   for (j in 1:length(list_poss_Rdata)) {
-    #     list_poss_Rdata_details = rbind(list_poss_Rdata_details,
-    #                                     file.info(paste0("04_shiny/x_results/", list_poss_Rdata[[j]]))$mtime)
-    #   }
-    #   latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-    #   load(file = paste0("04_shiny/x_results/",latest_file))
-    # } else{
-    #   stop("shiny: can't find underlying simulation to load!")
-    # }
-  }
-  #NB: need new function to subset
+  ### FORCE
+  if (is.na(var_2)) var_2_range = NA
+  if (this_output == "cases") TOGGLES_project_severe_disease = list()
+  if (this_output != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
   
-  ### Subset data to this_configuration
-  this_configuration <- default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
-  to_plot <-  filter_scenarios(data,this_configuration)
+  
+  ### Load simulation
+  this_configuration = default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
+  if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
+  if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("essential workers","no vaccine" )]
+  
+  to_plot <- to_plot_loaded <- access_simulations(
+    load_simulations,
+    this_configuration,
+    TOGGLES_project_severe_disease,
+    output = this_output
+    )
   
   
   ### Rename phase to include var_2 in plot if relevant
@@ -92,8 +92,9 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
   
   ### Send error if no simulations selected
   if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
-    return(filter_scenarios(data,this_configuration,warning_search = 1))
+    return(filter_scenarios(to_plot_loaded,this_configuration,warning_search = 1))
   }
+  rm(to_plot_loaded)
   
   
   ### Collect information on the last date of essential worker rollout in case the explicit labelling of this phase is dropped later
@@ -142,7 +143,7 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
     cumulative_no_vax = to_plot %>%
       filter(time == vaccine_delivery_start_date - 1 & 
                phase == "no vaccine") %>%
-      summarise(cum_no_vax = cumulative_incidence, .groups = "keep") %>%
+      reframe(cum_no_vax = cumulative_incidence) %>%
       ungroup() %>%
       select(-phase,-supply)
     
@@ -215,6 +216,7 @@ plot_simulations <- function(data, # expects fleet_admiral:ship_log_completed.Rd
   if(is.na(var_2) == FALSE){
     defined_colour_palette <- defined_colour_palette[1:length(unique(to_plot_left_plot$phase))]
     names(defined_colour_palette) <- unique(to_plot_left_plot$phase)
+    if ("no vaccine" %in%  names(defined_colour_palette))  names(defined_colour_palette) <- c("no vaccine", names(defined_colour_palette)[ names(defined_colour_palette) != "no vaccine"])
     
   }
   
