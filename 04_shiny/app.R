@@ -1,6 +1,27 @@
 
+#### SETUP #####################################################################
+#rm(list = ls())
 require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter)
 options(scipen = 1000) #turn off scientific notation
+for (function_script in list.files(path="02_functions/", full.name = TRUE)){source(function_script)}
+
+path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
+list_poss_Rdata = list.files(
+  path = path_stem,
+  pattern = "ship_log*"
+)
+if (length(list_poss_Rdata) > 0) {
+  list_poss_Rdata_details = double()
+  for (j in 1:length(list_poss_Rdata)) {
+    list_poss_Rdata_details = rbind(list_poss_Rdata_details,
+                                    file.info(paste0(path_stem, list_poss_Rdata[[j]]))$mtime)
+  }
+  latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
+  load(file = paste0(path_stem,latest_file))
+} else{
+  stop(paste0("(R Shiny) app: can't find underlying simulation to load! Searching:", path_stem))
+}
+################################################################################
 
 
 
@@ -17,8 +38,8 @@ CHOICES = list(
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
-  R0 = c(1,2,4,6,8) ,
-  vaccine_delivery_start_date = c(50,100),
+  R0 = unique(ship_log$R0) ,
+  vaccine_delivery_start_date = unique(ship_log$vaccine_delivery_start_date) ,
   supply = 
     c("20%" = 0.2,
       "50%" = 0.5,
@@ -48,17 +69,21 @@ ui <- fluidPage(
     
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
-                  radioGroupButtons(inputId = "INPUT_outcome",
-                                    label = "",
-                                    choices = c("cases","severe disease"),
+                  radioGroupButtons(inputId = "this_output",
+                                    label = "Outcome:",
+                                    choices = c("cases","deaths","presentations"),
                                     justified = TRUE),
                   uiOutput("severe_disease_pt_est_input"),
                   uiOutput("severe_disease_age_dn_input"),
                   uiOutput("severe_disease_comorb_increased_risk"),
-                  selectInput(inputId = "INPUT_variable",
+                  selectInput(inputId = "var_1",
                                     label = "Variable to vary:",
                                     choices = CHOICES$variable,
                                     selected = "R0"),
+                  selectInput(inputId = "var_2",
+                              label = "Second variable to vary (optional):",
+                              choices = CHOICES$variable,
+                              selected = FALSE),
                   selectInput(inputId = "INPUT_yaxis_title",
                               label = "Incidence statistic:",
                               choices = CHOICES$incidence_statistic,
@@ -147,283 +172,41 @@ server <- function(input, output, session) {
   
   # output$test <- renderText({
   #   #"test"
-  #   #multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
   #   print(c(0,as.numeric(input$INPUT_supply)))
   #   })
   # 
   # output$test2 <- renderTable({
   #   #"test"
-  #   multiscenario_facet_plot(ship_log_completed,"R0","incidence",display_vaccine_availability = 1, display_end_of_essential_worker_delivery = 1)
   # })
   
   ### Conditional UI components
   output$severe_disease_pt_est_input <- renderUI({
-    if(input$INPUT_outcome == "severe disease"){
+    if(input$this_output != "cases"){
       numericInput(inputId = "TOGGLE_severe_disease_point_estimate", label = "Population-level estimate (%):", value = 1)
     } 
   })
   output$severe_disease_age_dn_input <- renderUI({
-    if(input$INPUT_outcome == "severe disease"){
+    if(input$this_output != "cases"){
       textInput(inputId = "TOGGLE_severe_disease_age_distribution",label = "Age distribution:")
     } 
   })
   output$severe_disease_comorb_increased_risk <- renderUI({
-    if(input$INPUT_outcome == "severe disease"){
+    if(input$this_output != "cases"){
       numericInput(inputId = "TOGGLE_severe_disease_comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
     } 
   })
 
   
-  ### Load simulation
-  list_poss_Rdata = list.files(
-    path = "x_results/",
-    pattern = "ship_log_completed*"
-  )
-  if (length(list_poss_Rdata) > 0) {
-    list_poss_Rdata_details = double()
-    for (j in 1:length(list_poss_Rdata)) {
-      list_poss_Rdata_details = rbind(list_poss_Rdata_details,
-                                      file.info(paste0("x_results/", list_poss_Rdata[[j]]))$mtime)
-    }
-    latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-    load(file = paste0("x_results/",latest_file))
-  } else{
-    stop("shiny: can't find underlying simulation to load!")
-  }
-  #____________________________________________________________
-  
-  
-  ### Apply configuration to subset data to desired scenario
-  configuration_filter <- function(data,configuration,warning_search = 0){
-    for (i in 1:length(configuration)){
-      if (names(configuration)[i] == "supply"){
-        data = data %>% 
-          filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]] | 
-                   phase %in% c("no vaccine", "essential workers"))
-      } else{
-        data = data %>% 
-          filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]]) 
-      }
-      if (warning_search == 1 & nrow(data[data$supply != 0,]) == 0){
-        return(names(configuration)[[i]])
-      }
-    }
-    return(data)
-  }
-  #____________________________________________________________
-  
-  
-  ### Function to plot influence of one variable at a time 
-  multiscenario_facet_plot <- function(data, # expects fleet_admiral:ship_log_completed.Rdata
-                                       this_var, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
-                                       yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-                                       display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
-                                       colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
-                                       display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
-                                       display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
-  ){
-    
-    # set default values of model configuration parameters
-    default_configuration <- list(
-        R0 = as.numeric(input$INPUT_R0),
-        vaccine_delivery_start_date = as.numeric(input$INPUT_vaccine_delivery_start_date),
-        supply = as.numeric(input$INPUT_supply),
-        infection_derived_immunity = as.numeric(input$INPUT_infection_derived_immunity),
-        rollout_modifier = as.numeric(input$INPUT_rollout_modifier),
-        vaccine_derived_immunity = as.numeric(input$INPUT_vaccine_derived_immunity)
-      )
-
-    # subset data to this_configuration
-    this_configuration <- default_configuration[! names(default_configuration) %in% {{this_var}}]
-    to_plot <-  configuration_filter(data,this_configuration)
-    to_plot$phase <- factor(to_plot$phase, levels = c("older adults followed by all adults",
-                                                      "children before adults",
-                                                      "all adults at the same time",
-                                                      "essential workers" ,
-                                                      "no vaccine" ))
-    
-    if (nrow(to_plot[! to_plot$phase %in% c("no vaccine","essential workers"),]) == 0){
-      return(configuration_filter(data,this_configuration,warning_search = 1))
-    }
-    
-    # ### Calculate severe outcomes if requested 
-    ### COLLAPSED BECAUSE WE PREVIOUSLY REMOVED THE AGE STRUCTURE IN TO PLOT
-    if(input$INPUT_outcome == "severe disease"){
-      if (length(input$TOGGLE_severe_disease_age_distribution) == length(unique(to_plot$age_group))){
-        to_plot <- project_severe_disease(
-          point_estimate        = input$TOGGLE_severe_disease_point_estimate/100, #input requested as percentage in shiny
-          age_distribution      =  as.numeric(unlist(strsplit(input$TOGGLE_severe_disease_age_distribution,","))),
-          VE                    = input$INPUT_vaccine_derived_immunity,
-          comorb_increased_risk = input$TOGGLE_severe_disease_comorb_increased_risk,
-          this_incidence_log_tidy = to_plot,
-          this_pop = loaded_setting_characteristics$population_by_comorbidity
-        )
-      }
-    }
-    #____________________________________________________________
-    
-    vline_data2 <- to_plot %>%
-      filter(phase == "essential workers") %>%
-      group_by(.data[[this_var]]) %>%
-      summarise(end_of_essential_workers_phase = max(time)) 
-    
-    # make incidence vs time plot
-    if (yaxis_title == "incidence"){
-      
-      if (colour_essential_workers_phase == 1){
-        left_plot <- to_plot 
-      } else if (colour_essential_workers_phase == 0){
-        left_plot <- to_plot %>%
-          filter(! phase %in% c("essential workers"))
-      }
-      
-      left_plot <- ggplot(left_plot) +
-        geom_line(aes(x=time,y=incidence,color=as.factor(phase)),linewidth = 1.25)  +
-        labs(color="", linetype = "") +
-        guides(color = guide_legend(nrow = 2)) +
-        theme(legend.position="bottom") +
-        facet_grid(.data[[this_var]] ~.)+
-        labs(title = this_var)  
-    } 
-    
-    # manipulate data to cumulative data set - NB: can move to run_disease_model to save time for Shiny
-    to_plot <- to_plot %>%
-      group_by(phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
-      arrange(time) %>%
-      mutate(cumulative_incidence = cumsum(incidence))
-    
-    if (colour_essential_workers_phase == 1){
-      #remove strategy before essential workers
-      max_essential_workers_time = to_plot %>%
-        filter(phase == "essential workers") %>%
-        summarise(max_time = max(time), .groups = "keep")%>%
-        ungroup() %>%
-        select(-phase,-supply)
-      cumulative_no_vax = to_plot %>%
-        filter(time == vaccine_delivery_start_date - 1 & 
-                 phase == "no vaccine") %>%
-        summarise(cum_no_vax = cumulative_incidence, .groups = "keep") %>%
-        ungroup() %>%
-        select(-phase,-supply)
-      
-      to_plot <- to_plot %>% 
-        left_join(max_essential_workers_time, by = join_by(setting, vaccine_delivery_start_date,
-                                                           R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-        left_join(cumulative_no_vax, by = join_by(setting, vaccine_delivery_start_date,
-                                                  R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-        filter(!(time <= max_time & ! phase %in% c("no vaccine","essential workers"))) %>%
-        mutate(cumulative_incidence = case_when(
-          phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
-          TRUE ~ cumulative_incidence
-        )) %>%
-        select(-max_time, - cum_no_vax)
-      
-    } else if (colour_essential_workers_phase == 0){
-      to_plot <- to_plot %>%
-        filter(! phase %in% c("essential workers"))
-    }
-    
-    
-    # make cumulative_incidence vs time plot
-    if (yaxis_title == "cumulative_incidence"){
-      left_plot <- ggplot(to_plot) + 
-        geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
-        labs(color="", linetype = "")+
-        ylab("cumulative incidence") + 
-        guides(color = guide_legend(nrow = 2)) +
-        theme(legend.position="bottom") +
-        facet_grid(.data[[this_var]] ~.)+
-        labs(title = this_var)
-      
-    }
-    
-    # manipulate data to cumulative incidence averted data set 
-    workshop = to_plot %>%
-      filter(phase == "no vaccine" & supply == 0) %>%
-      ungroup() %>%
-      select(-phase,-supply,-incidence) %>%
-      rename(baseline = cumulative_incidence)
-    to_plot <- to_plot %>%
-      filter(phase != "no vaccine") %>%
-      left_join(workshop, relationship = "many-to-many", by = join_by(time, setting, 
-                                                                      vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-      mutate(vaccine_effect = baseline - cumulative_incidence)
-    
-    # make cumulative_incidence_averted vs time plot
-    if (yaxis_title == "cumulative_incidence_averted"){
-      to_plot$phase <- factor(to_plot$phase, levels = c("no vaccine" , 
-                                                        "essential workers" ,
-                                                        "older adults followed by all adults",
-                                                        "all adults at the same time",
-                                                        "children before adults"))
-      left_plot <- ggplot(to_plot) + 
-        geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
-        labs(color="", linetype = "") +
-        ylab("cumulative cases averted by vaccine") +
-        xlim(0,time_horizon) + 
-        guides(color = guide_legend(nrow = 2))+
-        theme(legend.position="bottom") +
-        facet_grid(.data[[this_var]] ~.)+
-        labs(title = this_var)
-    }
-    
-    
-    #uniform colour
-    #NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
-    left_plot <- left_plot  +
-      scale_colour_manual(values = 
-                            c("no vaccine" = "#F8766D", 
-                              "older adults followed by all adults" =  "#A3A500",
-                              "essential workers" = "#00BF7D" ,
-                              "all adults at the same time" = "#00B0F6",
-                              "children before adults"  = "#E76BF3"))
-    #dashed line for first day of vaccine availability 
-    if (display_vaccine_availability == 1){
-      vline_data <- to_plot %>%
-        group_by({{this_var}}) %>%
-        reframe(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
-      left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = vaccine_delivery_start_date), linetype = "dashed")
-    }
-    #dashed line for last day of essential worker delivery
-    if (display_end_of_essential_worker_delivery == 1){
-      left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_essential_workers_phase), linetype = "dashed")
-    }
-    
-    
-    # function output
-    if (display_impact_heatmap == 1){
-      
-      to_plot <- to_plot %>%
-        filter(phase != "no vaccine" &
-                 time == time_horizon) %>%
-        select(-time,-incidence,-cumulative_incidence) %>%
-        mutate(vaccine_effect = vaccine_effect/baseline)
-      
-      right_plot <-  ggplot(to_plot) + 
-        geom_tile(aes(x=.data[[this_var]],y=phase,fill=vaccine_effect)) +
-        geom_text(aes(x=.data[[this_var]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
-        scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
-        ylab("strategy")+
-        theme(legend.position="bottom")
-      
-      ggarrange(left_plot,right_plot,nrow = 1)
-      
-    } else{
-      left_plot  
-    }
-
-  }
-  
-  #text to display when hospitalisation for molnupiravir
   output$WARNING_no_plot <- renderText({
-    check_plot_exists <- multiscenario_facet_plot(
-      data = ship_log_completed,
-      this_var = input$INPUT_variable,
+    check_plot_exists <-    plot_simulations(
+      var_1 = input$var_1,
+      var_2 = input$var_2,
       yaxis_title = input$INPUT_yaxis_title,
       display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
+      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
       display_vaccine_availability = input$INPUT_display_vaccine_availability,
-      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
+      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+      load_simulations = FALSE
     )
     if(is.character(check_plot_exists)) {
       validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
@@ -432,15 +215,17 @@ server <- function(input, output, session) {
   
   #output plot
   output$OUTPUT_plot <- renderPlot({
-    multiscenario_facet_plot(
-      data = ship_log_completed,
-      this_var = input$INPUT_variable, 
+    plot_simulations(
+      var_1 = input$var_1,
+      var_2 = input$var_2,
       yaxis_title = input$INPUT_yaxis_title,
       display_impact_heatmap = input$INPUT_display_impact_heatmap,
       colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
       display_vaccine_availability = input$INPUT_display_vaccine_availability,
-      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery
-      )
+      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+      load_simulations = FALSE
+    )
+    
     },
     res = 96)
   
