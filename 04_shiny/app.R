@@ -21,6 +21,7 @@ if (length(list_poss_Rdata) > 0) {
 } else{
   stop(paste0("(R Shiny) app: can't find underlying simulation to load! Searching:", path_stem))
 }
+load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
 ################################################################################
 
 
@@ -69,25 +70,27 @@ ui <- fluidPage(
     
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
-                  radioGroupButtons(inputId = "this_output",
-                                    label = "Outcome:",
-                                    choices = c("cases","deaths","presentations"),
-                                    justified = TRUE),
-                  uiOutput("severe_disease_pt_est_input"),
-                  uiOutput("severe_disease_age_dn_input"),
-                  uiOutput("severe_disease_comorb_increased_risk"),
+                  
                   selectInput(inputId = "var_1",
                                     label = "Variable to vary:",
                                     choices = CHOICES$variable,
                                     selected = "R0"),
-                  selectInput(inputId = "var_2",
-                              label = "Second variable to vary (optional):",
-                              choices = CHOICES$variable,
-                              selected = FALSE),
-                  selectInput(inputId = "INPUT_yaxis_title",
+                  uiOutput("var_2_input"),
+                  selectInput(inputId = "yaxis_title",
                               label = "Incidence statistic:",
                               choices = CHOICES$incidence_statistic,
                               selected = "incidence"),
+                  selectInput(inputId = "this_output",
+                              label = "Outcome:",
+                              choices = c("cases","deaths","presentations")),
+                  
+                  #TOGGLES_project_severe_disease
+                  uiOutput("TOGGLES_project_severe_disease_point_estimate"),
+                  uiOutput("TOGGLES_project_severe_disease_age_distribution"),
+                  uiOutput("TOGGLES_project_severe_disease_VE"),
+                  uiOutput("TOGGLES_project_comorb_increased_risk"),
+                  
+                  
                   
                   radioGroupButtons(inputId = "INPUT_R0",
                                     label = "Basic reproduction number:",
@@ -170,64 +173,97 @@ ui <- fluidPage(
 #### SERVER DEFINITION ########################################################
 server <- function(input, output, session) {
   
-  # output$test <- renderText({
-  #   #"test"
-  #   print(c(0,as.numeric(input$INPUT_supply)))
-  #   })
-  # 
-  # output$test2 <- renderTable({
-  #   #"test"
-  # })
+ # output$test <- renderText({
+ #     input$var_2
+ #     })
+  
   
   ### Conditional UI components
-  output$severe_disease_pt_est_input <- renderUI({
-    if(input$this_output != "cases"){
-      numericInput(inputId = "TOGGLE_severe_disease_point_estimate", label = "Population-level estimate (%):", value = 1)
-    } 
+  output$var_2_input <- renderUI({
+    selectInput(inputId = "var_2",
+              label = "Second variable to vary (optional):",
+              choices = c(CHOICES$variable[CHOICES$variable != input$var_1],"none"),
+              selected = "none")
   })
-  output$severe_disease_age_dn_input <- renderUI({
-    if(input$this_output != "cases"){
-      textInput(inputId = "TOGGLE_severe_disease_age_distribution",label = "Age distribution:")
-    } 
+  output$TOGGLES_project_severe_disease_point_estimate <- renderUI({
+    if(input$this_output != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
   })
-  output$severe_disease_comorb_increased_risk <- renderUI({
-    if(input$this_output != "cases"){
-      numericInput(inputId = "TOGGLE_severe_disease_comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
-    } 
+  output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
+    if(input$this_output != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
+                                                 choices = unique(age_specific_severity_MASTER$pathogen), selected = unique(age_specific_severity_MASTER$pathogen, multiple = TRUE))
   })
+  output$TOGGLES_project_severe_disease_VE <- renderUI({
+    if(input$this_output != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
+  })
+  # output$TOGGLES_project_comorb_increased_risk <- renderUI({
+  #   if(input$this_output != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
+  # })
 
   
-  output$WARNING_no_plot <- renderText({
-    check_plot_exists <-    plot_simulations(
-      var_1 = input$var_1,
-      var_2 = input$var_2,
-      yaxis_title = input$INPUT_yaxis_title,
-      display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
-      display_vaccine_availability = input$INPUT_display_vaccine_availability,
-      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
-      load_simulations = FALSE
-    )
-    if(is.character(check_plot_exists)) {
-      validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
+  # output$WARNING_no_plot <- renderText({
+  #   check_plot_exists <-    plot_simulations(
+  #     var_1 = input$var_1,
+  #     var_2 = var_2_reactive,
+  #     yaxis_title = input$yaxis_title,
+  #     display_impact_heatmap = input$INPUT_display_impact_heatmap,
+  #     colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
+  #     display_vaccine_availability = input$INPUT_display_vaccine_availability,
+  #     display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+  #     load_simulations = FALSE
+  #   )
+  #   if(is.character(check_plot_exists)) {
+  #     validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
+  #   }
+  # })
+  # 
+  #output plot
+  
+  input_project_severe_disease <- reactive({
+    if (input$this_output != "cases") {
+      list(
+        point_estimate =  input$severe_disease_point_estimate,
+        age_distribution = input$severe_disease_age_distribution,
+        VE_severe_disease = input$severe_disease_VE,
+        comorb_increased_risk = 1
+      )
+    } else{
+      list()
     }
   })
   
-  #output plot
   output$OUTPUT_plot <- renderPlot({
+    
     plot_simulations(
       var_1 = input$var_1,
       var_2 = input$var_2,
-      yaxis_title = input$INPUT_yaxis_title,
+      yaxis_title = input$yaxis_title,
+      this_output = input$this_output,
+      TOGGLES_project_severe_disease = input_project_severe_disease,
+      default_configuration =
+        list(
+          R0 = 2,
+          vaccine_delivery_start_date = 100,
+          phase = c(
+            # "older adults followed by all adults",
+            # "children before adults",
+            "all adults at the same time",
+            "essential workers",
+            "no vaccine"
+          ),
+          supply = c(0.2),
+          infection_derived_immunity = 1,
+          rollout_modifier = 2,
+          vaccine_derived_immunity = 1
+        ),
       display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
+      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
       display_vaccine_availability = input$INPUT_display_vaccine_availability,
       display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
       load_simulations = FALSE
     )
-    
-    },
-    res = 96)
+
+  },
+  res = 96)
   
 }
 
