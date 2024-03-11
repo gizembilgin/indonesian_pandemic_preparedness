@@ -5,7 +5,7 @@ plot_simulations <- function(
     var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
     var_2 = NA,
     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-    this_output = "cases",
+    this_output = "cases", #options: "cases","deaths"
     TOGGLES_project_severe_disease = list(),
     free_yaxis = FALSE,
     var_1_range = NA,
@@ -273,9 +273,9 @@ plot_simulations <- function(
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom") +
-      scale_y_discrete(labels = label_wrap(20)) +
-      scale_x_discrete(labels = label_wrap(20)) 
-    if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse()
+      scale_y_discrete(labels = label_wrap(20))
+       
+    if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse(labels = label_wrap(20)) else right_plot <- right_plot + scale_x_discrete(labels = label_wrap(20))
     
     if (is.na(var_2) == FALSE){
       right_plot <- right_plot + 
