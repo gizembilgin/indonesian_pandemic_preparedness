@@ -108,7 +108,7 @@ access_simulations <- function(
     filter(! phase %in% c("essential workers", "no vaccine")) %>% 
     group_by(phase,supply,comorbidity,vaccination_status,age_group,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
     summarise(n=n(), .groups = "keep") %>%
-    filter(n != TOGGLE_time_horizon)
+    filter(n != max(this_ship_log_completed$time))
   if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in this_ship_log_completed")}
   rm(this_ship_log,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
   

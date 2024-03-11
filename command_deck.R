@@ -6,6 +6,7 @@
 # load libraries
 require(tidyverse);require(deSolve); require(ggpubr)
 options(scipen = 1000)
+#rm(list = ls())
 
 # load all functions
 for (function_script in list.files(path="02_functions/", full.name = TRUE)){source(function_script)}

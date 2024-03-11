@@ -1,5 +1,14 @@
 #Functional plotting for multiple runs of the command_deck (e.g., fleet_admiral)
 
+### SETUP
+require(tidyverse);require(deSolve); require(ggpubr)
+options(scipen = 1000)
+#rm(list = ls())
+TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
+for (function_script in list.files(path="02_functions/", full.name = TRUE)){source(function_script)}
+loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
+
+
 ### Plot influence of one variable at a time 
 plot_simulations (
     var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
@@ -8,7 +17,7 @@ plot_simulations (
     this_output = "cases",    #options: cases, deaths
     TOGGLES_project_severe_disease = list(),
     free_yaxis = FALSE,
-    var_1_range = c(50,100,200),
+    var_1_range = c(2,3,4),
     var_2_range = NA,
     default_configuration =
       list(

@@ -200,7 +200,7 @@ plot_simulations <- function(
       geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
       ylab("cumulative cases averted by vaccine") +
-      xlim(0,time_horizon) + 
+      xlim(0,max(to_plot$time)) + 
       guides(color = guide_legend(nrow = 2)) +
       facet_grid(.data[[var_1]] ~.)
   }
@@ -250,7 +250,7 @@ plot_simulations <- function(
     
     to_plot <- to_plot %>%
       filter(phase != "no vaccine" &
-               time == time_horizon) %>%
+               time == max(to_plot$time)) %>%
       select(-time,-incidence,-cumulative_incidence) %>%
       mutate(vaccine_effect = vaccine_effect/baseline)
     
