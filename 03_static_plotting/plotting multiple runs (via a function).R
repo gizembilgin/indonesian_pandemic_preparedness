@@ -1,7 +1,7 @@
 #Functional plotting for multiple runs of the command_deck (e.g., fleet_admiral)
 
 ### SETUP
-require(tidyverse);require(deSolve); require(ggpubr)
+require(tidyverse) require(ggpubr)
 options(scipen = 1000)
 #rm(list = ls())
 TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
