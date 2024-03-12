@@ -5,7 +5,7 @@ plot_simulations <- function(
     var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
     var_2 = NA,
     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-    this_output = "cases", #options: "cases","deaths"
+    this_outcome = "cases", #options: "cases","deaths"
     TOGGLES_project_severe_disease = list(),
     var_1_range = NA,
     var_2_range = NA,
@@ -39,9 +39,9 @@ plot_simulations <- function(
   if (exists("var_2") == FALSE | is.null(var_2)) var_2 = NA
   if (is.na(var_2) == FALSE &&  var_2 == "none") var_2 = NA
   if (is.na(var_2)) var_2_range = NA
-  if (this_output == "cases") TOGGLES_project_severe_disease = list()
-  if (this_output == "cases") display_severity_curve = 0
-  if (this_output != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
+  if (this_outcome == "cases") TOGGLES_project_severe_disease = list()
+  if (this_outcome == "cases") display_severity_curve = 0
+  if (this_outcome != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
   
   
   ### Load simulation
@@ -57,7 +57,7 @@ plot_simulations <- function(
     load_simulations,
     this_configuration,
     TOGGLES_project_severe_disease,
-    output = this_output
+    output = this_outcome
     )
   
   
@@ -125,7 +125,8 @@ plot_simulations <- function(
       geom_line(aes(x=time,y=incidence,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)
+      facet_grid(.data[[var_1]] ~.) + 
+      ylab(paste0("incidence (",this_outcome,")"))
   } 
   
   
@@ -178,8 +179,8 @@ plot_simulations <- function(
     to_plot_left_plot <- to_plot
     left_plot <- ggplot(to_plot_left_plot) + 
       geom_line(aes(x=time,y=cumulative_incidence,color=as.factor(phase)),linewidth = 1.25)  +
-      labs(color="", linetype = "")+
-      ylab("cumulative incidence") + 
+      labs(color="", linetype = "")+ 
+      ylab(paste0("cumulative incidence (",this_outcome,")")) +
       guides(color = guide_legend(nrow = 2)) +
       facet_grid(.data[[var_1]] ~.)
   }
@@ -207,7 +208,7 @@ plot_simulations <- function(
     left_plot <- ggplot(to_plot_left_plot) + 
       geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
-      ylab("cumulative cases averted by vaccine") +
+      ylab(paste0("cumulative incidence averted (",this_outcome,")")) +
       xlim(0,max(to_plot$time)) + 
       guides(color = guide_legend(nrow = 2)) +
       facet_grid(.data[[var_1]] ~.)
