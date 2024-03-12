@@ -39,6 +39,7 @@ CHOICES = list(
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
+  vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "essential workers")]),
   R0 = unique(ship_log$R0) ,
   vaccine_delivery_start_date = unique(ship_log$vaccine_delivery_start_date) ,
   supply = 
@@ -80,6 +81,8 @@ ui <- fluidPage(
                   selectInput(inputId = "this_output",
                               label = "Outcome:",
                               choices = c("cases","deaths","presentations")),
+                  selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
+                              choices = CHOICES$vaccination_strategies, selected = "all adults at the same time", multiple = TRUE),
                   
                   #TOGGLES_project_severe_disease
                   uiOutput("TOGGLES_project_severe_disease_point_estimate"),
@@ -98,7 +101,7 @@ ui <- fluidPage(
                   prettySwitch(
                     label = "free y-axis",
                     inputId = "free_yaxis",
-                    value = FALSE,
+                    value = TRUE,
                     status = "success",
                     fill = TRUE
                   ),
@@ -161,7 +164,7 @@ server <- function(input, output, session) {
  #   indicator_plot_ready
  #   })
  output$test2 <- renderText ({
-   is.numeric(input$vaccine_delivery_start_date)
+   input$vaccination_strategies
  })
   
   
@@ -179,12 +182,14 @@ server <- function(input, output, session) {
               choices = c(CHOICES$variable[CHOICES$variable != input$var_1],"none"),
               selected = "none")
   })
+  
+  
   output$TOGGLES_project_severe_disease_point_estimate <- renderUI({
     if(input$this_output != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
   })
   output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
     if(input$this_output != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
-                                                 choices = unique(age_specific_severity_MASTER$pathogen), selected = unique(age_specific_severity_MASTER$pathogen, multiple = TRUE))
+                                                 choices = unique(age_specific_severity_MASTER$pathogen), selected = "Plague", multiple = TRUE)
   })
   output$TOGGLES_project_severe_disease_VE <- renderUI({
     if(input$this_output != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
@@ -192,6 +197,7 @@ server <- function(input, output, session) {
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
   #   if(input$this_output != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
   # })
+  
   
   output$ui_R0 <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "R0"){
@@ -305,7 +311,7 @@ server <- function(input, output, session) {
       } else if (input$var_1 == "infection_derived_immunity"){ this_var_1_range = input$infection_derived_immunity
       } else if (input$var_1 == "rollout_modifier"){ this_var_1_range = input$rollout_modifier
       } else if (input$var_1 == "vaccine_derived_immunity"){ this_var_1_range = input$vaccine_derived_immunity
-      }
+      } else{this_var_1_range = NA}
     } else{this_var_1_range = NA}
     
     if ((input$this_output == "cases" |
@@ -337,13 +343,7 @@ server <- function(input, output, session) {
           list(
             R0 = input$R0,
             vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
-            phase = c(
-              # "older adults followed by all adults",
-              # "children before adults",
-              "all adults at the same time",
-              "essential workers",
-              "no vaccine"
-            ),
+            phase = c(input$vaccination_strategies,"essential workers", "no vaccine"),
             supply = as.numeric(input$supply),
             infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
             rollout_modifier =  as.numeric(input$rollout_modifier),

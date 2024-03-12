@@ -152,11 +152,12 @@ plot_simulations <- function(
       ungroup() %>%
       select(-phase,-supply)
     
+    join_by_vars = c("setting", "vaccine_delivery_start_date","R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity")
+    if ("pathogen" %in% names(to_plot)) join_by_vars = c(join_by_vars,"pathogen")
+    
     to_plot <- to_plot %>% 
-      left_join(max_essential_workers_time, by = join_by(setting, vaccine_delivery_start_date,
-                                                         R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
-      left_join(cumulative_no_vax, by = join_by(setting, vaccine_delivery_start_date,
-                                                R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity)) %>%
+      left_join(max_essential_workers_time, by = join_by_vars) %>%
+      left_join(cumulative_no_vax, by = join_by_vars) %>%
       filter(!(time <= max_time & ! phase %in% c("no vaccine","essential workers"))) %>%
       mutate(cumulative_incidence = case_when(
         phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
