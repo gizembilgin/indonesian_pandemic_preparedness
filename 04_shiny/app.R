@@ -3,7 +3,7 @@
 #rm(list = ls())
 require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter)
 options(scipen = 1000) #turn off scientific notation
-for (function_script in list.files(path="02_functions/", full.name = TRUE)){source(function_script)}
+for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
 
 path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
 list_poss_Rdata = list.files(
@@ -90,33 +90,13 @@ ui <- fluidPage(
                   uiOutput("TOGGLES_project_severe_disease_VE"),
                   uiOutput("TOGGLES_project_comorb_increased_risk"),
                   
-                  
-                  
-                  radioGroupButtons(inputId = "INPUT_R0",
-                                    label = "Basic reproduction number:",
-                                    choices = CHOICES$R0,
-                                    selected = 2),
-                  radioGroupButtons(inputId = "INPUT_vaccine_delivery_start_date",
-                                    label = "Days between pathogen detected and vaccine first delivered:",
-                                    choices = CHOICES$vaccine_delivery_start_date,
-                                    selected = 100), 
-                  radioGroupButtons(inputId = "INPUT_supply",
-                                    label = "Vaccine supply (% population):",
-                                    choices = CHOICES$supply,
-                                    selected = 0.2), 
-                  radioGroupButtons(inputId = "INPUT_rollout_modifier",
-                                    label = "Rollout speed:",
-                                    choices = CHOICES$rollout_modifier,
-                                    selected = 1), 
-                  radioGroupButtons(inputId = "INPUT_infection_derived_immunity",
-                                    label = "Protection from infection-derived immunity:",
-                                    choices = CHOICES$infection_derived_immunity,
-                                    selected = 1),   
-                  radioGroupButtons(inputId = "INPUT_vaccine_derived_immunity",
-                                    label = "Protection from vaccine-derived immunity:",
-                                    choices = CHOICES$vaccine_derived_immunity,
-                                    selected = 1),   
-                  
+                  uiOutput("ui_R0"),
+                  uiOutput("ui_vaccine_delivery_start_date"),
+                  uiOutput("ui_supply"),
+                  uiOutput("ui_rollout_modifier"),
+                  uiOutput("ui_infection_derived_immunity"),
+                  uiOutput("ui_vaccine_derived_immunity"),
+
                   h5(strong("Display:")),
                   prettySwitch(
                     label = "free y-axis",
@@ -183,9 +163,9 @@ server <- function(input, output, session) {
  # output$test <- renderText ({
  #   indicator_plot_ready
  #   })
- # output$test2 <- renderPrint ({
- #   input_project_severe_disease$point_estimate
- # })
+ output$test2 <- renderText ({
+   is.numeric(input$vaccine_delivery_start_date)
+ })
   
   
   ### Conditional UI components
@@ -207,6 +187,89 @@ server <- function(input, output, session) {
   })
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
   #   if(input$this_output != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
+  # })
+  
+  output$ui_R0 <- renderUI({
+    if(input$var_1 != "R0"){
+      radioGroupButtons(inputId = "R0",
+                        label = "Basic reproduction number:",
+                        choices = CHOICES$R0,
+                        selected = 2)
+    }  else{
+      checkboxGroupButtons(inputId = "R0",
+                        label = "Basic reproduction number:",
+                        choices = CHOICES$R0,
+                        selected = 2)
+    }
+  })
+  output$ui_vaccine_delivery_start_date <- renderUI({
+    if(input$var_1 != "vaccine_delivery_start_date"){
+      radioGroupButtons(inputId = "vaccine_delivery_start_date",
+                        label = "Days between pathogen detected and vaccine first delivered:",
+                        choices = CHOICES$vaccine_delivery_start_date,
+                        selected = 100)
+    }  else{
+      checkboxGroupButtons(inputId = "vaccine_delivery_start_date",
+                           label = "Days between pathogen detected and vaccine first delivered:",
+                           choices = CHOICES$vaccine_delivery_start_date,
+                           selected = 100)
+    }
+  })
+  output$ui_supply <- renderUI({
+    if(input$var_1 != "supply"){
+      radioGroupButtons(inputId = "supply",
+                        label = "Vaccine supply (% population):",
+                        choices = CHOICES$supply,
+                        selected = 0.2)
+    } else{
+      checkboxGroupButtons(inputId = "supply",
+                           label = "Vaccine supply (% population):",
+                           choices = CHOICES$supply,
+                           selected = 0.2)
+    }
+  })
+  output$ui_supply <- renderUI({
+    if(input$var_1 != "rollout_modifier"){
+      radioGroupButtons(inputId = "rollout_modifier",
+                        label = "Rollout speed:",
+                        choices = CHOICES$rollout_modifier,
+                        selected = 1) 
+    } else{
+      checkboxGroupButtons(inputId = "rollout_modifier",
+                           label = "Rollout speed:",
+                           choices = CHOICES$rollout_modifier,
+                           selected = 1) 
+    }
+  })
+  output$ui_supply <- renderUI({
+    if(input$var_1 != "infection_derived_immunity"){
+      radioGroupButtons(inputId = "infection_derived_immunity",
+                        label = "Protection from infection-derived immunity:",
+                        choices = CHOICES$infection_derived_immunity,
+                        selected = 1) 
+    } else{
+      checkboxGroupButtons(inputId = "infection_derived_immunity",
+                           label = "Protection from infection-derived immunity:",
+                           choices = CHOICES$infection_derived_immunity,
+                           selected = 1) 
+    }
+  })
+  output$ui_supply <- renderUI({
+    if(input$var_1 != "vaccine_derived_immunity"){
+      radioGroupButtons(inputId = "vaccine_derived_immunity",
+                        label = "Protection from vaccine-derived immunity:",
+                        choices = CHOICES$vaccine_derived_immunity,
+                        selected = 1)
+    } else{
+      checkboxGroupButtons(inputId = "vaccine_derived_immunity",
+                           label = "Protection from vaccine-derived immunity:",
+                           choices = CHOICES$vaccine_derived_immunity,
+                           selected = 1)
+    }
+  })
+  
+  # this_var_1_range <- reactive({
+  #   if (input$var_1 == "R0"){input$R0} else{0}
   # })
 
   
@@ -231,10 +294,22 @@ server <- function(input, output, session) {
   
   output$OUTPUT_plot <- renderPlot({
     
-    if (input$this_output == "cases" |
-        (is.numeric(input$severe_disease_point_estimate) & 
-         is.character(input$severe_disease_age_distribution) & 
-         is.numeric(input$severe_disease_VE))){
+    if (input$var_1 == "R0"){this_var_1_range = input$R0
+    } else if (input$var_1 == "vaccine_delivery_start_date"){ this_var_1_range = input$vaccine_delivery_start_date
+    } else if (input$var_1 == "supply"){ this_var_1_range = input$supply
+    } else if (input$var_1 == "infection_derived_immunity"){ this_var_1_range = input$infection_derived_immunity
+    } else if (input$var_1 == "rollout_modifier"){ this_var_1_range = input$rollout_modifier
+    } else if (input$var_1 == "vaccine_derived_immunity"){ this_var_1_range = input$vaccine_derived_immunity
+    } else{this_var_1_range = NA}
+    
+    if ((input$this_output == "cases" |
+         (
+           is.numeric(input$severe_disease_point_estimate) &
+           is.character(input$severe_disease_age_distribution) &
+           is.numeric(input$severe_disease_VE)
+         )) &
+        is.null(input$vaccine_delivery_start_date) == FALSE) {
+      
       plot_simulations(
         var_1 = input$var_1,
         var_2 = input$var_2,
@@ -246,10 +321,11 @@ server <- function(input, output, session) {
           VE_severe_disease =  input$severe_disease_VE,
           comorb_increased_risk = 1
         ), 
+        var_1_range = this_var_1_range,
         default_configuration =
           list(
-            R0 = 2,
-            vaccine_delivery_start_date = 100,
+            R0 = input$R0,
+            vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
             phase = c(
               # "older adults followed by all adults",
               # "children before adults",
@@ -257,7 +333,7 @@ server <- function(input, output, session) {
               "essential workers",
               "no vaccine"
             ),
-            supply = c(0.2),
+            supply = 0.2,#input$supply,
             infection_derived_immunity = 1,
             rollout_modifier = 2,
             vaccine_derived_immunity = 1
