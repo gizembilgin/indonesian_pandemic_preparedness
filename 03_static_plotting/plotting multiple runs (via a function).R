@@ -181,6 +181,7 @@ plot_simulations (
     ),
   load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
+  display_severity_curve = 1, 
   colour_essential_workers_phase = 1,
   display_var_1 = 0,
   display_vaccine_availability = 1

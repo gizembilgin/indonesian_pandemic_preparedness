@@ -28,6 +28,7 @@ plot_simulations <- function(
     load_simulations = TRUE, #load simulations for each run
     free_yaxis = FALSE,
     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
+    display_severity_curve = 0,
     display_var_1 = 1,
     colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
@@ -39,6 +40,7 @@ plot_simulations <- function(
   if (is.na(var_2) == FALSE &&  var_2 == "none") var_2 = NA
   if (is.na(var_2)) var_2_range = NA
   if (this_output == "cases") TOGGLES_project_severe_disease = list()
+  if (this_output == "cases") display_severity_curve = 0
   if (this_output != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
   
   
@@ -288,10 +290,29 @@ plot_simulations <- function(
         ylab(gsub("_"," ",var_2))
     }
     
-    ggarrange(left_plot,right_plot,nrow = 1)
+    result <- ggarrange(left_plot,right_plot,nrow = 1)
     
   } else{
-    left_plot  
+    result <- left_plot  
   }
   
+  
+  ### Include severity_plot
+  if (display_severity_curve == 1){
+    
+    extra_plot <- project_severe_disease(
+      TOGGLES_project_severe_disease = TOGGLES_project_severe_disease, 
+      return_severity = TRUE
+    ) %>%
+      filter(vaccination_status == 0 & comorbidity == 0) %>%
+      ggplot() +
+      geom_col(aes(x=age_group,y=case_fatality_rate)) +
+      facet_wrap(~ pathogen, ncol = 1,scales = "free")
+    
+    if (display_impact_heatmap == 1)  result <- ggarrange(left_plot,right_plot,extra_plot,nrow = 1) 
+    if (display_impact_heatmap == 0)  result <- ggarrange(left_plot,extra_plot,nrow = 1) 
+  }
+  
+  
+  print(result)
 }

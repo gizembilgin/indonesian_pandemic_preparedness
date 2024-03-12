@@ -4,7 +4,7 @@
 ### These incidence of severe disease is modified by age, vaccination status, and comorbidity
 ### The setting's population structure is required to scale these incidence rates appropriately to retain the desired popuation-level severity rate
 
-project_severe_disease <- function(data,
+project_severe_disease <- function(data = data.frame(),
                                    TOGGLES_project_severe_disease = 
                                      list(
                                        point_estimate = TOGGLES_project_severe_disease$point_estimate,

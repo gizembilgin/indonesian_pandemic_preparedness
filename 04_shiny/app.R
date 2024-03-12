@@ -113,6 +113,13 @@ ui <- fluidPage(
                     fill = TRUE
                   ),
                   prettySwitch(
+                    label = "severity curve",
+                    inputId = "display_severity_curve",
+                    value = FALSE,
+                    status = "success",
+                    fill = TRUE
+                  ),
+                  prettySwitch(
                     label = "date of vaccine availability",
                     inputId = "display_vaccine_availability",
                     value = TRUE,
@@ -163,9 +170,9 @@ server <- function(input, output, session) {
  # output$test <- renderText ({
  #   indicator_plot_ready
  #   })
- output$test2 <- renderText ({
-   input$vaccination_strategies
- })
+ # output$test2 <- renderText ({
+ #   input$vaccination_strategies
+ # })
   
   
   ### Conditional UI components
@@ -351,6 +358,7 @@ server <- function(input, output, session) {
           ),
         free_yaxis = input$free_yaxis,
         display_impact_heatmap = input$display_impact_heatmap,
+        display_severity_curve = input$display_severity_curve,
         display_var_1 = 0,
         colour_essential_workers_phase = input$colour_essential_workers_phase,
         display_vaccine_availability = input$display_vaccine_availability,
