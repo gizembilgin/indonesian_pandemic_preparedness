@@ -228,7 +228,7 @@ server <- function(input, output, session) {
                            selected = 0.2)
     }
   })
-  output$ui_supply <- renderUI({
+  output$ui_rollout_modifier <- renderUI({
     if(input$var_1 != "rollout_modifier"){
       radioGroupButtons(inputId = "rollout_modifier",
                         label = "Rollout speed:",
@@ -241,7 +241,7 @@ server <- function(input, output, session) {
                            selected = 1) 
     }
   })
-  output$ui_supply <- renderUI({
+  output$ui_infection_derived_immunity <- renderUI({
     if(input$var_1 != "infection_derived_immunity"){
       radioGroupButtons(inputId = "infection_derived_immunity",
                         label = "Protection from infection-derived immunity:",
@@ -254,7 +254,7 @@ server <- function(input, output, session) {
                            selected = 1) 
     }
   })
-  output$ui_supply <- renderUI({
+  output$ui_vaccine_derived_immunity <- renderUI({
     if(input$var_1 != "vaccine_derived_immunity"){
       radioGroupButtons(inputId = "vaccine_derived_immunity",
                         label = "Protection from vaccine-derived immunity:",
@@ -308,7 +308,9 @@ server <- function(input, output, session) {
            is.character(input$severe_disease_age_distribution) &
            is.numeric(input$severe_disease_VE)
          )) &
-        is.null(input$vaccine_delivery_start_date) == FALSE) {
+        is.null(input$R0) == FALSE&
+        is.null(input$vaccine_delivery_start_date) == FALSE &
+        is.null(input$supply) == FALSE) {
       
       plot_simulations(
         var_1 = input$var_1,
@@ -333,7 +335,7 @@ server <- function(input, output, session) {
               "essential workers",
               "no vaccine"
             ),
-            supply = 0.2,#input$supply,
+            supply = as.numeric(input$supply),
             infection_derived_immunity = 1,
             rollout_modifier = 2,
             vaccine_derived_immunity = 1
