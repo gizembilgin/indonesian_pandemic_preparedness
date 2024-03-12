@@ -78,7 +78,7 @@ ui <- fluidPage(
                               label = "Incidence statistic:",
                               choices = CHOICES$incidence_statistic,
                               selected = "incidence"),
-                  selectInput(inputId = "this_output",
+                  selectInput(inputId = "this_outcome",
                               label = "Outcome:",
                               choices = c("cases","deaths","presentations")),
                   selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
@@ -177,7 +177,7 @@ server <- function(input, output, session) {
   
   ### Conditional UI components
  output$var_1_input <- renderUI({
-   if(input$this_output != "cases") choices_list = c("pathogen",CHOICES$variable) else choices_list = CHOICES$variable
+   if(input$this_outcome != "cases") choices_list = c("pathogen",CHOICES$variable) else choices_list = CHOICES$variable
    selectInput(inputId = "var_1",
                label = "Variable to vary:",
                choices = choices_list,
@@ -192,17 +192,17 @@ server <- function(input, output, session) {
   
   
   output$TOGGLES_project_severe_disease_point_estimate <- renderUI({
-    if(input$this_output != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
+    if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
   })
   output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
-    if(input$this_output != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
+    if(input$this_outcome != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
                                                  choices = unique(age_specific_severity_MASTER$pathogen), selected = "Plague", multiple = TRUE)
   })
   output$TOGGLES_project_severe_disease_VE <- renderUI({
-    if(input$this_output != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
+    if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
   })
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
-  #   if(input$this_output != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
+  #   if(input$this_outcome != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
   # })
   
   
@@ -321,7 +321,7 @@ server <- function(input, output, session) {
       } else{this_var_1_range = NA}
     } else{this_var_1_range = NA}
     
-    if ((input$this_output == "cases" |
+    if ((input$this_outcome == "cases" |
          (
            is.numeric(input$severe_disease_point_estimate) &
            is.character(input$severe_disease_age_distribution) &
@@ -338,7 +338,7 @@ server <- function(input, output, session) {
         var_1 = input$var_1,
         var_2 = input$var_2,
         yaxis_title = input$yaxis_title,
-        this_output = input$this_output,
+        this_outcome = input$this_outcome,
         TOGGLES_project_severe_disease = list(
           point_estimate =  input$severe_disease_point_estimate,
           age_distribution = input$severe_disease_age_distribution,
