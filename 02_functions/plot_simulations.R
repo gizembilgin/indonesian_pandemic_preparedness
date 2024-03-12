@@ -36,7 +36,7 @@ plot_simulations <- function(
   
   ### FORCE
   if (exists("var_2") == FALSE | is.null(var_2)) var_2 = NA
-  if (is.na(var_2) == FALSE &&  var_2 == "none")  var_2 = NA
+  if (is.na(var_2) == FALSE &&  var_2 == "none") var_2 = NA
   if (is.na(var_2)) var_2_range = NA
   if (this_output == "cases") TOGGLES_project_severe_disease = list()
   if (this_output != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
