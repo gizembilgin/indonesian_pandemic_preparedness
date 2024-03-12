@@ -71,10 +71,7 @@ ui <- fluidPage(
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
                   
-                  selectInput(inputId = "var_1",
-                                    label = "Variable to vary:",
-                                    choices = CHOICES$variable,
-                                    selected = "R0"),
+                  uiOutput("var_1_input"),
                   uiOutput("var_2_input"),
                   selectInput(inputId = "yaxis_title",
                               label = "Incidence statistic:",
@@ -169,6 +166,13 @@ server <- function(input, output, session) {
   
   
   ### Conditional UI components
+ output$var_1_input <- renderUI({
+   if(input$this_output != "cases") choices_list = c("pathogen",CHOICES$variable) else choices_list = CHOICES$variable
+   selectInput(inputId = "var_1",
+               label = "Variable to vary:",
+               choices = choices_list,
+               selected = "R0")
+ })
   output$var_2_input <- renderUI({
     selectInput(inputId = "var_2",
               label = "Second variable to vary (optional):",
@@ -190,7 +194,7 @@ server <- function(input, output, session) {
   # })
   
   output$ui_R0 <- renderUI({
-    if(input$var_1 != "R0"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "R0"){
       radioGroupButtons(inputId = "R0",
                         label = "Basic reproduction number:",
                         choices = CHOICES$R0,
@@ -203,7 +207,7 @@ server <- function(input, output, session) {
     }
   })
   output$ui_vaccine_delivery_start_date <- renderUI({
-    if(input$var_1 != "vaccine_delivery_start_date"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_delivery_start_date"){
       radioGroupButtons(inputId = "vaccine_delivery_start_date",
                         label = "Days between pathogen detected and vaccine first delivered:",
                         choices = CHOICES$vaccine_delivery_start_date,
@@ -216,7 +220,7 @@ server <- function(input, output, session) {
     }
   })
   output$ui_supply <- renderUI({
-    if(input$var_1 != "supply"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "supply"){
       radioGroupButtons(inputId = "supply",
                         label = "Vaccine supply (% population):",
                         choices = CHOICES$supply,
@@ -229,7 +233,7 @@ server <- function(input, output, session) {
     }
   })
   output$ui_rollout_modifier <- renderUI({
-    if(input$var_1 != "rollout_modifier"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "rollout_modifier"){
       radioGroupButtons(inputId = "rollout_modifier",
                         label = "Rollout speed:",
                         choices = CHOICES$rollout_modifier,
@@ -242,7 +246,7 @@ server <- function(input, output, session) {
     }
   })
   output$ui_infection_derived_immunity <- renderUI({
-    if(input$var_1 != "infection_derived_immunity"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "infection_derived_immunity"){
       radioGroupButtons(inputId = "infection_derived_immunity",
                         label = "Protection from infection-derived immunity:",
                         choices = CHOICES$infection_derived_immunity,
@@ -255,7 +259,7 @@ server <- function(input, output, session) {
     }
   })
   output$ui_vaccine_derived_immunity <- renderUI({
-    if(input$var_1 != "vaccine_derived_immunity"){
+    if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_derived_immunity"){
       radioGroupButtons(inputId = "vaccine_derived_immunity",
                         label = "Protection from vaccine-derived immunity:",
                         choices = CHOICES$vaccine_derived_immunity,
@@ -294,12 +298,14 @@ server <- function(input, output, session) {
   
   output$OUTPUT_plot <- renderPlot({
     
-    if (input$var_1 == "R0"){this_var_1_range = input$R0
-    } else if (input$var_1 == "vaccine_delivery_start_date"){ this_var_1_range = input$vaccine_delivery_start_date
-    } else if (input$var_1 == "supply"){ this_var_1_range = input$supply
-    } else if (input$var_1 == "infection_derived_immunity"){ this_var_1_range = input$infection_derived_immunity
-    } else if (input$var_1 == "rollout_modifier"){ this_var_1_range = input$rollout_modifier
-    } else if (input$var_1 == "vaccine_derived_immunity"){ this_var_1_range = input$vaccine_derived_immunity
+    if (is.null(input$var_1)== FALSE){
+      if (input$var_1 == "R0"){this_var_1_range = input$R0
+      } else if (input$var_1 == "vaccine_delivery_start_date"){ this_var_1_range = input$vaccine_delivery_start_date
+      } else if (input$var_1 == "supply"){ this_var_1_range = input$supply
+      } else if (input$var_1 == "infection_derived_immunity"){ this_var_1_range = input$infection_derived_immunity
+      } else if (input$var_1 == "rollout_modifier"){ this_var_1_range = input$rollout_modifier
+      } else if (input$var_1 == "vaccine_derived_immunity"){ this_var_1_range = input$vaccine_derived_immunity
+      }
     } else{this_var_1_range = NA}
     
     if ((input$this_output == "cases" |
