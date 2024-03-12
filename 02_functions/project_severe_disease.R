@@ -32,7 +32,7 @@ project_severe_disease <- function(data,
   
   ### Load age-specific severity of specified pathogen
   if (is.character(age_distribution)){
-    load(file = "01_inputs/age_specific_severity_MASTER.Rdata")
+    load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
     if (length(unique(age_specific_severity_MASTER$pathogen)[unique(age_specific_severity_MASTER$pathogen) %in% age_distribution]) == 0){
       stop("project_severe_disease: you have specified the age distribution of a known pathogen, but not one included in pathogen in age_specific_severity_MASTER")
     } 
