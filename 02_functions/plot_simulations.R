@@ -44,8 +44,11 @@ plot_simulations <- function(
   
   ### Load simulation
   this_configuration = default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
-  if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
-  if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
+  if (length(var_1_range)>0){
+    if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
+    if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
+    
+  }
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("essential workers","no vaccine" )]
   
   to_plot <- to_plot_loaded <- access_simulations(
