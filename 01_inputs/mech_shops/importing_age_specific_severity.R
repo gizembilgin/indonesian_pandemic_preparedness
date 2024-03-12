@@ -120,11 +120,13 @@ project_severe_disease(
 
 #CHECK: plot all pathogen shapes with fixed severity point estimate
 project_severe_disease(
-  point_estimate =  1/100,
-  age_distribution = unique(age_specific_severity_MASTER$pathogen),
-  VE = 0,
-  comorb_increased_risk = 1,
-  this_incidence_log_tidy = incidence_log_tidy,
+  TOGGLES_project_severe_disease = 
+    list(
+      point_estimate =  1 / 100,
+      age_distribution = unique(age_specific_severity_MASTER$pathogen),
+      VE_severe_disease = 0,
+      comorb_increased_risk = 1
+    ), 
   this_pop = loaded_setting_characteristics$population_by_comorbidity,
   return_severity = TRUE
 ) %>%
