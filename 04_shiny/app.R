@@ -119,29 +119,36 @@ ui <- fluidPage(
                   
                   h5(strong("Display:")),
                   prettySwitch(
+                    label = "free y-axis",
+                    inputId = "free_yaxis",
+                    value = FALSE,
+                    status = "success",
+                    fill = TRUE
+                  ),
+                  prettySwitch(
                     label = "heatmap",
-                    inputId = "INPUT_display_impact_heatmap",
+                    inputId = "display_impact_heatmap",
                     value = TRUE,
                     status = "success",
                     fill = TRUE
                   ),
                   prettySwitch(
                     label = "date of vaccine availability",
-                    inputId = "INPUT_display_vaccine_availability",
+                    inputId = "display_vaccine_availability",
                     value = TRUE,
                     status = "success",
                     fill = TRUE
                   ),
                   prettySwitch(
                     label = "end of essential worker delivery",
-                    inputId = "INPUT_display_end_of_essential_worker_delivery",
+                    inputId = "display_end_of_essential_worker_delivery",
                     value = TRUE,
                     status = "success",
                     fill = TRUE
                   ),
                   prettySwitch(
                     label = "colour essential worker delivery",
-                    inputId = "INPUT_colour_essential_workers_phase",
+                    inputId = "colour_essential_workers_phase",
                     value = TRUE,
                     status = "success",
                     fill = TRUE
@@ -208,10 +215,10 @@ server <- function(input, output, session) {
   #     var_1 = input$var_1,
   #     var_2 = var_2_reactive,
   #     yaxis_title = input$yaxis_title,
-  #     display_impact_heatmap = input$INPUT_display_impact_heatmap,
-  #     colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase, 
-  #     display_vaccine_availability = input$INPUT_display_vaccine_availability,
-  #     display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+  #     display_impact_heatmap = input$display_impact_heatmap,
+  #     colour_essential_workers_phase = input$colour_essential_workers_phase, 
+  #     display_vaccine_availability = input$display_vaccine_availability,
+  #     display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
   #     load_simulations = FALSE
   #   )
   #   if(is.character(check_plot_exists)) {
@@ -255,10 +262,12 @@ server <- function(input, output, session) {
             rollout_modifier = 2,
             vaccine_derived_immunity = 1
           ),
-        display_impact_heatmap = input$INPUT_display_impact_heatmap,
-        colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
-        display_vaccine_availability = input$INPUT_display_vaccine_availability,
-        display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+        free_yaxis = input$free_yaxis,
+        display_impact_heatmap = input$display_impact_heatmap,
+        display_var_1 = 0,
+        colour_essential_workers_phase = input$colour_essential_workers_phase,
+        display_vaccine_availability = input$display_vaccine_availability,
+        display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
         load_simulations = FALSE
       )
     }

@@ -7,7 +7,6 @@ plot_simulations <- function(
     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
     this_output = "cases", #options: "cases","deaths"
     TOGGLES_project_severe_disease = list(),
-    free_yaxis = FALSE,
     var_1_range = NA,
     var_2_range = NA,
     default_configuration =
@@ -27,6 +26,7 @@ plot_simulations <- function(
         vaccine_derived_immunity = 1
       ),
     load_simulations = TRUE, #load simulations for each run
+    free_yaxis = FALSE,
     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
     display_var_1 = 1,
     colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
