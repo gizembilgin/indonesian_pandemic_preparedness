@@ -9,20 +9,21 @@ access_simulations <- function(
   
   ### Load simulations (optional for each run)
   if (load_simulations == TRUE){
+    path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
     list_poss_Rdata = list.files(
-      path = "04_shiny/x_results/",
+      path = path_stem,
       pattern = "ship_log*"
     )
     if (length(list_poss_Rdata) > 0) {
       list_poss_Rdata_details = double()
       for (j in 1:length(list_poss_Rdata)) {
         list_poss_Rdata_details = rbind(list_poss_Rdata_details,
-                                        file.info(paste0("04_shiny/x_results/", list_poss_Rdata[[j]]))$mtime)
+                                        file.info(paste0(path_stem, list_poss_Rdata[[j]]))$mtime)
       }
       latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-      load(file = paste0("04_shiny/x_results/",latest_file))
+      load(file = paste0(path_stem,latest_file))
     } else{
-      stop("load_smulations: can't find underlying simulation to load!")
+      stop(paste0("access_simulations: can't find underlying simulation to load! Searching:", path_stem))
     }
   }
   
