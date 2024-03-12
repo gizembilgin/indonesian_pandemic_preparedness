@@ -308,9 +308,12 @@ server <- function(input, output, session) {
            is.character(input$severe_disease_age_distribution) &
            is.numeric(input$severe_disease_VE)
          )) &
-        is.null(input$R0) == FALSE&
+        is.null(input$R0) == FALSE &
         is.null(input$vaccine_delivery_start_date) == FALSE &
-        is.null(input$supply) == FALSE) {
+        is.null(input$supply) == FALSE &
+        is.null(input$infection_derived_immunity) == FALSE &
+        is.null(input$rollout_modifier) == FALSE &
+        is.null(input$vaccine_derived_immunity) == FALSE) {
       
       plot_simulations(
         var_1 = input$var_1,
@@ -336,9 +339,9 @@ server <- function(input, output, session) {
               "no vaccine"
             ),
             supply = as.numeric(input$supply),
-            infection_derived_immunity = 1,
-            rollout_modifier = 2,
-            vaccine_derived_immunity = 1
+            infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
+            rollout_modifier =  as.numeric(input$rollout_modifier),
+            vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity)
           ),
         free_yaxis = input$free_yaxis,
         display_impact_heatmap = input$display_impact_heatmap,
