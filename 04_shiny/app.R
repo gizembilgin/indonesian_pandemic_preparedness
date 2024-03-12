@@ -156,8 +156,8 @@ ui <- fluidPage(
                
                waiter::useWaiter(),
                
-               textOutput("test"),
-               tableOutput("test2"),
+               verbatimTextOutput ("test"),
+               textOutput("test2"),
                
                textOutput("WARNING_no_plot"),
                plotOutput("OUTPUT_plot", height = "800px")
@@ -173,9 +173,12 @@ ui <- fluidPage(
 #### SERVER DEFINITION ########################################################
 server <- function(input, output, session) {
   
- # output$test <- renderText({
- #     input$var_2
- #     })
+ # output$test <- renderText ({
+ #   indicator_plot_ready
+ #   })
+ # output$test2 <- renderPrint ({
+ #   input_project_severe_disease$point_estimate
+ # })
   
   
   ### Conditional UI components
@@ -218,49 +221,45 @@ server <- function(input, output, session) {
   # 
   #output plot
   
-  input_project_severe_disease <- reactive({
-    if (input$this_output != "cases") {
-      list(
-        point_estimate =  input$severe_disease_point_estimate,
-        age_distribution = input$severe_disease_age_distribution,
-        VE_severe_disease = input$severe_disease_VE,
-        comorb_increased_risk = 1
-      )
-    } else{
-      list()
-    }
-  })
   
   output$OUTPUT_plot <- renderPlot({
     
-    plot_simulations(
-      var_1 = input$var_1,
-      var_2 = input$var_2,
-      yaxis_title = input$yaxis_title,
-      this_output = input$this_output,
-      TOGGLES_project_severe_disease = input_project_severe_disease,
-      default_configuration =
-        list(
-          R0 = 2,
-          vaccine_delivery_start_date = 100,
-          phase = c(
-            # "older adults followed by all adults",
-            # "children before adults",
-            "all adults at the same time",
-            "essential workers",
-            "no vaccine"
+    if (input$this_output == "cases" |
+        (is.numeric(input$severe_disease_point_estimate))){
+      plot_simulations(
+        var_1 = input$var_1,
+        var_2 = input$var_2,
+        yaxis_title = input$yaxis_title,
+        this_output = input$this_output,
+        TOGGLES_project_severe_disease = list(
+          point_estimate =  input$severe_disease_point_estimate,
+          age_distribution = "Plague",
+          VE_severe_disease = 1,
+          comorb_increased_risk = 1
+        ), #input_project_severe_disease,
+        default_configuration =
+          list(
+            R0 = 2,
+            vaccine_delivery_start_date = 100,
+            phase = c(
+              # "older adults followed by all adults",
+              # "children before adults",
+              "all adults at the same time",
+              "essential workers",
+              "no vaccine"
+            ),
+            supply = c(0.2),
+            infection_derived_immunity = 1,
+            rollout_modifier = 2,
+            vaccine_derived_immunity = 1
           ),
-          supply = c(0.2),
-          infection_derived_immunity = 1,
-          rollout_modifier = 2,
-          vaccine_derived_immunity = 1
-        ),
-      display_impact_heatmap = input$INPUT_display_impact_heatmap,
-      colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
-      display_vaccine_availability = input$INPUT_display_vaccine_availability,
-      display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
-      load_simulations = FALSE
-    )
+        display_impact_heatmap = input$INPUT_display_impact_heatmap,
+        colour_essential_workers_phase = input$INPUT_colour_essential_workers_phase,
+        display_vaccine_availability = input$INPUT_display_vaccine_availability,
+        display_end_of_essential_worker_delivery = input$INPUT_display_end_of_essential_worker_delivery,
+        load_simulations = FALSE
+      )
+    }
 
   },
   res = 96)
