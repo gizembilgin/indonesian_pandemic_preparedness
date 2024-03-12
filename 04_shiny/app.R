@@ -225,7 +225,9 @@ server <- function(input, output, session) {
   output$OUTPUT_plot <- renderPlot({
     
     if (input$this_output == "cases" |
-        (is.numeric(input$severe_disease_point_estimate))){
+        (is.numeric(input$severe_disease_point_estimate) & 
+         is.character(input$severe_disease_age_distribution) & 
+         is.numeric(input$severe_disease_VE))){
       plot_simulations(
         var_1 = input$var_1,
         var_2 = input$var_2,
@@ -233,10 +235,10 @@ server <- function(input, output, session) {
         this_output = input$this_output,
         TOGGLES_project_severe_disease = list(
           point_estimate =  input$severe_disease_point_estimate,
-          age_distribution = "Plague",
-          VE_severe_disease = 1,
+          age_distribution = input$severe_disease_age_distribution,
+          VE_severe_disease =  input$severe_disease_VE,
           comorb_increased_risk = 1
-        ), #input_project_severe_disease,
+        ), 
         default_configuration =
           list(
             R0 = 2,
