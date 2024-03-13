@@ -88,12 +88,7 @@ for (setting in LIST_setting){
             #OPTION: to save in a different format, e.g., JSON to save memory BUT requires more complex format
             
             this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
-              mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
-                     vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date,
-                     R0 = FLEET_ADMIRAL_OVERRIDE$R0,
-                     infection_derived_immunity = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity,
-                     rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier,
-                     vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity)
+              mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting)
             
             ship_log = rbind(ship_log,this_simulation)
             indicator_log = rbind(indicator_log,this_simulation_indicator)
@@ -109,6 +104,8 @@ rm(this_simulation, this_simulation_indicator)
 time_of_result = Sys.time()
 time_of_result = gsub(':','-',time_of_result)
 save(ship_log,file = paste0("04_shiny/x_results/ship_log",time_of_result,".Rdata"))
+indicator_log <- unique(indicator_log)
+save(indicator_log,file = paste0("04_shiny/x_results/indicator_log",time_of_result,".Rdata"))
 save.image(file = paste0("04_shiny/x_results/workspace_image_",time_of_result,".Rdata"))
 
 rm(FLEET_ADMIRAL_OVERRIDE)
