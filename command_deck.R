@@ -106,7 +106,7 @@ parameters = list(
   omega=1/TOGGLE_average_immune_period,
   rho=TOGGLE_infection_derived_immunity,
   VE=TOGGLE_vaccine_derived_immunity,
-  J=num_age_groups
+  J=length(age_group_labels)
 )
 
 workshop <- run_disease_model(

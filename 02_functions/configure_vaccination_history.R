@@ -123,7 +123,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         vaccine_delivery_start_date = LIST_vaccination_strategies$vaccine_delivery_start_date,
         rollout_modifier = LIST_vaccination_strategies$rollout_modifier,
         supply = this_supply,
-        delivered_supply = max_supply,
+        delivered_supply = min(max_supply,this_supply),
         strategy = this_phase)
       
       #indicator_speed_sufficient == speed sufficient for delivery within time horizon
