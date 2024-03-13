@@ -15,8 +15,11 @@ plot_simulations <- function(
         vaccine_delivery_start_date = 100,
         phase = c(
           "older adults followed by all adults",
-          "children before adults",
-          "all adults at the same time",
+          "adults then children",               
+          "children then adults",                
+          "step up",                            
+          "step down",                           
+          "uniform", 
           "essential workers",
           "no vaccine"
         ),
@@ -218,10 +221,13 @@ plot_simulations <- function(
   ### Apply plotting visuals
   #uniform colours, NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
   defined_colour_palette <-  c("no vaccine" = "#F8766D", 
-                               "older adults followed by all adults" =  "#A3A500",
-                               "essential workers" = "#00BF7D" ,
-                               "all adults at the same time" = "#00B0F6",
-                               "children before adults"  = "#E76BF3")
+                               "essential workers"  = "#00BF7D" ,                  
+                               "older adults followed by all adults" = "#3b94b2",
+                               "adults then children" = "#76c3c4" ,              
+                               "children then adults" ="#ebd829" ,               
+                               "step up" = "#e1a500",                             
+                               "step down" = "#00B0F6" ,                          
+                               "uniform"  = "#00BA38")
   if(is.na(var_2) == FALSE){
     defined_colour_palette <- defined_colour_palette[1:length(unique(to_plot_left_plot$phase))]
     names(defined_colour_palette) <- unique(to_plot_left_plot$phase)
