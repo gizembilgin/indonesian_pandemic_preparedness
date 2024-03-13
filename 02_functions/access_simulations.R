@@ -22,6 +22,7 @@ access_simulations <- function(
       }
       latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
       load(file = paste0(path_stem,latest_file))
+      load(file = paste0(path_stem,gsub("ship_log","indicator_log",latest_file))) #load accompanying indicator_log
     } else{
       stop(paste0("access_simulations: can't find underlying simulation to load! Searching:", path_stem))
     }
@@ -31,6 +32,8 @@ access_simulations <- function(
   
   ### Subset ship_log to this_configuration
   this_ship_log <-  filter_scenarios(ship_log,this_configuration[! names(this_configuration) == "supply"])
+  this_indicator_log <- indicator_log %>% rename(phase = strategy)
+  this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity")])
   if (load_simulations == TRUE) rm(ship_log)
   
   
@@ -113,10 +116,15 @@ access_simulations <- function(
   if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in this_ship_log_completed")}
   rm(this_ship_log,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
   
-  if ("supply" %in% names(this_configuration)){
-    #couldn't remove earlier as needed to reconstruct the cascade
+  if ("supply" %in% names(this_configuration)){#NB: couldn't remove earlier as needed to reconstruct the cascade
+    
+    #check indicator_log if exists
+    workshop <- this_indicator_log %>% filter(supply %in% this_configuration$supply)
+    ###COMEBACK - if multiple supplies calculated close to each other and some don't exist will need to use previous supply
+    
     this_ship_log_completed <- this_ship_log_completed %>%
       filter(supply %in% this_configuration$supply |  phase %in% c("no vaccine", "essential workers"))
+
   }
 
   if (! output %in% c("cases","deaths")) stop("access_simulations: you have not specified how to output this output")
