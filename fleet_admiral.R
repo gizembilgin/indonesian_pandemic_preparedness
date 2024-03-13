@@ -38,6 +38,7 @@ length(LIST_setting)*length(LIST_vaccine_delivery_start_date)*
   length(LIST_rollout_modifier)*length(LIST_vaccine_derived_immunity)
 
 ship_log <- data.frame()
+indicator_log <- data.frame()
 
 for (setting in LIST_setting){
   for (vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
@@ -71,7 +72,16 @@ for (setting in LIST_setting){
             #NB: object.size(this_simulation)/object.size(incidence_log_tidy) -> x 2 size
             #OPTION: to save in a different format, e.g., JSON to save memory BUT requires more complex format
             
+            this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
+              mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
+                     vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date,
+                     R0 = FLEET_ADMIRAL_OVERRIDE$R0,
+                     infection_derived_immunity = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity,
+                     rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier,
+                     vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity)
+            
             ship_log = rbind(ship_log,this_simulation)
+            indicator_log = rbind(indicator_log,this_simulation_indicator)
             
           }
         }
@@ -79,6 +89,7 @@ for (setting in LIST_setting){
     }
   }
 }
+rm(this_simulation, this_simulation_indicator)
 
 time_of_result = Sys.time()
 time_of_result = gsub(':','-',time_of_result)

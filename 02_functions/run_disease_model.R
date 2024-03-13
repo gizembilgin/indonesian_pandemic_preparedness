@@ -8,7 +8,10 @@ run_disease_model <- function(time_horizon = 365,
                               this_age_group_labels = age_group_labels) {
   
   
-  vaccination_history <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies)
+  workshop <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies)
+  vaccination_history <- workshop$vaccination_history
+  indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon
+  rm(workshop)
   
   state = c(this_inital_state$individuals) 
   skeleton_state <- this_inital_state %>% select(-individuals)
@@ -238,5 +241,7 @@ if (nrow(vaccination_history) != 0){
     filter(time>0) %>%
     select(-cumulative_flag)
 
-  return(sol_log)
+  result = list(incidence_log_tidy = sol_log,
+                indicator_delivery_within_time_horizon = indicator_delivery_within_time_horizon)
+  return(result)
 }

@@ -109,10 +109,13 @@ parameters = list(
   J=num_age_groups
 )
 
-incidence_log_tidy <- run_disease_model(
+workshop <- run_disease_model(
   time_horizon = TOGGLE_time_horizon,
   vaccination_strategies = TOGGLE_vaccination_strategy
 )
+incidence_log_tidy <- workshop$incidence_log_tidy
+indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon
+rm(workshop)
 
 severe_disease_log_tidy <- project_severe_disease(
   point_estimate = TOGGLE_severe_disease_point_estimate,
