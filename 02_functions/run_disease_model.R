@@ -34,7 +34,6 @@ run_disease_model <- function(time_horizon = 365,
            supply = 0,
            cumulative_flag = 1)
 
-  
 if (nrow(vaccination_history) != 0){
 
     # run with daily time steps when vaccine being delivered
@@ -64,11 +63,12 @@ if (nrow(vaccination_history) != 0){
 
         if(this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
           this_time_sequence <- this_time_sequence[this_time_sequence > sol$time]
+          if(length(unique(this_time_sequence)) == 1) this_time_sequence <- c() #supply > max_supply and not first
         }
         
         if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
           # only run delivery to essential workers once (for first "supply" scenario)
-        }  else {
+        }  else if (length(this_time_sequence)>0){
           
           for (this_time in this_time_sequence){
           
