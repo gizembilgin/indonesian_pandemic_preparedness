@@ -22,11 +22,26 @@ LIST_strategy = list(
   list("older adults followed by all adults",
        list(c("60 to 110"),c(0,1)),
        list(c("18 to 29","30 to 59"),c(0,1))),
-  list("all adults at the same time",
-       list(c("18 to 29","30 to 59","60 to 110"),c(0,1))),
-  list("children before adults", 
+  list("adults then children",
+       list(c("18 to 29","30 to 59","60 to 110"),c(0,1)),
+       list(c("0 to 4","5 to 17"),c(0,1))),
+  list("children then adults", 
        list(c("0 to 4","5 to 17"),c(0,1)), 
-       list(c("18 to 29","30 to 59","60 to 110"),c(0,1)))                                                     
+       list(c("18 to 29","30 to 59","60 to 110"),c(0,1))),
+  list("step up",
+       list(c("0 to 4"),c(0,1)),
+       list(c("5 to 17"),c(0,1)),
+       list(c("18 to 29"),c(0,1)),
+       list(c("30 to 59"),c(0,1)),
+       list(c("60 to 110"),c(0,1))),
+  list("step down",
+       list(c("60 to 110"),c(0,1)),
+       list(c("30 to 59"),c(0,1)),
+       list(c("18 to 29"),c(0,1)),
+       list(c("5 to 17"),c(0,1)),
+       list(c("0 to 4"),c(0,1))),
+  list("uniform",
+       list(c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),c(0,1)))
   )
 #_______________________________________________________________________________
 
