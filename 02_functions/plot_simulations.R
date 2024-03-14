@@ -93,8 +93,11 @@ plot_simulations <- function(
     }
   } else{
     to_plot$phase <- factor(to_plot$phase, levels = c("older adults followed by all adults",
-                                                      "children before adults",
-                                                      "all adults at the same time",
+                                                      "children then adults" ,
+                                                      "adults then children"  ,
+                                                      "step down" ,
+                                                      "step up" ,
+                                                      "uniform",
                                                       "essential workers" ,
                                                       "no vaccine" ))
   }

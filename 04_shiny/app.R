@@ -82,7 +82,7 @@ ui <- fluidPage(
                               label = "Outcome:",
                               choices = c("cases","deaths","presentations")),
                   selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
-                              choices = CHOICES$vaccination_strategies, selected = "all adults at the same time", multiple = TRUE),
+                              choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
                   
                   #TOGGLES_project_severe_disease
                   uiOutput("TOGGLES_project_severe_disease_point_estimate"),
