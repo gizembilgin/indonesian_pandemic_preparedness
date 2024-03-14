@@ -3,7 +3,7 @@
 access_simulations <- function(
     load_simulations = TRUE, #load ship_log every run of accessing the simulation ~ 3 seconds
     this_configuration,
-    output = "incidence",
+    output = "cases",
     TOGGLES_project_severe_disease = list()
 ){
   
@@ -108,6 +108,39 @@ access_simulations <- function(
   this_ship_log_completed = rbind(this_ship_log, additional_rows) %>%
     select(-flag_reconstructed) #not currently used
   
+  #Check indicator_log that all supplies exist
+  workshop <- this_indicator_log %>%
+    filter(indicator_speed_sufficient == FALSE)
+  if (length(unique(workshop$supply))>1){
+    
+    for (this_supply in unique(workshop$supply[workshop$supply != min(workshop$supply)])){
+      loop_level_1 <- workshop %>% filter(supply == this_supply)
+      
+      for (this_phase in unique(loop_level_1$phase)){
+        loop_level_2 <- loop_level_1 %>% filter(phase == this_phase)
+        
+        for (this_vaccine_delivery_start_date in unique(loop_level_2$vaccine_delivery_start_date)){
+          loop_level_3 <- loop_level_2 %>% filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date)
+          
+          for (this_rollout_modifier in unique(loop_level_3$rollout_modifier))
+          replacement_rows <- this_ship_log_completed %>%
+            filter(rollout_modifier == this_rollout_modifier &
+                     vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+                     phase == this_phase & 
+                     supply == min(workshop$supply)) %>%
+              mutate(supply = this_supply)
+          this_ship_log_completed <- this_ship_log_completed %>%
+            filter(! (rollout_modifier == this_rollout_modifier &
+                     vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+                     phase == this_phase & 
+                     supply == this_supply))
+          this_ship_log_completed = rbind(this_ship_log_completed, replacement_rows)
+          
+        }
+      }
+    }
+  }
+  
   check = this_ship_log_completed %>%
     filter(! phase %in% c("essential workers", "no vaccine")) %>% 
     group_by(phase,supply,comorbidity,vaccination_status,age_group,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
@@ -117,10 +150,6 @@ access_simulations <- function(
   rm(this_ship_log,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
   
   if ("supply" %in% names(this_configuration)){#NB: couldn't remove earlier as needed to reconstruct the cascade
-    
-    #check indicator_log if exists
-    workshop <- this_indicator_log %>% filter(supply %in% this_configuration$supply)
-    ###COMEBACK - if multiple supplies calculated close to each other and some don't exist will need to use previous supply
     
     this_ship_log_completed <- this_ship_log_completed %>%
       filter(supply %in% this_configuration$supply |  phase %in% c("no vaccine", "essential workers"))
