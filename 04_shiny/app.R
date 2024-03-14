@@ -178,7 +178,7 @@ server <- function(input, output, session) {
  #   indicator_plot_ready
  #   })
  # output$test2 <- renderText ({
- #   input$vaccination_strategies
+ #   input %>% select({{var_1}})
  # })
   
   
@@ -213,82 +213,61 @@ server <- function(input, output, session) {
   # })
   
   
+  make_radioGroupButtons <- function(this_var,this_var_label,these_choices,this_var_selected){
+    radioGroupButtons(inputId = this_var,
+                      label = this_var_label,
+                      choices = these_choices,
+                      selected = this_var_selected)
+  }
+  make_checkboxGroupButtons <- function(this_var,this_var_label,these_choices,this_var_selected){
+    checkboxGroupButtons(inputId = this_var,
+                      label = this_var_label,
+                      choices = these_choices,
+                      selected = this_var_selected)
+  }
+  
   output$ui_R0 <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "R0"){
-      radioGroupButtons(inputId = "R0",
-                        label = "Basic reproduction number:",
-                        choices = CHOICES$R0,
-                        selected = 2)
+      make_radioGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2)
     }  else{
-      checkboxGroupButtons(inputId = "R0",
-                        label = "Basic reproduction number:",
-                        choices = CHOICES$R0,
-                        selected = 2)
+      make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2)
     }
   })
   output$ui_vaccine_delivery_start_date <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_delivery_start_date"){
-      radioGroupButtons(inputId = "vaccine_delivery_start_date",
-                        label = "Days between pathogen detected and vaccine first delivered:",
-                        choices = CHOICES$vaccine_delivery_start_date,
-                        selected = 100)
+      make_radioGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
+                             CHOICES$vaccine_delivery_start_date, 100)
     }  else{
-      checkboxGroupButtons(inputId = "vaccine_delivery_start_date",
-                           label = "Days between pathogen detected and vaccine first delivered:",
-                           choices = CHOICES$vaccine_delivery_start_date,
-                           selected = 100)
+      make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
+                             CHOICES$vaccine_delivery_start_date, 100)
     }
   })
   output$ui_supply <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "supply"){
-      radioGroupButtons(inputId = "supply",
-                        label = "Vaccine supply (% population):",
-                        choices = CHOICES$supply,
-                        selected = 0.2)
+      make_radioGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2)
     } else{
-      checkboxGroupButtons(inputId = "supply",
-                           label = "Vaccine supply (% population):",
-                           choices = CHOICES$supply,
-                           selected = 0.2)
+      make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2)
     }
   })
   output$ui_rollout_modifier <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "rollout_modifier"){
-      radioGroupButtons(inputId = "rollout_modifier",
-                        label = "Rollout speed:",
-                        choices = CHOICES$rollout_modifier,
-                        selected = 1) 
+      make_radioGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1)
     } else{
-      checkboxGroupButtons(inputId = "rollout_modifier",
-                           label = "Rollout speed:",
-                           choices = CHOICES$rollout_modifier,
-                           selected = 1) 
+      make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1)
     }
   })
   output$ui_infection_derived_immunity <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "infection_derived_immunity"){
-      radioGroupButtons(inputId = "infection_derived_immunity",
-                        label = "Protection from infection-derived immunity:",
-                        choices = CHOICES$infection_derived_immunity,
-                        selected = 1) 
+      make_radioGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1)
     } else{
-      checkboxGroupButtons(inputId = "infection_derived_immunity",
-                           label = "Protection from infection-derived immunity:",
-                           choices = CHOICES$infection_derived_immunity,
-                           selected = 1) 
+      make_checkboxGroupButtons ("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1)
     }
   })
   output$ui_vaccine_derived_immunity <- renderUI({
     if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_derived_immunity"){
-      radioGroupButtons(inputId = "vaccine_derived_immunity",
-                        label = "Protection from vaccine-derived immunity:",
-                        choices = CHOICES$vaccine_derived_immunity,
-                        selected = 1)
+      make_radioGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
     } else{
-      checkboxGroupButtons(inputId = "vaccine_derived_immunity",
-                           label = "Protection from vaccine-derived immunity:",
-                           choices = CHOICES$vaccine_derived_immunity,
-                           selected = 1)
+      make_checkboxGroupButtons ("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
     }
   })
   
