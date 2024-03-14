@@ -32,6 +32,7 @@ plot_simulations <- function(
     free_yaxis = FALSE,
     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
     display_severity_curve = 0,
+    display_age_proportion_on_severity_curve = 0,
     display_var_1 = 1,
     colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
@@ -317,7 +318,13 @@ plot_simulations <- function(
       filter(vaccination_status == 0 & comorbidity == 0) %>%
       ggplot() +
       geom_col(aes(x=age_group,y=case_fatality_rate)) +
-      facet_wrap(~ pathogen, ncol = 1,scales = "free")
+      facet_wrap(~ pathogen, ncol = 1,scales = "free") 
+    
+    if (display_age_proportion_on_severity_curve == 1){
+      extra_plot <- extra_plot +
+        geom_text(aes(x=age_group,y=case_fatality_rate ,label = as.character(round(pop_proportion ,digits=2))), 
+                  color = "white", size = 4, position = position_stack(vjust = 0.5))
+    }
     
     if (display_impact_heatmap == 1)  result <- ggarrange(left_plot,right_plot,extra_plot,nrow = 1) 
     if (display_impact_heatmap == 0)  result <- ggarrange(left_plot,extra_plot,nrow = 1) 

@@ -92,7 +92,7 @@ project_severe_disease <- function(data = data.frame(),
                 values_from = "individuals",
                 names_prefix = "comorb_")
   matrix_of_severe_disease <- matrix_of_severe_disease %>%
-    select(-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
+    #select(-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
     left_join(workshop, by = "age_group") %>%
     mutate(case_fatality_rate_0 = case_fatality_rate*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
            case_fatality_rate_1 = case_fatality_rate*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
