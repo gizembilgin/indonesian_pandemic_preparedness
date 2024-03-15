@@ -62,6 +62,27 @@ CHOICES = list(
 
 
 
+##### FUNCTION DEFINITIONS #####################################################
+make_checkboxGroupButtons <- function(this_var,this_label,these_choices,this_var_selected){
+  checkboxGroupButtons(inputId = this_var,
+                       label = this_label,
+                       choices = these_choices,
+                       selected = this_var_selected)
+}
+make_prettySwitch <- function(this_variable, this_label, default = TRUE){
+  prettySwitch(
+    label = this_label,
+    inputId = this_variable,
+    value = default,
+    status = "success",
+    fill = TRUE
+  )
+}
+################################################################################
+
+
+
+
 ##### USER INTERFACE DEFINITION ################################################
 ui <- fluidPage(
   
@@ -72,8 +93,6 @@ ui <- fluidPage(
     ### Widgets ################################################################ 
     sidebarPanel( width = 3,
                   
-                  uiOutput("var_1_input"),
-                  uiOutput("var_2_input"),
                   selectInput(inputId = "yaxis_title",
                               label = "Incidence statistic:",
                               choices = CHOICES$incidence_statistic,
@@ -90,63 +109,23 @@ ui <- fluidPage(
                   uiOutput("TOGGLES_project_severe_disease_VE"),
                   uiOutput("TOGGLES_project_comorb_increased_risk"),
                   
-                  uiOutput("ui_R0"),
-                  uiOutput("ui_vaccine_delivery_start_date"),
-                  uiOutput("ui_supply"),
-                  uiOutput("ui_rollout_modifier"),
-                  uiOutput("ui_infection_derived_immunity"),
-                  uiOutput("ui_vaccine_derived_immunity"),
+                  make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
+                  make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
+                                            CHOICES$vaccine_delivery_start_date, 100),
+                  make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
+                  make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
+                  make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
+                  make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1),
 
                   h5(strong("Display:")),
-                  prettySwitch(
-                    label = "free y-axis",
-                    inputId = "free_yaxis",
-                    value = TRUE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "heatmap",
-                    inputId = "display_impact_heatmap",
-                    value = TRUE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "severity curve",
-                    inputId = "display_severity_curve",
-                    value = FALSE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "age proportions on severity curve",
-                    inputId = "display_age_proportion_on_severity_curve",
-                    value = FALSE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "date of vaccine availability",
-                    inputId = "display_vaccine_availability",
-                    value = TRUE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "end of essential worker delivery",
-                    inputId = "display_end_of_essential_worker_delivery",
-                    value = TRUE,
-                    status = "success",
-                    fill = TRUE
-                  ),
-                  prettySwitch(
-                    label = "colour essential worker delivery",
-                    inputId = "colour_essential_workers_phase",
-                    value = TRUE,
-                    status = "success",
-                    fill = TRUE
-                  ),
+                  make_prettySwitch("free_yaxis","free y-axis"),
+                  make_prettySwitch("display_impact_heatmap","heatmap"),
+                  make_prettySwitch("display_severity_curve","severity curve", default = FALSE),
+                  make_prettySwitch("display_age_proportion_on_severity_curve","age proportions on severity curve", default = FALSE),
+                  make_prettySwitch("display_vaccine_availability","date of vaccine availability"),
+                  make_prettySwitch("display_end_of_essential_worker_delivery","end of essential worker delivery"),
+                  make_prettySwitch("colour_essential_workers_phase","colour essential worker delivery"),
+                  make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE),
                   
     ),
     
@@ -177,27 +156,12 @@ server <- function(input, output, session) {
  # output$test <- renderText ({
  #   indicator_plot_ready
  #   })
- # output$test2 <- renderText ({
- #   input %>% select({{var_1}})
- # })
+ output$test2 <- renderText ({
+   count_plot_dimensions()
+ })
   
   
   ### Conditional UI components
- output$var_1_input <- renderUI({
-   if(input$this_outcome != "cases") choices_list = c("pathogen",CHOICES$variable) else choices_list = CHOICES$variable
-   selectInput(inputId = "var_1",
-               label = "Variable to vary:",
-               choices = choices_list,
-               selected = "R0")
- })
-  output$var_2_input <- renderUI({
-    selectInput(inputId = "var_2",
-              label = "Second variable to vary (optional):",
-              choices = c(CHOICES$variable[CHOICES$variable != input$var_1],"none"),
-              selected = "none")
-  })
-  
-  
   output$TOGGLES_project_severe_disease_point_estimate <- renderUI({
     if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
   })
@@ -213,147 +177,120 @@ server <- function(input, output, session) {
   # })
   
   
-  make_radioGroupButtons <- function(this_var,this_var_label,these_choices,this_var_selected){
-    radioGroupButtons(inputId = this_var,
-                      label = this_var_label,
-                      choices = these_choices,
-                      selected = this_var_selected)
-  }
-  make_checkboxGroupButtons <- function(this_var,this_var_label,these_choices,this_var_selected){
-    checkboxGroupButtons(inputId = this_var,
-                      label = this_var_label,
-                      choices = these_choices,
-                      selected = this_var_selected)
-  }
-  
-  output$ui_R0 <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "R0"){
-      make_radioGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2)
-    }  else{
-      make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2)
-    }
-  })
-  output$ui_vaccine_delivery_start_date <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_delivery_start_date"){
-      make_radioGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
-                             CHOICES$vaccine_delivery_start_date, 100)
-    }  else{
-      make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
-                             CHOICES$vaccine_delivery_start_date, 100)
-    }
-  })
-  output$ui_supply <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "supply"){
-      make_radioGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2)
-    } else{
-      make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2)
-    }
-  })
-  output$ui_rollout_modifier <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "rollout_modifier"){
-      make_radioGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1)
-    } else{
-      make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1)
-    }
-  })
-  output$ui_infection_derived_immunity <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "infection_derived_immunity"){
-      make_radioGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1)
-    } else{
-      make_checkboxGroupButtons ("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1)
-    }
-  })
-  output$ui_vaccine_derived_immunity <- renderUI({
-    if(is.null(input$var_1) == FALSE && input$var_1 != "vaccine_derived_immunity"){
-      make_radioGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
-    } else{
-      make_checkboxGroupButtons ("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
-    }
-  })
-  
-  # this_var_1_range <- reactive({
-  #   if (input$var_1 == "R0"){input$R0} else{0}
-  # })
-
-  
-  # output$WARNING_no_plot <- renderText({
-  #   check_plot_exists <-    plot_simulations(
-  #     var_1 = input$var_1,
-  #     var_2 = var_2_reactive,
-  #     yaxis_title = input$yaxis_title,
-  #     display_impact_heatmap = input$display_impact_heatmap,
-  #     colour_essential_workers_phase = input$colour_essential_workers_phase, 
-  #     display_vaccine_availability = input$display_vaccine_availability,
-  #     display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
-  #     load_simulations = FALSE
-  #   )
-  #   if(is.character(check_plot_exists)) {
-  #     validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
-  #   }
-  # })
-  # 
-  #output plot
-  
-  
-  output$OUTPUT_plot <- renderPlot({
+  #count_plot_dimensions: checks which input variables have multiple values selected
+  count_plot_dimensions <- reactive({
+    plot_dimension_vector = c()
     
-    if (is.null(input$var_1)== FALSE){
-      if (input$var_1 == "R0"){this_var_1_range = input$R0
-      } else if (input$var_1 == "vaccine_delivery_start_date"){ this_var_1_range = input$vaccine_delivery_start_date
-      } else if (input$var_1 == "supply"){ this_var_1_range = input$supply
-      } else if (input$var_1 == "infection_derived_immunity"){ this_var_1_range = input$infection_derived_immunity
-      } else if (input$var_1 == "rollout_modifier"){ this_var_1_range = input$rollout_modifier
-      } else if (input$var_1 == "vaccine_derived_immunity"){ this_var_1_range = input$vaccine_derived_immunity
-      } else{this_var_1_range = NA}
-    } else{this_var_1_range = NA}
+    if (length(input$R0)>1)                          plot_dimension_vector = c(plot_dimension_vector,"R0")
+    if (length(input$vaccine_delivery_start_date)>1) plot_dimension_vector = c(plot_dimension_vector,"vaccine_delivery_start_date")
+    if (length(input$supply)>1)                      plot_dimension_vector = c(plot_dimension_vector,"supply")
+    if (length(input$rollout_modifier)>1)            plot_dimension_vector = c(plot_dimension_vector,"rollout_modifier")
+    if (length(input$infection_derived_immunity)>1)  plot_dimension_vector = c(plot_dimension_vector,"infection_derived_immunity")
+    if (length(input$vaccine_derived_immunity)>1)    plot_dimension_vector = c(plot_dimension_vector,"vaccine_derived_immunity")
+    if (input$this_outcome != "cases" & length(input$severe_disease_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
     
-    if ((input$this_outcome == "cases" |
-         (
-           is.numeric(input$severe_disease_point_estimate) &
-           is.character(input$severe_disease_age_distribution) &
-           is.numeric(input$severe_disease_VE)
-         )) &
-        is.null(input$R0) == FALSE &
-        is.null(input$vaccine_delivery_start_date) == FALSE &
-        is.null(input$supply) == FALSE &
-        is.null(input$infection_derived_immunity) == FALSE &
-        is.null(input$rollout_modifier) == FALSE &
-        is.null(input$vaccine_derived_immunity) == FALSE) {
-      
-      plot_simulations(
-        var_1 = input$var_1,
-        var_2 = input$var_2,
-        yaxis_title = input$yaxis_title,
-        this_outcome = input$this_outcome,
-        TOGGLES_project_severe_disease = list(
-          point_estimate =  input$severe_disease_point_estimate,
-          age_distribution = input$severe_disease_age_distribution,
-          VE_severe_disease =  input$severe_disease_VE,
-          comorb_increased_risk = 1
-        ), 
-        var_1_range = this_var_1_range,
-        default_configuration =
-          list(
-            R0 = input$R0,
-            vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
-            phase = c(input$vaccination_strategies,"essential workers", "no vaccine"),
-            supply = as.numeric(input$supply),
-            infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
-            rollout_modifier =  as.numeric(input$rollout_modifier),
-            vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity)
-          ),
-        free_yaxis = input$free_yaxis,
-        display_impact_heatmap = input$display_impact_heatmap,
-        display_severity_curve = input$display_severity_curve,
-        display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
-        display_var_1 = 0,
-        colour_essential_workers_phase = input$colour_essential_workers_phase,
-        display_vaccine_availability = input$display_vaccine_availability,
-        display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
-        load_simulations = FALSE
-      )
+    plot_dimension_vector
+  }) 
+  #select_var: tells you which variable has multiple values selected, and the range specified
+  select_var <- function(num){
+    
+    plot_dimensions <- count_plot_dimensions()
+    
+    if(length(plot_dimensions)>(num-1)) this_var = plot_dimensions[num] else if (num ==1) this_var = "R0" else this_var = NA
+    
+    if (is.na(this_var) == FALSE){
+      if (this_var == "R0") {
+        this_var_range = input$R0
+      } else if (this_var == "vaccine_delivery_start_date") {
+        this_var_range = input$vaccine_delivery_start_date
+      } else if (this_var == "supply") {
+        this_var_range = input$supply
+      } else if (this_var == "infection_derived_immunity") {
+        this_var_range = input$infection_derived_immunity
+      } else if (this_var == "rollout_modifier") {
+        this_var_range = input$rollout_modifier
+      } else if (this_var == "vaccine_derived_immunity") {
+        this_var_range = input$vaccine_derived_immunity
+      } else {
+        this_var_range = NA
+      }
+    } else{
+      this_var_range = NA
     }
+    list(this_var,this_var_range)
 
+  }
+  #call_plot: calls the plotting function after checking all required inputs provided
+  call_plot <- function(){
+   if ((input$this_outcome == "cases" |
+        (
+          is.numeric(input$severe_disease_point_estimate) &
+          is.character(input$severe_disease_age_distribution) &
+          is.numeric(input$severe_disease_VE)
+        )) &
+       is.null(input$R0) == FALSE &
+       is.null(input$vaccine_delivery_start_date) == FALSE &
+       is.null(input$supply) == FALSE &
+       is.null(input$infection_derived_immunity) == FALSE &
+       is.null(input$rollout_modifier) == FALSE &
+       is.null(input$vaccine_derived_immunity) == FALSE) {
+     
+     this_TOGGLES_project_severe_disease <- list(
+       point_estimate =  input$severe_disease_point_estimate,
+       age_distribution = input$severe_disease_age_distribution,
+       VE_severe_disease =  input$severe_disease_VE,
+       comorb_increased_risk = 1
+     )
+     if (input$this_outcome == "cases") this_TOGGLES_project_severe_disease <- list()
+     
+     plot_simulations(
+       var_1 = select_var(1)[[1]],
+       var_2 = select_var(2)[[1]],
+       yaxis_title = input$yaxis_title,
+       this_outcome = input$this_outcome,
+       TOGGLES_project_severe_disease = this_TOGGLES_project_severe_disease, 
+       var_1_range = select_var(1)[[2]],
+       var_2_range = select_var(2)[[2]],
+       default_configuration =
+         list(
+           R0 = input$R0,
+           vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
+           phase = c(input$vaccination_strategies,"essential workers", "no vaccine"),
+           supply = as.numeric(input$supply),
+           infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
+           rollout_modifier =  as.numeric(input$rollout_modifier),
+           vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity)
+         ),
+       free_yaxis = input$free_yaxis,
+       display_impact_heatmap = input$display_impact_heatmap,
+       display_severity_curve = input$display_severity_curve,
+       display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
+       display_var_1 = 0,
+       colour_essential_workers_phase = input$colour_essential_workers_phase,
+       display_vaccine_availability = input$display_vaccine_availability,
+       display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
+       load_simulations = FALSE
+     )
+   }
+ }
+ output_plot <-  reactive({call_plot()})
+  
+  output$WARNING_no_plot <- renderText({
+
+    plot_dimensions <- count_plot_dimensions()
+
+    if(length(plot_dimensions)>2) validate(paste0("You have selected multiple values for more than two variables (",length(plot_dimensions), " variables with multiple values selected) .",
+                                                  "\nTo create a plot please deselect values values for ",length(plot_dimensions)-2," variable(s)."))
+
+    check_plot_exists <- output_plot
+    if(is.character(check_plot_exists)) {
+      validate(paste("\nNote: The underlying simulation for this plot does not exist. There are no simulations available for the selected value of:",check_plot_exists ))
+    }
+  })
+  
+  output$OUTPUT_plot <-   renderPlot({
+    plot_dimensions <- count_plot_dimensions()
+    if (length(plot_dimensions)<3)  print(output_plot())
   },
   res = 96)
   
