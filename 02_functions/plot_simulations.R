@@ -20,7 +20,7 @@ plot_simulations <- function(
           "step up",                            
           "step down",                           
           "uniform", 
-          "essential workers",
+          "healthcare workers",
           "no vaccine"
         ),
         supply = c(0.2),
@@ -34,9 +34,9 @@ plot_simulations <- function(
     display_severity_curve = 0,
     display_age_proportion_on_severity_curve = 0,
     display_var_1 = 1,
-    colour_essential_workers_phase = 1, #options: 0 (no), 1 (yes)
+    colour_healthcare_workers_phase = 1, #options: 0 (no), 1 (yes)
     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
-    display_end_of_essential_worker_delivery = 1  #options: 0 (no), 1 (yes)
+    display_end_of_healthcare_worker_delivery = 1  #options: 0 (no), 1 (yes)
 ){
   
   ### FORCE
@@ -57,7 +57,7 @@ plot_simulations <- function(
     if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
   }
   
-  include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("essential workers","no vaccine" )]
+  include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("healthcare workers","no vaccine" )]
   
   to_plot <- to_plot_loaded <- access_simulations(
     load_simulations,
@@ -72,7 +72,7 @@ plot_simulations <- function(
     if (length(include_strategies)>1){
       to_plot <- to_plot %>%
         mutate(phase = case_when(
-          phase %in% c("no vaccine","essential workers") ~ phase,
+          phase %in% c("no vaccine","healthcare workers") ~ phase,
           TRUE ~ paste(phase,"(",var_2,.data[[var_2]],")")
         ))
     } else{
@@ -80,13 +80,13 @@ plot_simulations <- function(
       if (var_2 != "vaccine_delivery_start_date"){ # general case
         to_plot <- to_plot %>%
           mutate(phase = case_when(
-            phase %in% c("no vaccine","essential workers") ~ phase,
+            phase %in% c("no vaccine","healthcare workers") ~ phase,
             TRUE ~ paste(var_2,.data[[var_2]])
           ))
       } else if (var_2 == "vaccine_delivery_start_date"){
         to_plot <- to_plot %>%
           mutate(phase = case_when(
-            phase %in% c("no vaccine","essential workers") ~ phase,
+            phase %in% c("no vaccine","healthcare workers") ~ phase,
             TRUE ~ paste("vaccine delivery starting at",.data[[var_2]],"days")
           ))
       }
@@ -101,7 +101,7 @@ plot_simulations <- function(
                                                       "step down" ,
                                                       "step up" ,
                                                       "uniform",
-                                                      "essential workers" ,
+                                                      "healthcare workers" ,
                                                       "no vaccine" ))
   }
   
@@ -113,21 +113,21 @@ plot_simulations <- function(
   rm(to_plot_loaded)
   
   
-  ### Collect information on the last date of essential worker rollout in case the explicit labelling of this phase is dropped later
+  ### Collect information on the last date of healthcare worker rollout in case the explicit labelling of this phase is dropped later
   vline_data2 <- to_plot %>%
-    filter(phase == "essential workers") %>%
+    filter(phase == "healthcare workers") %>%
     group_by(.data[[var_1]]) %>%
-    summarise(end_of_essential_workers_phase = max(time), .groups = "keep") 
+    summarise(end_of_healthcare_workers_phase = max(time), .groups = "keep") 
   
   
   ### Making plot option 1/3: Incidence vs time
   if (yaxis_title == "incidence"){
     
-    if (colour_essential_workers_phase == 1){
+    if (colour_healthcare_workers_phase == 1){
       to_plot_left_plot <- to_plot
-    } else if (colour_essential_workers_phase == 0){
+    } else if (colour_healthcare_workers_phase == 0){
       to_plot_left_plot <- to_plot %>%
-        filter(! phase %in% c("essential workers"))
+        filter(! phase %in% c("healthcare workers"))
     }
     
     left_plot <- ggplot(to_plot_left_plot) +
@@ -149,11 +149,11 @@ plot_simulations <- function(
     mutate(cumulative_incidence = cumsum(incidence))
   
   
-  ### Isolate essential worker period if colour_essential_workers_phase == 1 
-  if (colour_essential_workers_phase == 1){
-    #remove strategy before essential workers
-    max_essential_workers_time = to_plot %>%
-      filter(phase == "essential workers") %>%
+  ### Isolate healthcare worker period if colour_healthcare_workers_phase == 1 
+  if (colour_healthcare_workers_phase == 1){
+    #remove strategy before healthcare workers
+    max_healthcare_workers_time = to_plot %>%
+      filter(phase == "healthcare workers") %>%
       summarise(max_time = max(time), .groups = "keep")%>%
       ungroup() %>%
       select(-phase,-supply)
@@ -168,18 +168,18 @@ plot_simulations <- function(
     if ("pathogen" %in% names(to_plot)) join_by_vars = c(join_by_vars,"pathogen")
     
     to_plot <- to_plot %>% 
-      left_join(max_essential_workers_time, by = join_by_vars) %>%
+      left_join(max_healthcare_workers_time, by = join_by_vars) %>%
       left_join(cumulative_no_vax, by = join_by_vars) %>%
-      filter(!(time <= max_time & ! phase %in% c("no vaccine","essential workers"))) %>%
+      filter(!(time <= max_time & ! phase %in% c("no vaccine","healthcare workers"))) %>%
       mutate(cumulative_incidence = case_when(
-        phase == "essential workers" ~ cumulative_incidence + cum_no_vax,
+        phase == "healthcare workers" ~ cumulative_incidence + cum_no_vax,
         TRUE ~ cumulative_incidence
       )) %>%
       select(-max_time, - cum_no_vax)
     
-  } else if (colour_essential_workers_phase == 0){
+  } else if (colour_healthcare_workers_phase == 0){
     to_plot <- to_plot %>%
-      filter(! phase %in% c("essential workers"))
+      filter(! phase %in% c("healthcare workers"))
   }
   
   
@@ -227,7 +227,7 @@ plot_simulations <- function(
   ### Apply plotting visuals
   #uniform colours, NB: caution as these names are user defined in the command_deck (will be fixed in the Shiny)
   defined_colour_palette <-  c("no vaccine" = "#F8766D", 
-                               "essential workers"  = "#00BF7D" ,                  
+                               "healthcare workers"  = "#00BF7D" ,                  
                                "older adults followed by all adults" = "#3b94b2",
                                "adults then children" = "#76c3c4" ,              
                                "children then adults" ="#ebd829" ,               
@@ -258,9 +258,9 @@ plot_simulations <- function(
     left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = vaccine_delivery_start_date), linetype = "dashed")
     
   }
-  #dashed line for last day of essential worker delivery
-  if (display_end_of_essential_worker_delivery == 1){
-    left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_essential_workers_phase), linetype = "dashed")
+  #dashed line for last day of healthcare worker delivery
+  if (display_end_of_healthcare_worker_delivery == 1){
+    left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_healthcare_workers_phase), linetype = "dashed")
   }
   #free y-axis
   if (free_yaxis) left_plot <- left_plot + facet_grid(.data[[var_1]] ~. , scales = "free_y")
@@ -289,7 +289,7 @@ plot_simulations <- function(
     right_plot <-  ggplot(to_plot) + 
       geom_tile(aes(x=.data[[var_1]],y=phase,fill=vaccine_effect)) +
       geom_text(aes(x=.data[[var_1]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
-      scale_fill_gradientn(colours=c("white","orange","red","dark red"), limits=c(0,1)) +
+      scale_fill_gradientn(colours=c("white","springgreen3","forestgreen"), limits=c(0,1)) +
       ylab("strategy") +
       coord_flip() +
       theme_bw() +

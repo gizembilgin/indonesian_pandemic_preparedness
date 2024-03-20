@@ -12,6 +12,11 @@ load_setting <- function(this_setting = "Indonesia",
   population <- population_MASTER %>%
     filter(name_english == this_setting | name_indonesian == this_setting) %>%
     select(age_group,individuals)
+  
+  indonesia_population_numeric <- population_MASTER %>%
+    filter(name_english == "Indonesia") %>%
+    summarise(individuals = sum(individuals))
+  indonesia_population_numeric < - indonesia_population_numeric$individuals
   rm(population_MASTER)
   
   
@@ -36,9 +41,13 @@ load_setting <- function(this_setting = "Indonesia",
   contact_matrix <- as.matrix(workshop[,-c(1)])
   
   
-  #(3/8) % of essential workers (DUMMY VALUE) - COVID-19 vaccination data
-  essential_workers <- data.frame(age_group = age_group_labels,
-                                  proportion = c(0,rep(0.1,length(age_group_labels)-2),0))
+  #(3/8) % of healthcare workers (DUMMY VALUE) - COVID-19 vaccination data
+  #NB: Assuming healthcare workers all 18 to 59, and uniformly distributed
+  healthcare_workers <- 2046639/indonesia_population_numeric #% of population
+  healthcare_workers <- healthcare_workers * sum(population$individuals) / sum(population$individuals[population$age_group %in%  c("18 to 29","30 to 59")]) #% of 18 to 59 working population
+  healthcare_workers <- healthcare_workers$individuals
+  healthcare_workers <- data.frame(age_group = age_group_labels,
+                                  proportion = c(0,0,healthcare_workers,healthcare_workers,0))
   
   
   #(4/8) daily_vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
@@ -46,7 +55,7 @@ load_setting <- function(this_setting = "Indonesia",
   
   
   #(5/8) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
-  vaccine_acceptance = data.frame(phase = c(rep("essential workers",2),rep("vaccination strategy",2)),
+  vaccine_acceptance = data.frame(phase = c(rep("healthcare workers",2),rep("vaccination strategy",2)),
                                   comorbidity = rep(c(0,1),2),
                                   uptake = c(0.95,0.95,0.9,0.95))
   
@@ -85,7 +94,7 @@ load_setting <- function(this_setting = "Indonesia",
   loaded_setting_characteristics <- list(population = population,
                                          population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
-                                         essential_workers = essential_workers,
+                                         healthcare_workers = healthcare_workers,
                                          daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity,
                                          vaccine_acceptance = vaccine_acceptance,
                                          comorbidities = comorbidities,

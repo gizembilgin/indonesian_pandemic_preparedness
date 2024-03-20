@@ -30,7 +30,7 @@ plot_simulations (
           "step up",                            
           "step down",                           
           "uniform", 
-          "essential workers",
+          "healthcare workers",
           "no vaccine"
         ),
         supply = c(0.2),
@@ -42,9 +42,9 @@ plot_simulations (
     #options: 0 (no), 1 (yes)
     display_impact_heatmap = 1, 
     display_var_1 = 1,
-    colour_essential_workers_phase = 1, 
+    colour_healthcare_workers_phase = 1, 
     display_vaccine_availability = 1, 
-    display_end_of_essential_worker_delivery = 1 
+    display_end_of_healthcare_worker_delivery = 1 
 )
 ################################################################################
 
@@ -66,7 +66,7 @@ plot_simulations (
       vaccine_delivery_start_date = 100,
       phase = c(
         "uniform",
-        "essential workers",
+        "healthcare workers",
         "no vaccine"
       ),
       supply = c(0.8),
@@ -76,10 +76,10 @@ plot_simulations (
     ),
   load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
-  colour_essential_workers_phase = 0,
+  colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
   display_vaccine_availability = 1, 
-  display_end_of_essential_worker_delivery = 0 
+  display_end_of_healthcare_worker_delivery = 0 
 )
 
 
@@ -103,7 +103,7 @@ plot_simulations (
                   "step up",                            
                   "step down",                           
                   "uniform", 
-                  "essential workers",
+                  "healthcare workers",
                   "no vaccine" ),
       supply = c(0.8),
       infection_derived_immunity = 1,
@@ -112,10 +112,10 @@ plot_simulations (
     ),
   load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
-  colour_essential_workers_phase = 0,
+  colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
   display_vaccine_availability = 1, 
-  display_end_of_essential_worker_delivery = 1,
+  display_end_of_healthcare_worker_delivery = 1,
   display_impact_heatmap = 0
 )
 
@@ -136,7 +136,7 @@ plot_simulations (
       vaccine_delivery_start_date = 100,
       phase =  c(
                  "uniform",
-                 "essential workers",
+                 "healthcare workers",
                  "no vaccine" ),
       supply = c(0.8),
       infection_derived_immunity = 1,
@@ -145,10 +145,10 @@ plot_simulations (
     ),
   load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
-  colour_essential_workers_phase = 0,
+  colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
   display_vaccine_availability = 1, 
-  display_end_of_essential_worker_delivery = 1,
+  display_end_of_healthcare_worker_delivery = 1,
   display_impact_heatmap = 0
 )
 ################################################################################
@@ -163,7 +163,7 @@ plot_simulations (
   this_outcome = "deaths",    #options: cases, deaths
   TOGGLES_project_severe_disease = list(
     point_estimate =  1 / 100,
-    age_distribution = c("SARS", "Plague", "Influenza 1918"),
+    age_distribution = c("SARS", "Plague", "Diptheria"),
     VE_severe_disease = 1,
     comorb_increased_risk = 1
   ),
@@ -178,9 +178,9 @@ plot_simulations (
         "step up",                            
         "step down",                           
         "uniform" ,
-        "essential workers",
+        "healthcare workers",
         "no vaccine" ),
-      supply = c(0.8),
+      supply = c(0.5),
       infection_derived_immunity = 1,
       rollout_modifier = 2,
       vaccine_derived_immunity = 1
@@ -188,7 +188,7 @@ plot_simulations (
   load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   display_severity_curve = 1, 
-  colour_essential_workers_phase = 1,
+  colour_healthcare_workers_phase = 1,
   display_var_1 = 0,
   display_vaccine_availability = 1
 )

@@ -39,7 +39,7 @@ CHOICES = list(
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
-  vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "essential workers")]),
+  vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "healthcare workers")]),
   R0 = unique(ship_log$R0) ,
   vaccine_delivery_start_date = unique(ship_log$vaccine_delivery_start_date) ,
   supply = 
@@ -123,8 +123,8 @@ ui <- fluidPage(
                   make_prettySwitch("display_severity_curve","severity curve", default = FALSE),
                   make_prettySwitch("display_age_proportion_on_severity_curve","age proportions on severity curve", default = FALSE),
                   make_prettySwitch("display_vaccine_availability","date of vaccine availability"),
-                  make_prettySwitch("display_end_of_essential_worker_delivery","end of essential worker delivery"),
-                  make_prettySwitch("colour_essential_workers_phase","colour essential worker delivery"),
+                  make_prettySwitch("display_end_of_healthcare_worker_delivery","end of healthcare worker delivery"),
+                  make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
                   make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE),
                   
     ),
@@ -156,9 +156,9 @@ server <- function(input, output, session) {
  # output$test <- renderText ({
  #   indicator_plot_ready
  #   })
- output$test2 <- renderText ({
-   count_plot_dimensions()
- })
+ # output$test2 <- renderText ({
+ #   count_plot_dimensions()
+ # })
   
   
   ### Conditional UI components
@@ -188,6 +188,8 @@ server <- function(input, output, session) {
     if (length(input$infection_derived_immunity)>1)  plot_dimension_vector = c(plot_dimension_vector,"infection_derived_immunity")
     if (length(input$vaccine_derived_immunity)>1)    plot_dimension_vector = c(plot_dimension_vector,"vaccine_derived_immunity")
     if (input$this_outcome != "cases" & length(input$severe_disease_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
+    
+    if (input$switch_plot_dimensions == TRUE) plot_dimension_vector <- rev(plot_dimension_vector)
     
     plot_dimension_vector
   }) 
@@ -255,7 +257,7 @@ server <- function(input, output, session) {
          list(
            R0 = input$R0,
            vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
-           phase = c(input$vaccination_strategies,"essential workers", "no vaccine"),
+           phase = c(input$vaccination_strategies,"healthcare workers", "no vaccine"),
            supply = as.numeric(input$supply),
            infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
            rollout_modifier =  as.numeric(input$rollout_modifier),
@@ -266,9 +268,9 @@ server <- function(input, output, session) {
        display_severity_curve = input$display_severity_curve,
        display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
        display_var_1 = 0,
-       colour_essential_workers_phase = input$colour_essential_workers_phase,
+       colour_healthcare_workers_phase = input$colour_healthcare_workers_phase,
        display_vaccine_availability = input$display_vaccine_availability,
-       display_end_of_essential_worker_delivery = input$display_end_of_essential_worker_delivery,
+       display_end_of_healthcare_worker_delivery = input$display_end_of_healthcare_worker_delivery,
        load_simulations = FALSE
      )
    }

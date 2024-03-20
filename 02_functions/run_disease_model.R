@@ -48,15 +48,15 @@ if (nrow(vaccination_history) != 0){
         this_time_sequence = time_sequence[time_sequence %in% unique(this_vaccination_history$time)]
         
         # load cascade point (see: 99_scanned schematics/2023_01_15 cascade of simulations.pdf)
-        if (this_phase == "essential workers"){
+        if (this_phase == "healthcare workers"){
           sol <- sol_no_vaccine %>%
             filter(time == min(this_time_sequence) -1)
           
-          this_time_sequence = this_time_sequence[this_time_sequence < min(vaccination_history$time[vaccination_history$phase != "essential workers"])]
-          # skip if after non-exclusive essential worker delivery period, ensures that day of overlap not missed!
+          this_time_sequence = this_time_sequence[this_time_sequence < min(vaccination_history$time[vaccination_history$phase != "healthcare workers"])]
+          # skip if after non-exclusive healthcare worker delivery period, ensures that day of overlap not missed!
           
         } else if (this_supply == unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
-          sol <- sol_handover_essential_workers
+          sol <- sol_handover_healthcare_workers
         } else {
           sol <- sol_handover                 
         }
@@ -66,8 +66,8 @@ if (nrow(vaccination_history) != 0){
           if(length(unique(this_time_sequence)) == 1) this_time_sequence <- c() #supply > max_supply and not first
         }
         
-        if (this_phase == "essential workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
-          # only run delivery to essential workers once (for first "supply" scenario)
+        if (this_phase == "healthcare workers" & this_supply != unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])[1]){
+          # only run delivery to healthcare workers once (for first "supply" scenario)
         }  else if (length(this_time_sequence)>0){
           
           for (this_time in this_time_sequence){
@@ -84,10 +84,10 @@ if (nrow(vaccination_history) != 0){
             
             todays_vaccinations <- vaccination_history %>%
               filter(time == this_time &
-                       phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
-                       (supply == this_supply | is.na(supply))) %>%   # is.na(supply) = NA when essential_workers
+                       phase %in% c(this_phase,"healthcare workers") & #include healthcare workers always to capture day of concurrent delivery with others
+                       (supply == this_supply | is.na(supply))) %>%   # is.na(supply) = NA when healthcare_workers
               select(-time,-phase) %>%
-              group_by(age_group,comorbidity) %>% #sum doses given to essential workers and general population
+              group_by(age_group,comorbidity) %>% #sum doses given to healthcare workers and general population
               summarise(doses_delivered = sum(doses_delivered), .groups = "keep")
             
             if (nrow(todays_vaccinations)>0){
@@ -125,7 +125,7 @@ if (nrow(vaccination_history) != 0){
             #CHECK: (INTENSIVE) vaccination history aligns with next_state configuration
             # expected_numbers <- vaccination_history %>%
             #   filter(time <= this_time) %>%
-            #   filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
+            #   filter(phase %in% c(this_phase,"healthcare workers") & #include healthcare workers always to capture day of concurrent delivery with others
             #            (supply == this_supply | is.na(supply))) %>%
             #   group_by(age_group,comorbidity) %>%
             #   summarise(doses_delivered = sum(doses_delivered), .groups = "keep")
@@ -174,10 +174,10 @@ if (nrow(vaccination_history) != 0){
                      cumulative_flag = 0)
             sol_log <- rbind(sol_log,this_sol_log)
             
-            #only run essential workers the first time (nb: run multiple times depending on vax strategies being tested)
-            if (this_phase == "essential workers" & this_time == max(this_time_sequence)){
-              sol_handover_essential_workers <- sol
-            } else if (this_phase != "essential workers" & this_time == max(this_time_sequence)-1){ #save and use as start point for next supply in this phase
+            #only run healthcare workers the first time (nb: run multiple times depending on vax strategies being tested)
+            if (this_phase == "healthcare workers" & this_time == max(this_time_sequence)){
+              sol_handover_healthcare_workers <- sol
+            } else if (this_phase != "healthcare workers" & this_time == max(this_time_sequence)-1){ #save and use as start point for next supply in this phase
               sol_handover <- sol
             }
             
@@ -185,7 +185,7 @@ if (nrow(vaccination_history) != 0){
         }
         
         #run remainder where no longer daily vaccine supply        
-        if (this_phase != "essential workers"){
+        if (this_phase != "healthcare workers"){
 
           sol <- as.data.frame(ode(y=next_state,
                                    times=seq(this_time-1,time_horizon,by=1),

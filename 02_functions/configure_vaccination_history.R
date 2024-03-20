@@ -1,5 +1,5 @@
 
-# This function creates combinations of vaccination strategies. It starts with the delivery of vaccines to essential workers, before
+# This function creates combinations of vaccination strategies. It starts with the delivery of vaccines to healthcare workers, before
 # providing multiple possible allocation pathways, identified by the variable "phase". 
 
 configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
@@ -7,7 +7,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
                                           daily_vaccine_delivery_capacity = loaded_setting_characteristics$daily_vaccine_delivery_capacity,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
-                                          essential_workers = loaded_setting_characteristics$essential_workers){
+                                          healthcare_workers = loaded_setting_characteristics$healthcare_workers){
   
   
   
@@ -44,43 +44,43 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   # }
   
 
-  ### DELIVER VACCINES TO ESSENTIAL WORKERS
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "essential workers",-c(1)]
+  ### DELIVER VACCINES TO healthcare workerS
+  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "healthcare workers",-c(1)]
 
-  essential_worker_target <- population_by_comorbidity %>%
-    left_join(essential_workers, by = "age_group") %>%
+  healthcare_worker_target <- population_by_comorbidity %>%
+    left_join(healthcare_workers, by = "age_group") %>%
     left_join(this_vaccine_acceptance, by = "comorbidity") %>%
     mutate(individuals = individuals * proportion * uptake) %>%
     filter(individuals != 0) %>%
     select(-uptake) %>%
-    mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all essential workers
-    mutate(doses_delivered = proportion * daily_vaccine_delivery_capacity) #calculate doses_delivered on a day of full capacity delivery to essential workers
-  if(round(sum(essential_worker_target$proportion),digits=2) != 1) stop("proportion calculation on essential_worker_target not EQ 100%")
+    mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all healthcare workers
+    mutate(doses_delivered = proportion * daily_vaccine_delivery_capacity) #calculate doses_delivered on a day of full capacity delivery to healthcare workers
+  if(round(sum(healthcare_worker_target$proportion),digits=2) != 1) stop("proportion calculation on healthcare_worker_target not EQ 100%")
   
-  essential_worker_timeframe = floor(sum(essential_worker_target$individuals)/daily_vaccine_delivery_capacity) #create sequence of days for full capacity delivery to essential workers
-  time_sequence = seq(LIST_vaccination_strategies$vaccine_delivery_start_date,LIST_vaccination_strategies$vaccine_delivery_start_date+essential_worker_timeframe-1,by=1)
-  if(length(time_sequence) != essential_worker_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to essential workers")
+  healthcare_worker_timeframe = floor(sum(healthcare_worker_target$individuals)/daily_vaccine_delivery_capacity) #create sequence of days for full capacity delivery to healthcare workers
+  time_sequence = seq(LIST_vaccination_strategies$vaccine_delivery_start_date,LIST_vaccination_strategies$vaccine_delivery_start_date+healthcare_worker_timeframe-1,by=1)
+  if(length(time_sequence) != healthcare_worker_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to healthcare workers")
   
-  essential_worker_delivery = crossing(time = time_sequence,essential_worker_target) 
-  final_row_delivery =  sum(essential_worker_target$individuals) - sum(essential_worker_delivery$doses_delivered)
-  final_row = essential_worker_target %>%
+  healthcare_worker_delivery = crossing(time = time_sequence,healthcare_worker_target) 
+  final_row_delivery =  sum(healthcare_worker_target$individuals) - sum(healthcare_worker_delivery$doses_delivered)
+  final_row = healthcare_worker_target %>%
     mutate(doses_delivered = proportion * final_row_delivery,
-           time = LIST_vaccination_strategies$vaccine_delivery_start_date + essential_worker_timeframe)
-  essential_worker_delivery <- rbind(essential_worker_delivery,final_row) %>%
+           time = LIST_vaccination_strategies$vaccine_delivery_start_date + healthcare_worker_timeframe)
+  healthcare_worker_delivery <- rbind(healthcare_worker_delivery,final_row) %>%
     select(-proportion,-individuals) %>%
-    mutate(phase = "essential workers")
-  if(abs(sum(essential_worker_delivery$doses_delivered) - sum(essential_worker_target$individuals))>1) stop("doses delivered to essential workers does not align with essential worker target")
-  if(nrow(essential_worker_delivery[essential_worker_delivery$doses_delivered<0,])>0) stop("negative doses delivered to essential workers")
+    mutate(phase = "healthcare workers")
+  if(abs(sum(healthcare_worker_delivery$doses_delivered) - sum(healthcare_worker_target$individuals))>1) stop("doses delivered to healthcare workers does not align with healthcare worker target")
+  if(nrow(healthcare_worker_delivery[healthcare_worker_delivery$doses_delivered<0,])>0) stop("negative doses delivered to healthcare workers")
   
-  partial_dose_delivery_on_first_day_essential_workers = daily_vaccine_delivery_capacity - final_row_delivery
-  if (partial_dose_delivery_on_first_day_essential_workers<0) stop("first day of delivery for people who aren't essential workers is negative")
+  partial_dose_delivery_on_first_day_healthcare_workers = daily_vaccine_delivery_capacity - final_row_delivery
+  if (partial_dose_delivery_on_first_day_healthcare_workers<0) stop("first day of delivery for people who aren't healthcare workers is negative")
   
   
   ### DELIVER VACCINES AS PER ALLOCATION STRATEGIES LISTED
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "essential workers",-c(1)]
+  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "healthcare workers",-c(1)]
   
   remainder_of_population_target <- population_by_comorbidity %>%
-    left_join(essential_workers, by = "age_group") %>%
+    left_join(healthcare_workers, by = "age_group") %>%
     left_join(this_vaccine_acceptance, by = "comorbidity") %>%
     mutate(individuals = individuals * (1-proportion) * uptake) %>%
     select(-proportion,-uptake)
@@ -94,9 +94,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     
     #CHECK value of this_supply
     if(this_supply > 1 | this_supply < 0) stop("vaccination supply not within 0 to 1")
-    if (this_supply < sum(essential_worker_target$individuals)/sum(population_by_comorbidity$individuals)){
-      stop(paste0("This supply (",this_supply*100,"%) is not sufficient to reach essential workers. Please specify a supply of at least ",
-                  round(sum(essential_worker_target$individuals)/sum(population_by_comorbidity$individuals) * 100,digits=0), "%.",
+    if (this_supply < sum(healthcare_worker_target$individuals)/sum(population_by_comorbidity$individuals)){
+      stop(paste0("This supply (",this_supply*100,"%) is not sufficient to reach healthcare workers. Please specify a supply of at least ",
+                  round(sum(healthcare_worker_target$individuals)/sum(population_by_comorbidity$individuals) * 100,digits=0), "%.",
                   " There is no point comparing vaccine prioritisation decisions without prioritisation decisions."))
     } 
     
@@ -131,7 +131,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       this_supply_modified = min(max_supply,this_supply)
       
       #indicator_supply_delivered == size of priority group uses complete supply      
-      if (sum(this_population_target$individuals) + sum(essential_worker_target$individuals) < this_supply * sum(population_by_comorbidity$individuals)) {
+      if (sum(this_population_target$individuals) + sum(healthcare_worker_target$individuals) < this_supply * sum(population_by_comorbidity$individuals)) {
         this_row$indicator_supply_delivered = FALSE
       } else{
         this_row$indicator_supply_delivered = TRUE
@@ -140,7 +140,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       
       # CALCULATE absolute number of supply and ALIGN this_population_target with supply
-      this_supply_abs = this_supply_modified * sum(population_by_comorbidity$individuals) - sum(essential_worker_target$individuals)
+      this_supply_abs = this_supply_modified * sum(population_by_comorbidity$individuals) - sum(healthcare_worker_target$individuals)
       if (this_supply_abs > sum(this_population_target$individuals)) this_supply_abs = sum(this_population_target$individuals)
 
       
@@ -174,14 +174,14 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       if(round(sum(this_population_target$proportion),digits=2) != length(unique(this_population_target$priority))) stop("proportion calculation on this_population_target not EQ 100%")
       
       
-      this_vax_history <- essential_worker_delivery
+      this_vax_history <- healthcare_worker_delivery
       
       
       #ALLOCATE doses by day
       for (this_priority in sort(unique(this_population_target$priority))){
         
         if (this_priority == 1){
-          partial_dose_delivery_on_first_day = partial_dose_delivery_on_first_day_essential_workers
+          partial_dose_delivery_on_first_day = partial_dose_delivery_on_first_day_healthcare_workers
         }
         
         this_priority_target_population  <- this_population_target %>%
@@ -233,7 +233,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       if (nrow(check)>0) stop("vaccine delivery exceeded supply")
 
       this_target_population_delivery <- this_vax_history %>%
-        filter(phase != "essential workers")
+        filter(phase != "healthcare workers")
       
       
       #CHECK: delivery to target population
@@ -245,14 +245,14 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     }
   }
   
-  vaccination_history_permutations <- bind_rows(essential_worker_delivery,target_population_delivery)
+  vaccination_history_permutations <- bind_rows(healthcare_worker_delivery,target_population_delivery)
   
   #CHECK: never deliver more doses than individuals
   for (this_phase in unique(vaccination_history_permutations$phase)){
     for (this_supply in unique(vaccination_history_permutations$supply)){
       
       check <- vaccination_history_permutations %>% 
-        filter(phase %in% c(this_phase,"essential workers") &
+        filter(phase %in% c(this_phase,"healthcare workers") &
                  (supply == this_supply | is.na(supply))) %>%
         group_by(age_group,comorbidity) %>%
         summarise(doses_delivered = sum(doses_delivered), .groups = "keep") %>%
@@ -273,7 +273,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   }
   
   #CHECK: all supply levels have same middle-period delivery (to ensure cascade in run_disease_model)
-  for (this_phase in unique(vaccination_history_permutations$phase[vaccination_history_permutations$phase != "essential workers"])){
+  for (this_phase in unique(vaccination_history_permutations$phase[vaccination_history_permutations$phase != "healthcare workers"])){
     check = vaccination_history_permutations %>% 
       filter(phase %in% c(this_phase)) %>% 
       mutate(doses_delivered = round(doses_delivered,digits = 2)) %>%

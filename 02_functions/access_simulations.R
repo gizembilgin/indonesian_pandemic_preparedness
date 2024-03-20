@@ -49,14 +49,14 @@ access_simulations <- function(
       this_workshop <- this_ship_log %>% 
         filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date &
                  rollout_modifier == this_rollout_modifier &
-                 ! phase %in% c("no vaccine","essential workers"))
+                 ! phase %in% c("no vaccine","healthcare workers"))
       
-      #Part 1/2: no vaccine and essential worker phases
+      #Part 1/2: no vaccine and healthcare worker phases
       this_before_strategy = this_ship_log %>% 
         filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date &
                  rollout_modifier == this_rollout_modifier) %>%
         filter((phase == "no vaccine" & time < vaccine_delivery_start_date) |
-                 phase %in% c("essential workers")) %>% #CHECKED: unique(to_propogate$supply) == 0 for no vax and 0.2 for essential workers
+                 phase %in% c("healthcare workers")) %>% #CHECKED: unique(to_propogate$supply) == 0 for no vax and 0.2 for healthcare workers
         ungroup() %>%
         select(-phase,-supply)
       before_strategy_contribution = this_workshop %>%
@@ -91,7 +91,7 @@ access_simulations <- function(
         
         cascade_contribution <- this_workshop %>%
           filter(supply == this_supply &
-                   phase != "essential workers" &
+                   phase != "healthcare workers" &
                    !(time %in% next_supply_times$time)) %>%
           ungroup() %>%
           select(-supply) %>%
@@ -142,7 +142,7 @@ access_simulations <- function(
   }
   
   check = this_ship_log_completed %>%
-    filter(! phase %in% c("essential workers", "no vaccine")) %>% 
+    filter(! phase %in% c("healthcare workers", "no vaccine")) %>% 
     group_by(phase,supply,comorbidity,vaccination_status,age_group,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
     summarise(n=n(), .groups = "keep") %>%
     filter(n != max(this_ship_log_completed$time))
@@ -152,7 +152,7 @@ access_simulations <- function(
   if ("supply" %in% names(this_configuration)){#NB: couldn't remove earlier as needed to reconstruct the cascade
     
     this_ship_log_completed <- this_ship_log_completed %>%
-      filter(supply %in% this_configuration$supply |  phase %in% c("no vaccine", "essential workers"))
+      filter(supply %in% this_configuration$supply |  phase %in% c("no vaccine", "healthcare workers"))
 
   }
 

@@ -20,7 +20,7 @@ todays_vaccinations
 this_phase
 # [1] "older adults followed by all adults"
 unique(vaccination_history$phase)
-# [1] "essential workers"                   "older adults followed by all adults" "all adults at the same time"        
+# [1] "healthcare workers"                   "older adults followed by all adults" "all adults at the same time"        
 # [4] "children before adults"   
 #i.e., first vaccination strategy
 
@@ -28,7 +28,7 @@ this_time
 # [1] 125
 
 vaccination_history %>%
-  filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
+  filter(phase %in% c(this_phase,"healthcare workers") & #include healthcare workers always to capture day of concurrent delivery with others
            (supply == this_supply | is.na(supply))) %>%
   filter(age_group == "60 to 110") %>%
   group_by(age_group,comorbidity) %>%
@@ -46,7 +46,7 @@ loaded_setting_characteristics$population_by_comorbidity[loaded_setting_characte
 
 vaccination_history %>%
   filter(time <= this_time) %>%
-  filter(phase %in% c(this_phase,"essential workers") & #include essential workers always to capture day of concurrent delivery with others
+  filter(phase %in% c(this_phase,"healthcare workers") & #include healthcare workers always to capture day of concurrent delivery with others
            (supply == this_supply | is.na(supply))) %>%
   filter(age_group == "60 to 110") %>%
   group_by(age_group,comorbidity) %>%
@@ -69,7 +69,7 @@ next_state %>%
 
 
 vaccination_history %>%
-  filter(phase %in% c("essential workers")) %>%
+  filter(phase %in% c("healthcare workers")) %>%
   group_by(age_group,comorbidity) %>%
   summarise(doses_delivered = sum(doses_delivered))
 vaccination_history %>%
@@ -83,7 +83,7 @@ next_state %>%
   summarise(individuals = sum(individuals), .groups = "keep")
 
 check = vaccination_history %>% filter(phase == this_phase) %>% pivot_wider(values_from = doses_delivered, names_from = supply)
-#NB: cascade not working because doses delivered per day after essential workers NOT the same across different vaccine supplies, even with fixed rollout capacity???? go back into configure_vaccination_history
+#NB: cascade not working because doses delivered per day after healthcare workers NOT the same across different vaccine supplies, even with fixed rollout capacity???? go back into configure_vaccination_history
 
 check = vaccination_history %>%
   filter(phase == this_phase) %>%

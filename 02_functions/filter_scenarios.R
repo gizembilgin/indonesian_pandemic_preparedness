@@ -4,7 +4,7 @@ filter_scenarios <- function(data,configuration,warning_search = 0){
     if (names(configuration)[i] == "supply"){
       data = data %>% 
         filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]] | 
-                 phase %in% c("no vaccine", "essential workers"))
+                 phase %in% c("no vaccine", "healthcare workers"))
     } else{
       data = data %>% 
         filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]]) 
