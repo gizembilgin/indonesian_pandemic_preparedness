@@ -5,9 +5,12 @@
 configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           
                                           vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
-                                          daily_vaccine_delivery_capacity = loaded_setting_characteristics$daily_vaccine_delivery_capacity,
+                                          daily_vaccine_delivery = loaded_setting_characteristics$daily_vaccine_delivery,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
-                                          healthcare_workers = loaded_setting_characteristics$healthcare_workers){
+                                          healthcare_workers = loaded_setting_characteristics$healthcare_workers,
+                                          
+                                          daily_vaccine_delivery_realistic = FALSE #if == TRUE then capacity to deliver vaccines slowly builds up over the first few months
+                                          ){
   
   
   
@@ -32,47 +35,100 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   rm(this_strategy,this_stage)
   
   
-  ### MODIFY rollout
-  daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity * LIST_vaccination_strategies$rollout_modifier
+  ### CONFIGURE daily_vaccine_delivery
+  # apply rollout_modifier
+  daily_vaccine_delivery$capacity  = daily_vaccine_delivery$capacity  * LIST_vaccination_strategies$rollout_modifier
   
+  # filter if you don't want a realistic gradual increase in delivery capacity
+  if (daily_vaccine_delivery_realistic == FALSE){
+    #select final row, speed of rollout when at full capacity with sufficient supply
+    daily_vaccine_delivery <- daily_vaccine_delivery[nrow(daily_vaccine_delivery),]
+  }
   
-  # ### MODIFY supply - REMOVED 13/03/2024, we still want these projections, just flagged
-  # max_supply <- (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*daily_vaccine_delivery_capacity/sum(population_by_comorbidity$individuals)
-  # if (length(LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply>max_supply])>0){
-  #   LIST_vaccination_strategies$supply = LIST_vaccination_strategies$supply[LIST_vaccination_strategies$supply<max_supply]
-  #   LIST_vaccination_strategies$supply = c(LIST_vaccination_strategies$supply,max_supply)
-  # }
+  # build daily_capacity_df
+  daily_capacity_df <- data.frame(time = seq(LIST_vaccination_strategies$vaccine_delivery_start_date, time_horizon),
+                                         capacity = 0)
+  for (this_row in 1:nrow(daily_vaccine_delivery)){
+    find_time <- min(daily_capacity_df$time[daily_capacity_df$capacity == 0])
+    daily_capacity_df <- daily_capacity_df %>%
+      mutate(capacity = case_when(
+        capacity == 0 & time <= find_time + daily_vaccine_delivery$days[this_row] - 1 ~ daily_vaccine_delivery$capacity[this_row],
+        TRUE ~ capacity
+      ))
+  }
+  # ggplot(daily_capacity_df) + geom_point(aes(time,capacity))
+  # daily_capacity_df %>% group_by(capacity) %>% summarise(n = n()) #CHECKED: as expected
+  
+  # calculate max supply
+  max_supply <-sum(daily_capacity_df$capacity)/ sum(population_by_comorbidity$individuals)
+  
+  # calculate end simulation time for each rollout capacity phase
+  find_time <- daily_capacity_df %>% 
+    group_by(capacity) %>% 
+    summarise(time = max(time)) 
+  daily_vaccine_delivery <- daily_vaccine_delivery %>%
+    left_join(find_time, by = "capacity")
+
   
 
   ### DELIVER VACCINES TO healthcare workerS
   this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "healthcare workers",-c(1)]
 
-  healthcare_worker_target <- population_by_comorbidity %>%
+  workshop_healthcare_worker_target <- healthcare_worker_target <- population_by_comorbidity %>%
     left_join(healthcare_workers, by = "age_group") %>%
     left_join(this_vaccine_acceptance, by = "comorbidity") %>%
     mutate(individuals = individuals * proportion * uptake) %>%
     filter(individuals != 0) %>%
     select(-uptake) %>%
     mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all healthcare workers
-    mutate(doses_delivered = proportion * daily_vaccine_delivery_capacity) #calculate doses_delivered on a day of full capacity delivery to healthcare workers
+    mutate(doses_delivered = proportion * daily_vaccine_delivery$capacity[1]) #calculate doses_delivered on a day of full capacity delivery to healthcare workers
   if(round(sum(healthcare_worker_target$proportion),digits=2) != 1) stop("proportion calculation on healthcare_worker_target not EQ 100%")
   
-  healthcare_worker_timeframe = floor(sum(healthcare_worker_target$individuals)/daily_vaccine_delivery_capacity) #create sequence of days for full capacity delivery to healthcare workers
-  time_sequence = seq(LIST_vaccination_strategies$vaccine_delivery_start_date,LIST_vaccination_strategies$vaccine_delivery_start_date+healthcare_worker_timeframe-1,by=1)
+  #configure data set
+  min_date = LIST_vaccination_strategies$vaccine_delivery_start_date  
+  healthcare_worker_delivery <- data.frame()
+  
+  #if healthcare workers take up multiple rollout capacity phases
+  while(nrow(daily_vaccine_delivery) > 1 && 
+    sum(workshop_healthcare_worker_target$individuals) >  daily_vaccine_delivery$capacity[1] *  daily_vaccine_delivery$days[1]){
+    these_rows <- crossing(time = seq(min_date, 
+                                      min_date + daily_vaccine_delivery$days[1] - 1),
+                           workshop_healthcare_worker_target) 
+    healthcare_worker_delivery <- rbind(healthcare_worker_delivery,these_rows)
+    
+    daily_vaccine_delivery <- daily_vaccine_delivery[-c(1),]
+    #update daily doses delivered
+    workshop_healthcare_worker_target  <- workshop_healthcare_worker_target %>%
+      mutate(doses_delivered = proportion * daily_vaccine_delivery$capacity[1]) 
+    #update min_date
+    min_date = max(healthcare_worker_delivery$time) + 1
+    #update individuals remaining to be vaccinated
+    these_rows <- these_rows %>%
+      group_by(age_group, comorbidity) %>%
+      summarise(individuals_vaccinated = sum(doses_delivered), .groups = "keep") %>%
+      select(age_group, comorbidity,individuals_vaccinated)
+    workshop_healthcare_worker_target <- workshop_healthcare_worker_target %>%
+      left_join(these_rows, by = c("age_group","comorbidity")) %>%
+      mutate(individuals = individuals - individuals_vaccinated) %>%
+      select(-individuals_vaccinated)
+  }
+  
+  healthcare_worker_timeframe = floor(sum(workshop_healthcare_worker_target$individuals)/daily_vaccine_delivery$capacity[1]) #create sequence of days for full capacity delivery to healthcare workers
+  time_sequence = seq(min_date,min_date+healthcare_worker_timeframe-1,by=1)
   if(length(time_sequence) != healthcare_worker_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to healthcare workers")
   
-  healthcare_worker_delivery = crossing(time = time_sequence,healthcare_worker_target) 
-  final_row_delivery =  sum(healthcare_worker_target$individuals) - sum(healthcare_worker_delivery$doses_delivered)
-  final_row = healthcare_worker_target %>%
+  these_rows = crossing(time = time_sequence,workshop_healthcare_worker_target) 
+  final_row_delivery =  sum(workshop_healthcare_worker_target$individuals) - sum(these_rows$doses_delivered)
+  final_row = workshop_healthcare_worker_target %>%
     mutate(doses_delivered = proportion * final_row_delivery,
-           time = LIST_vaccination_strategies$vaccine_delivery_start_date + healthcare_worker_timeframe)
-  healthcare_worker_delivery <- rbind(healthcare_worker_delivery,final_row) %>%
+           time = min_date + healthcare_worker_timeframe)
+  healthcare_worker_delivery <- rbind(healthcare_worker_delivery,these_rows,final_row) %>%
     select(-proportion,-individuals) %>%
     mutate(phase = "healthcare workers")
   if(abs(sum(healthcare_worker_delivery$doses_delivered) - sum(healthcare_worker_target$individuals))>1) stop("doses delivered to healthcare workers does not align with healthcare worker target")
   if(nrow(healthcare_worker_delivery[healthcare_worker_delivery$doses_delivered<0,])>0) stop("negative doses delivered to healthcare workers")
   
-  partial_dose_delivery_on_first_day_healthcare_workers = daily_vaccine_delivery_capacity - final_row_delivery
+  partial_dose_delivery_on_first_day_healthcare_workers = daily_vaccine_delivery$capacity[1] - final_row_delivery
   if (partial_dose_delivery_on_first_day_healthcare_workers<0) stop("first day of delivery for people who aren't healthcare workers is negative")
   
   
@@ -88,7 +144,6 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
 
   target_population_delivery = data.frame()
   indicator_delivery_within_time_horizon = data.frame()
-  max_supply <- (time_horizon - LIST_vaccination_strategies$vaccine_delivery_start_date)*daily_vaccine_delivery_capacity/sum(population_by_comorbidity$individuals)
   
   for (this_supply in LIST_vaccination_strategies$supply){
     
@@ -166,10 +221,12 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       
       #CALCULATE daily dose delivery by priority group
+      this_loop_daily_vaccine_delivery <- daily_vaccine_delivery
+      
       this_population_target <- this_population_target %>%
         group_by(priority) %>%
         mutate(proportion = individuals/sum(individuals)) %>% #calculate this age/comorb combination as a proportion of all target population
-        mutate(doses_delivered = proportion * daily_vaccine_delivery_capacity) %>% #calculate doses_delivered on a day of full capacity delivery to all target population
+        mutate(doses_delivered = proportion * this_loop_daily_vaccine_delivery$capacity[1]) %>% #calculate doses_delivered on a day of full capacity delivery to all target population
         filter(doses_delivered != 0)
       if(round(sum(this_population_target$proportion),digits=2) != length(unique(this_population_target$priority))) stop("proportion calculation on this_population_target not EQ 100%")
       
@@ -184,29 +241,65 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
           partial_dose_delivery_on_first_day = partial_dose_delivery_on_first_day_healthcare_workers
         }
         
-        this_priority_target_population  <- this_population_target %>%
-          filter(priority == this_priority)
+        workshop_priority_target_population <- this_priority_target_population  <- this_population_target %>%
+          filter(priority == this_priority)  %>% 
+          mutate(doses_delivered = proportion * this_loop_daily_vaccine_delivery$capacity[1])
+        this_target_population_delivery = data.frame()
         
         # first day - partial delivery <-> align with previous phase
-        first_day_target_population <- this_priority_target_population %>%
+        first_day_target_population <- workshop_priority_target_population %>%
           mutate(doses_delivered = partial_dose_delivery_on_first_day * proportion,
                  time = max(this_vax_history$time))
+        #update to remove first day delivery
+        workshop_priority_target_population$individuals <- workshop_priority_target_population$individuals  - workshop_priority_target_population$proportion * partial_dose_delivery_on_first_day
+        min_date = max(this_vax_history$time) + 1
+
+        
+        #if delivery take up multiple rollout capacity phases
+        while(nrow(this_loop_daily_vaccine_delivery) > 1 && 
+              sum(workshop_priority_target_population$individuals)  >  
+              this_loop_daily_vaccine_delivery$capacity[1] *  (this_loop_daily_vaccine_delivery$time[1] - min_date )){
+          
+          these_rows <- crossing(time = seq(min_date, 
+                                            min_date + this_loop_daily_vaccine_delivery$time[1] - 1),
+                                 workshop_priority_target_population) 
+          this_target_population_delivery <- rbind(this_target_population_delivery,these_rows)
+          
+          this_loop_daily_vaccine_delivery <- this_loop_daily_vaccine_delivery[-c(1),]
+          #update daily doses delivered
+          workshop_priority_target_population  <- workshop_priority_target_population %>%
+            mutate(doses_delivered = proportion * this_loop_daily_vaccine_delivery$capacity[1]) 
+          #update min_date
+          min_date = max(this_target_population_delivery$time) + 1
+          #update individuals remaining to be vaccinated
+          these_rows <- these_rows %>%
+            group_by(age_group, comorbidity) %>%
+            summarise(individuals_vaccinated = sum(doses_delivered), .groups = "keep") %>%
+            select(age_group, comorbidity,individuals_vaccinated)
+          workshop_priority_target_population <- workshop_priority_target_population %>%
+            left_join(these_rows, by = c("age_group","comorbidity")) %>%
+            mutate(individuals = individuals - individuals_vaccinated) %>%
+            select(-individuals_vaccinated)
+          
+        }
         
         # full delivery days
-        priority_target_timeframe = floor((sum(this_priority_target_population$individuals)-partial_dose_delivery_on_first_day)/daily_vaccine_delivery_capacity) 
-        time_sequence = seq(max(this_vax_history$time)+1,max(this_vax_history$time)+priority_target_timeframe,by=1)
-        if(length(time_sequence) != priority_target_timeframe) stop("time sequence not aligning with timeframe for delivery of doses to the target population")
-        this_target_population_delivery = crossing(time = time_sequence,this_priority_target_population) 
+        priority_target_timeframe = floor(sum(workshop_priority_target_population$individuals)/this_loop_daily_vaccine_delivery$capacity[1]) 
+        time_sequence = seq(min_date,min_date+priority_target_timeframe-1,by=1)
+        if(length(time_sequence) != priority_target_timeframe ) stop("time sequence not aligning with timeframe for delivery of doses to the target population")
+        these_rows = crossing(time = time_sequence,
+                              workshop_priority_target_population) 
         
         # last day - partial delivery <-> align with doses left
-        final_row_delivery =  sum(this_priority_target_population$individuals) - sum(this_target_population_delivery$doses_delivered) - sum(first_day_target_population$doses_delivered)
-        final_row = this_priority_target_population %>%
+        final_row_delivery =  sum(workshop_priority_target_population$individuals) - sum(these_rows$doses_delivered)
+        final_row = workshop_priority_target_population %>%
           mutate(doses_delivered = proportion * final_row_delivery,
-                 time = max(this_target_population_delivery$time) + 1)
+                 time = max(these_rows$time) + 1)
         
-        partial_dose_delivery_on_first_day = daily_vaccine_delivery_capacity - final_row_delivery
+        partial_dose_delivery_on_first_day = this_loop_daily_vaccine_delivery$capacity[1] - final_row_delivery
+        if (partial_dose_delivery_on_first_day<0) stop("configure_vaccination_history: more doses delivered in final_row_delivery of strategy than capacity")
         
-        this_target_population_delivery <- rbind(first_day_target_population,this_target_population_delivery,final_row) %>%
+        this_target_population_delivery <- rbind(first_day_target_population,this_target_population_delivery,these_rows,final_row) %>%
           ungroup() %>%
           select(-proportion,-individuals,-priority) %>%
           mutate(phase = this_phase,
@@ -221,7 +314,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       check <- this_vax_history %>%
         group_by(time) %>%
         summarise(total_daily_delivered = sum(doses_delivered)) %>%
-        filter(round(total_daily_delivered-daily_vaccine_delivery_capacity)>0)
+        left_join(daily_capacity_df, by = "time") %>%
+        filter(round(total_daily_delivered-capacity)>0)
       if (nrow(check)>0) stop(paste("daily capacity of vaccine delivery exceeded at time step",check$time[1]))
       
       
@@ -283,7 +377,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       reframe(n = n()) %>%
       filter(n>1) %>%
       group_by(time) %>%
-      summarise(n = unique(n))
+      reframe(n = unique(n))
     if (nrow(check) > length(LIST_vaccination_strategies$supply) - 1) stop("cascade in run_disease_model will NOT work for this configured vaccination history")
   }
 
