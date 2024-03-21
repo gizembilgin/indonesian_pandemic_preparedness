@@ -41,7 +41,8 @@ load_setting <- function(this_setting = "Indonesia",
   contact_matrix <- as.matrix(workshop[,-c(1)])
   
   
-  #(3/8) % of healthcare workers (DUMMY VALUE) - COVID-19 vaccination data
+  #(3/8) % of healthcare workers - COVID-19 vaccination data
+  #2 million doses delivered to healthcare workers during the first prioritised stage of the Indonesian COVID-19 vaccine rollout
   #NB: Assuming healthcare workers all 18 to 59, and uniformly distributed
   healthcare_workers <- 2046639/indonesia_population_numeric #% of population
   healthcare_workers <- healthcare_workers * sum(population$individuals) / sum(population$individuals[population$age_group %in%  c("18 to 29","30 to 59")]) #% of 18 to 59 working population
@@ -50,8 +51,14 @@ load_setting <- function(this_setting = "Indonesia",
                                   proportion = c(0,0,healthcare_workers,healthcare_workers,0))
   
   
-  #(4/8) daily_vaccine_delivery_capacity (DUMMY VALUE)  - COVID-19 vaccination data
-  daily_vaccine_delivery_capacity = 0.00163*sum(population$individuals)
+  #(4/8) daily_vaccine_delivery - COVID-19 vaccination data
+  daily_vaccine_delivery <- data.frame(days = c(as.numeric(as.Date('2021-03-01') - as.Date('2021-01-12')),
+                                                                            as.numeric(as.Date('2021-06-01') - as.Date('2021-03-01')),
+                                                                            as.numeric(as.Date('2022-02-01') - as.Date('2021-06-01'))),
+                                                capacity =   c(0.89/as.numeric(as.Date('2021-03-01') - as.Date('2021-01-12')),
+                                                                              (7.34-0.89)/as.numeric(as.Date('2021-06-01') - as.Date('2021-03-01')),
+                                                                              (80.25-7.34)/as.numeric(as.Date('2022-02-01') - as.Date('2021-06-01')))/100)
+  daily_vaccine_delivery$capacity = daily_vaccine_delivery$capacity*sum(population$individuals)
   
   
   #(5/8) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
@@ -95,7 +102,7 @@ load_setting <- function(this_setting = "Indonesia",
                                          population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
                                          healthcare_workers = healthcare_workers,
-                                         daily_vaccine_delivery_capacity = daily_vaccine_delivery_capacity,
+                                         daily_vaccine_delivery = daily_vaccine_delivery,
                                          vaccine_acceptance = vaccine_acceptance,
                                          comorbidities = comorbidities,
                                          access_to_care = access_to_care,
