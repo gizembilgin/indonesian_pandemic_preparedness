@@ -49,6 +49,7 @@ TOGGLE_vaccine_derived_immunity = 0.8
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
                                    rollout_modifier = 1,
+                                   daily_vaccine_delivery_realistic = FALSE,
                                    strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
                                      list("older adults followed by all adults",
                                           list(c("60 to 110"),c(0,1)),
@@ -69,6 +70,7 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
   
   if ("supply" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$supply = FLEET_ADMIRAL_OVERRIDE$supply
   if ("rollout_modifier" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier
+  if ("daily_vaccine_delivery_realistic" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic
   if ("strategy" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$strategy = FLEET_ADMIRAL_OVERRIDE$strategy
   if ("vaccine_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity
 }
