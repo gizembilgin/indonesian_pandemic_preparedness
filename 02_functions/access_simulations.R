@@ -3,7 +3,7 @@
 access_simulations <- function(
     load_simulations = TRUE, #load ship_log every run of accessing the simulation ~ 3 seconds
     this_configuration,
-    output = "cases",
+    outcome = "cases",
     TOGGLES_project_severe_disease = list()
 ){
   
@@ -156,14 +156,14 @@ access_simulations <- function(
 
   }
 
-  if (! output %in% c("cases","deaths")) stop("access_simulations: you have not specified how to output this output")
-  if (output == "cases"){
+  if (! outcome %in% c("cases","deaths")) stop("access_simulations: you have not specified how to outcome this outcome")
+  if (outcome == "cases"){
     
     this_ship_log_completed <- this_ship_log_completed %>%
       group_by(time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
       summarise(incidence = sum(incidence), .groups = "keep") 
     
-  } else if (output == "deaths"){
+  } else if (outcome == "deaths"){
     
     if (length(TOGGLES_project_severe_disease) == 0 ) stop("access_simulations: you have selected to output deaths but not specified TOGGLE_project_severe_disease")
     

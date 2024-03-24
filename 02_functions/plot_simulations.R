@@ -63,7 +63,7 @@ plot_simulations <- function(
     load_simulations,
     this_configuration,
     TOGGLES_project_severe_disease,
-    output = this_outcome
+    outcome = this_outcome
     )
   
   
