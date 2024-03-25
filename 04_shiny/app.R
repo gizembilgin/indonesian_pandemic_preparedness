@@ -141,7 +141,9 @@ ui <- fluidPage(
                textOutput("test2"),
                
                textOutput("WARNING_no_plot"),
-               plotOutput("OUTPUT_plot", height = "800px")
+               plotOutput("OUTPUT_plot", height = "800px"),
+               actionButton(inputId = "update_plot",
+                            label = "Update plot")
                
     )
   )
@@ -168,7 +170,7 @@ server <- function(input, output, session) {
   })
   output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
     if(input$this_outcome != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
-                                                 choices = unique(age_specific_severity_MASTER$pathogen), selected = "Plague", multiple = TRUE)
+                                                 choices = sort(unique(age_specific_severity_MASTER$pathogen)), selected = "Plague", multiple = TRUE)
   })
   output$TOGGLES_project_severe_disease_VE <- renderUI({
     if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
@@ -276,8 +278,10 @@ server <- function(input, output, session) {
        load_simulations = FALSE
      )
    }
- }
- output_plot <-  reactive({call_plot()})
+  }
+  
+  #output_plot when update_button clicked OR when app initialised and last UI button (vaccine_derived_immunity) created
+  output_plot <- eventReactive({input$update_plot|is.null(input$vaccine_derived_immunity) == FALSE},{call_plot()})
   
   output$WARNING_no_plot <- renderText({
 
