@@ -114,6 +114,7 @@ ui <- fluidPage(
                                             CHOICES$vaccine_delivery_start_date, 100),
                   make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
                   make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
+                  make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE),
                   make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
                   make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1),
 
@@ -261,7 +262,8 @@ server <- function(input, output, session) {
            supply = as.numeric(input$supply),
            infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
            rollout_modifier =  as.numeric(input$rollout_modifier),
-           vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity)
+           vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity),
+           daily_vaccine_delivery_realistic = input$daily_vaccine_delivery_realistic
          ),
        free_yaxis = input$free_yaxis,
        display_impact_heatmap = input$display_impact_heatmap,

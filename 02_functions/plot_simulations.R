@@ -50,6 +50,7 @@ plot_simulations <- function(
   
   ### Load simulation
   this_configuration = default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
+  if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration <- c(this_configuration, daily_vaccine_delivery_realistic = FALSE)
   if (length(var_1_range)>0){
     if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
   }

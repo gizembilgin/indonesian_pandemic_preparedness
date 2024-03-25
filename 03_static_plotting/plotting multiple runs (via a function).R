@@ -38,7 +38,7 @@ plot_simulations (
         rollout_modifier = 2,
         vaccine_derived_immunity = 1
       ),
-    load_simulations = TRUE, #load simulations for each run
+    load_simulations = FALSE, #load simulations for each run
     #options: 0 (no), 1 (yes)
     display_impact_heatmap = 1, 
     display_var_1 = 1,
@@ -74,7 +74,7 @@ plot_simulations (
       rollout_modifier = 2,
       vaccine_derived_immunity = 1
     ),
-  load_simulations = TRUE, #load simulations for each run
+  load_simulations = FALSE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
@@ -110,7 +110,7 @@ plot_simulations (
       rollout_modifier = 2,
       vaccine_derived_immunity = 1
     ),
-  load_simulations = TRUE, #load simulations for each run
+  load_simulations = FALSE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
@@ -143,7 +143,7 @@ plot_simulations (
       rollout_modifier = 2,
       vaccine_derived_immunity = 1
     ),
-  load_simulations = TRUE, #load simulations for each run
+  load_simulations = FALSE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
@@ -183,9 +183,10 @@ plot_simulations (
       supply = c(0.5),
       infection_derived_immunity = 1,
       rollout_modifier = 2,
-      vaccine_derived_immunity = 1
+      vaccine_derived_immunity = 1,
+      daily_vaccine_delivery_realistic = TRUE
     ),
-  load_simulations = TRUE, #load simulations for each run
+  load_simulations = FALSE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   display_severity_curve = 1, 
   colour_healthcare_workers_phase = 1,

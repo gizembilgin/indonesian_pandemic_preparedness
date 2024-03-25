@@ -7,9 +7,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
                                           daily_vaccine_delivery = loaded_setting_characteristics$daily_vaccine_delivery,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
-                                          healthcare_workers = loaded_setting_characteristics$healthcare_workers,
-                                          
-                                          daily_vaccine_delivery_realistic = FALSE #if == TRUE then capacity to deliver vaccines slowly builds up over the first few months
+                                          healthcare_workers = loaded_setting_characteristics$healthcare_workers
                                           ){
   
   
@@ -40,7 +38,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   daily_vaccine_delivery$capacity  = daily_vaccine_delivery$capacity  * LIST_vaccination_strategies$rollout_modifier
   
   # filter if you don't want a realistic gradual increase in delivery capacity
-  if (daily_vaccine_delivery_realistic == FALSE){
+  # if == TRUE then capacity to deliver vaccines slowly builds up over the first few months
+  if (LIST_vaccination_strategies$daily_vaccine_delivery_realistic == FALSE){
     #select final row, speed of rollout when at full capacity with sufficient supply
     daily_vaccine_delivery <- daily_vaccine_delivery[nrow(daily_vaccine_delivery),]
   }
@@ -381,6 +380,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     if (nrow(check) > length(LIST_vaccination_strategies$supply) - 1) stop("cascade in run_disease_model will NOT work for this configured vaccination history")
   }
 
+  vaccination_history_permutations <- vaccination_history_permutations %>%
+    filter(time <= time_horizon)
+  
   result = list(indicator_delivery_within_time_horizon = indicator_delivery_within_time_horizon,
                 vaccination_history = vaccination_history_permutations)  
   return (result)
