@@ -22,6 +22,7 @@ access_simulations <- function(
       }
       latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
       load(file = paste0(path_stem,latest_file))
+      load(file = paste0(path_stem,gsub("ship_log","ship_log_key",latest_file))) #load accompanying key
       load(file = paste0(path_stem,gsub("ship_log","indicator_log",latest_file))) #load accompanying indicator_log
     } else{
       stop(paste0("access_simulations: can't find underlying simulation to load! Searching:", path_stem))
@@ -31,7 +32,16 @@ access_simulations <- function(
   
   
   ### Subset ship_log to this_configuration
-  this_ship_log <-  filter_scenarios(ship_log,this_configuration[! names(this_configuration) == "supply"])
+  #NB: leaving supply here to allow cascade to be reconstructed
+  #find relevant run_IDs in key
+  this_ship_log_key <-  filter_scenarios(ship_log_key,this_configuration[! names(this_configuration) %in% c("supply","phase")])
+  #subset ship_log to run_IDs and then phases as well
+  this_ship_log <- ship_log %>%
+    filter(run_ID %in% this_ship_log_key$run_ID) %>%
+    left_join(this_ship_log_key, by = "run_ID") %>%
+    select(-run_ID)
+  this_ship_log <- filter_scenarios(this_ship_log,this_configuration[names(this_configuration) %in% c("phase")] )
+  #also subset indicator_log to this_configuration
   this_indicator_log <- indicator_log %>% rename(phase = strategy)
   this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity")])
   if (load_simulations == TRUE) rm(ship_log)

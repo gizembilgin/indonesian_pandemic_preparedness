@@ -18,6 +18,7 @@ if (length(list_poss_Rdata) > 0) {
   }
   latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
   load(file = paste0(path_stem,latest_file))
+  load(file = paste0(path_stem,gsub("ship_log","ship_log_key",latest_file))) #load accompanying key
 } else{
   stop(paste0("(R Shiny) app: can't find underlying simulation to load! Searching:", path_stem))
 }
@@ -40,8 +41,8 @@ CHOICES = list(
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
   vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "healthcare workers")]),
-  R0 = unique(ship_log$R0) ,
-  vaccine_delivery_start_date = unique(ship_log$vaccine_delivery_start_date) ,
+  R0 = unique(ship_log_key$R0) ,
+  vaccine_delivery_start_date = unique(ship_log_key$vaccine_delivery_start_date) ,
   supply = 
     c("20%" = 0.2,
       "50%" = 0.5,

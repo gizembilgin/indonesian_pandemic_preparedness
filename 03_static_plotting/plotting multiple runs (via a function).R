@@ -38,7 +38,7 @@ plot_simulations (
         rollout_modifier = 2,
         vaccine_derived_immunity = 1
       ),
-    load_simulations = FALSE, #load simulations for each run
+    load_simulations = TRUE, #load simulations for each run
     #options: 0 (no), 1 (yes)
     display_impact_heatmap = 1, 
     display_var_1 = 1,

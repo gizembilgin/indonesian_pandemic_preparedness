@@ -1,5 +1,6 @@
 
 ### The 'fleet admiral' runs the command_deck  multiple times to generate the data set underlying the Shiny 
+require(ids)
 
 ### CONFIGURE
 ################################################################################
@@ -8,7 +9,7 @@ LIST_setting = c("Indonesia")
 LIST_vaccine_delivery_start_date = c(50,100,200)
 
 #pathogen characteristics
-LIST_R0_to_fit = c(1,1.5,2,3,4,6)  #  c(1,2,4,6,8) 
+LIST_R0_to_fit = c(1,2,3,4,5)  #  c(1,2,4,6,8) 
 #LIST_severity_scenario
 #LIST_prior_immunity_scenario
 LIST_infection_derived_immunity = c(0.75,1)
@@ -54,16 +55,17 @@ length(LIST_setting)*length(LIST_vaccine_delivery_start_date)*
   length(LIST_rollout_modifier)*length(LIST_vaccine_derived_immunity) *
   length(LIST_daily_vaccine_delivery_realistic)
 
-ship_log <- data.frame()
-indicator_log <- data.frame()
+ship_log <- ship_log_key <- indicator_log <- data.frame()
+
 
 for (setting in LIST_setting){
-  for (vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
-    for (R0_to_fit in LIST_R0_to_fit){
-      for(infection_derived_immunity in LIST_infection_derived_immunity){
-        for (rollout_modifier in LIST_rollout_modifier){
-          for (daily_vaccine_delivery_realistic in LIST_daily_vaccine_delivery_realistic){
-            for (vaccine_derived_immunity in LIST_vaccine_derived_immunity){
+  for (vaccine_derived_immunity in LIST_vaccine_derived_immunity){
+    for(infection_derived_immunity in LIST_infection_derived_immunity){
+       for (vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
+         for (R0_to_fit in LIST_R0_to_fit){
+           for (rollout_modifier in LIST_rollout_modifier){
+            for (daily_vaccine_delivery_realistic in LIST_daily_vaccine_delivery_realistic){
+
               
               FLEET_ADMIRAL_OVERRIDE = list(
                 setting = setting,
@@ -81,22 +83,29 @@ for (setting in LIST_setting){
               
               source("command_deck.R")
               
+              this_simulation_ID <- random_id(n = 1, bytes = 8)
+              
               this_simulation <- incidence_log_tidy %>%
-                mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
-                       vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date,
-                       R0 = FLEET_ADMIRAL_OVERRIDE$R0,
-                       infection_derived_immunity = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity,
-                       rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier,
-                       daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic,
-                       vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity)
-              #NB: object.size(this_simulation)/object.size(incidence_log_tidy) -> x 2 size
-              #OPTION: to save in a different format, e.g., JSON to save memory BUT requires more complex format
+                mutate(run_ID = this_simulation_ID)
+              
+              #save as a separate key rather than columns on the dataframe to save space
+              this_simulation_key <- data.frame(
+                run_ID = this_simulation_ID,
+                setting = FLEET_ADMIRAL_OVERRIDE$setting,
+                vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date,
+                R0 = FLEET_ADMIRAL_OVERRIDE$R0,
+                infection_derived_immunity = FLEET_ADMIRAL_OVERRIDE$infection_derived_immunity,
+                rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier,
+                daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic,
+                vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity
+              )
               
               this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
                 mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
                        daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic)
               
               ship_log = rbind(ship_log,this_simulation)
+              ship_log_key = rbind(ship_log_key, this_simulation_key)
               indicator_log = rbind(indicator_log,this_simulation_indicator)
               
             }
@@ -110,6 +119,7 @@ rm(this_simulation, this_simulation_indicator)
 
 time_of_result = Sys.time()
 time_of_result = gsub(':','-',time_of_result)
+save(ship_log_key,file = paste0("04_shiny/x_results/ship_log_key",time_of_result,".Rdata"))
 save(ship_log,file = paste0("04_shiny/x_results/ship_log",time_of_result,".Rdata"))
 indicator_log <- unique(indicator_log)
 save(indicator_log,file = paste0("04_shiny/x_results/indicator_log",time_of_result,".Rdata"))
