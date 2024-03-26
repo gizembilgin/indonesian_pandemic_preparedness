@@ -59,7 +59,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   # daily_capacity_df %>% group_by(capacity) %>% summarise(n = n()) #CHECKED: as expected
   
   # calculate max supply
-  max_supply <-sum(daily_capacity_df$capacity)/ sum(population_by_comorbidity$individuals)
+  max_supply_abs <- sum(daily_capacity_df$capacity)
+  max_supply_prop <- max_supply_abs / sum(population_by_comorbidity$individuals)
   
   # calculate end simulation time for each rollout capacity phase
   find_time <- daily_capacity_df %>% 
@@ -91,7 +92,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   while(nrow(daily_vaccine_delivery) > 1 && 
     sum(workshop_healthcare_worker_target$individuals) >  daily_vaccine_delivery$capacity[1] *  daily_vaccine_delivery$days[1]){
     these_rows <- crossing(time = seq(min_date, 
-                                      min_date + daily_vaccine_delivery$days[1] - 1),
+                                      daily_vaccine_delivery$time[1]),
                            workshop_healthcare_worker_target) 
     healthcare_worker_delivery <- rbind(healthcare_worker_delivery,these_rows)
     
@@ -177,12 +178,12 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         vaccine_delivery_start_date = LIST_vaccination_strategies$vaccine_delivery_start_date,
         rollout_modifier = LIST_vaccination_strategies$rollout_modifier,
         supply = this_supply,
-        delivered_supply = min(max_supply,this_supply),
+        delivered_supply = min(max_supply_prop,this_supply),
         strategy = this_phase)
       
       #indicator_speed_sufficient == speed sufficient for delivery within time horizon
-      if (this_supply>max_supply)   this_row$indicator_speed_sufficient = FALSE  else  this_row$indicator_speed_sufficient = TRUE
-      this_supply_modified = min(max_supply,this_supply)
+      if (this_supply>max_supply_prop)   this_row$indicator_speed_sufficient = FALSE  else  this_row$indicator_speed_sufficient = TRUE
+      this_supply_modified = min(max_supply_prop,this_supply)
       
       #indicator_supply_delivered == size of priority group uses complete supply      
       if (sum(this_population_target$individuals) + sum(healthcare_worker_target$individuals) < this_supply * sum(population_by_comorbidity$individuals)) {
@@ -260,7 +261,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
               this_loop_daily_vaccine_delivery$capacity[1] *  (this_loop_daily_vaccine_delivery$time[1] - min_date )){
           
           these_rows <- crossing(time = seq(min_date, 
-                                            min_date + this_loop_daily_vaccine_delivery$time[1] - 1),
+                                            this_loop_daily_vaccine_delivery$time[1]),
                                  workshop_priority_target_population) 
           this_target_population_delivery <- rbind(this_target_population_delivery,these_rows)
           
@@ -295,8 +296,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
           mutate(doses_delivered = proportion * final_row_delivery,
                  time = max(these_rows$time) + 1)
         
-        partial_dose_delivery_on_first_day = this_loop_daily_vaccine_delivery$capacity[1] - final_row_delivery
-        if (partial_dose_delivery_on_first_day<0) stop("configure_vaccination_history: more doses delivered in final_row_delivery of strategy than capacity")
+        partial_dose_delivery_on_first_day = this_loop_daily_vaccine_delivery$capacity[1] - round(final_row_delivery, digits = 2)
+        if (round(partial_dose_delivery_on_first_day, digits = 2)<0) stop("configure_vaccination_history: more doses delivered in final_row_delivery of strategy than capacity")
         
         this_target_population_delivery <- rbind(first_day_target_population,this_target_population_delivery,these_rows,final_row) %>%
           ungroup() %>%
@@ -381,7 +382,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   }
 
   vaccination_history_permutations <- vaccination_history_permutations %>%
-    filter(time <= time_horizon)
+    filter(time <= time_horizon) %>%
+    filter(round(doses_delivered, digits = 2) > 0)
   
   result = list(indicator_delivery_within_time_horizon = indicator_delivery_within_time_horizon,
                 vaccination_history = vaccination_history_permutations)  
