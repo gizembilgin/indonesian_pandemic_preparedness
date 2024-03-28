@@ -127,7 +127,7 @@ ui <- fluidPage(
                   make_prettySwitch("display_vaccine_availability","dashed line of vaccine availability"),
                   make_prettySwitch("display_end_of_healthcare_worker_delivery","dashed line denoting end of healthcare worker delivery"),
                   #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
-                  make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE),
+                  uiOutput("SWITCH_plot_dimensions"),
                   
     ),
     
@@ -179,6 +179,9 @@ server <- function(input, output, session) {
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
   #   if(input$this_outcome != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
   # })
+  output$SWITCH_plot_dimensions <- renderUI({
+    if(select_var(1)[[1]] != "R0" & length(count_plot_dimensions())>1) make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE)
+  })
   
   #call_waiter: creates spinner while waiting for plot to load
   call_waiter <- function(this_output){
@@ -200,7 +203,7 @@ server <- function(input, output, session) {
     if (length(input$vaccine_derived_immunity)>1)    plot_dimension_vector = c(plot_dimension_vector,"vaccine_derived_immunity")
     if (input$this_outcome != "cases" & length(input$severe_disease_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
     
-    if (input$switch_plot_dimensions == TRUE) plot_dimension_vector <- rev(plot_dimension_vector)
+    if (is.null(input$switch_plot_dimensions) == FALSE && input$switch_plot_dimensions == TRUE) plot_dimension_vector <- rev(plot_dimension_vector)
     
     plot_dimension_vector
   }) 
