@@ -124,9 +124,9 @@ ui <- fluidPage(
                   make_prettySwitch("display_impact_heatmap","heatmap"),
                   make_prettySwitch("display_severity_curve","severity curve", default = FALSE),
                   make_prettySwitch("display_age_proportion_on_severity_curve","age proportions on severity curve", default = FALSE),
-                  make_prettySwitch("display_vaccine_availability","date of vaccine availability"),
-                  make_prettySwitch("display_end_of_healthcare_worker_delivery","end of healthcare worker delivery"),
-                  make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
+                  make_prettySwitch("display_vaccine_availability","dashed line of vaccine availability"),
+                  make_prettySwitch("display_end_of_healthcare_worker_delivery","dashed line denoting end of healthcare worker delivery"),
+                  #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
                   make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE),
                   
     ),
@@ -180,7 +180,14 @@ server <- function(input, output, session) {
   #   if(input$this_outcome != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
   # })
   
-  
+  #call_waiter: creates spinner while waiting for plot to load
+  call_waiter <- function(this_output){
+    waiter::Waiter$new(
+      id = this_output,
+      html = spin_3(), 
+      color = transparent(.5)
+    )$show()
+  }
   #count_plot_dimensions: checks which input variables have multiple values selected
   count_plot_dimensions <- reactive({
     plot_dimension_vector = c()
@@ -273,7 +280,7 @@ server <- function(input, output, session) {
        display_severity_curve = input$display_severity_curve,
        display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
        display_var_1 = 0,
-       colour_healthcare_workers_phase = input$colour_healthcare_workers_phase,
+       colour_healthcare_workers_phase = 0, #input$colour_healthcare_workers_phase,
        display_vaccine_availability = input$display_vaccine_availability,
        display_end_of_healthcare_worker_delivery = input$display_end_of_healthcare_worker_delivery,
        load_simulations = FALSE
@@ -282,7 +289,10 @@ server <- function(input, output, session) {
   }
   
   #output_plot when update_button clicked OR when app initialised and last UI button (vaccine_derived_immunity) created
-  output_plot <- eventReactive({input$update_plot|is.null(input$vaccine_derived_immunity) == FALSE},{call_plot()})
+  output_plot <- eventReactive({input$update_plot|is.null(input$vaccine_derived_immunity) == FALSE},{
+    call_waiter("OUTPUT_plot")
+    call_plot()
+  })
   
   output$WARNING_no_plot <- renderText({
 
