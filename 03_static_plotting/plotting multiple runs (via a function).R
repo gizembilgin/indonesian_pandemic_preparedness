@@ -184,12 +184,13 @@ plot_simulations (
       infection_derived_immunity = 1,
       rollout_modifier = 2,
       vaccine_derived_immunity = 1,
-      daily_vaccine_delivery_realistic = TRUE
+      daily_vaccine_delivery_realistic = FALSE
     ),
-  load_simulations = FALSE, #load simulations for each run
+  load_simulations = TRUE, #load simulations for each run
   #options: 0 (no), 1 (yes)
   display_severity_curve = 1, 
-  colour_healthcare_workers_phase = 1,
+  colour_healthcare_workers_phase = 0,
+  display_end_of_healthcare_worker_delivery = 0,
   display_var_1 = 0,
   display_vaccine_availability = 1
 )
