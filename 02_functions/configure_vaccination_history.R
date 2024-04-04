@@ -4,6 +4,7 @@
 
 configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           
+                                          time_horizon = simulation_days,
                                           vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
                                           daily_vaccine_delivery = loaded_setting_characteristics$daily_vaccine_delivery,
                                           population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
@@ -45,7 +46,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   }
   
   # build daily_capacity_df
-  daily_capacity_df <- data.frame(time = seq(LIST_vaccination_strategies$vaccine_delivery_start_date, time_horizon),
+  daily_capacity_df <- data.frame(time = seq(LIST_vaccination_strategies$vaccine_delivery_start_date, simulation_days),
                                          capacity = 0)
   for (this_row in 1:nrow(daily_vaccine_delivery)){
     find_time <- min(daily_capacity_df$time[daily_capacity_df$capacity == 0])
@@ -54,6 +55,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
         capacity == 0 & time <= find_time + daily_vaccine_delivery$days[this_row] - 1 ~ daily_vaccine_delivery$capacity[this_row],
         TRUE ~ capacity
       ))
+    if (this_row == nrow(daily_vaccine_delivery)) daily_capacity_df$capacity[daily_capacity_df$capacity == 0] <- daily_vaccine_delivery$capacity[this_row]
   }
   # ggplot(daily_capacity_df) + geom_point(aes(time,capacity))
   # daily_capacity_df %>% group_by(capacity) %>% summarise(n = n()) #CHECKED: as expected
