@@ -135,3 +135,29 @@ project_severe_disease(
   geom_col(aes(x=age_group,y=case_fatality_rate)) +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
 ################################################################################
+
+
+### CHECK pop-level severity estimates
+# age_specific_severity_MASTER %>%
+#   filter(name_english == "Indonesia") %>%
+#   select(-name_english,-name_indonesian,-statistic) %>%
+#   left_join(population, by = "age_group") %>%
+#   group_by(pathogen) %>%
+#   mutate(proportion = individuals/sum(individuals),
+#          interim = case_fatality_rate * proportion) %>%
+#   summarise(case_fatality_rate = sum(interim)) %>%
+#   arrange(case_fatality_rate)
+
+# pathogen       case_fatality_rate
+# 1 COVID-19 WT                0.0124
+# 2 Influenza 1918             0.0213
+# 3 Diptheria                  0.0817
+# 4 SARS                       0.0915
+# 5 Lassa fever                0.240 
+# 6 MERS-CoV                   0.263 
+# 7 JEV                        0.425 
+# 8 HIV                        0.469 
+# 9 Cholera                    0.470 
+# 10 Tuberculosis              0.510 
+# 11 Plague                    0.649 
+# 12 Ebola                     0.649  
