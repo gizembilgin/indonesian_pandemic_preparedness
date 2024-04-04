@@ -1,8 +1,8 @@
 
 
-configure_inital_state <- function(detection_prevalence,
-                                   average_symptomatic_period,
-                                   average_exposed_period,
+configure_inital_state <- function(index_case_age_group = c("30 to 59"),
+                                   #average_symptomatic_period,
+                                   #average_exposed_period,
                                    age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
                                    population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity) {
   
@@ -12,15 +12,33 @@ configure_inital_state <- function(detection_prevalence,
              case_when(vaccination_status != 0 ~ 0, # no one is vaccinated at the initial time point
                        TRUE ~ individuals)) 
   
+  index_case <- inital_state %>%
+    filter(age_group %in% index_case_age_group) %>%
+    mutate(index_case = individuals/sum(individuals)) %>%
+    select(-individuals)
+  
   # include SEIR classes
   inital_state <- crossing(class = c("S","E","I","R","Incid"), inital_state) %>%
     mutate(individuals = case_when(
-      class == "S" ~ individuals * (1-detection_prevalence),
-      class == "E" ~ individuals * detection_prevalence * average_exposed_period/(average_exposed_period + average_symptomatic_period),
-      class == "I" ~ individuals * detection_prevalence * average_symptomatic_period/(average_exposed_period + average_symptomatic_period),
-      class == "R" ~ 0,
-      class == "Incid" ~ 0 # empty rows for incidence tracker
-    ))
+      class == "S" ~ individuals,
+      class %in% c("E","I","R","Incid") ~ 0 # empty rows for incidence tracker
+    )) %>%
+    left_join(index_case, by = c("age_group","comorbidity","vaccination_status")) %>%
+    mutate(individuals = case_when(
+      class == "S" & is.na(index_case) == FALSE ~ individuals - index_case,
+      class == "I" & is.na(index_case) == FALSE ~ index_case,
+      TRUE ~ individuals
+    )) %>%
+    select(-index_case)
+  
+  # previous configuration with with detection_prevalence
+  # inital_state <- crossing(class = c("S","E","I","R","Incid"), inital_state) %>%
+  #   mutate(individuals = case_when(
+  #   class == "S" ~ individuals * (1-detection_prevalence),
+  #   class == "E" ~ individuals * detection_prevalence * average_exposed_period/(average_exposed_period + average_symptomatic_period),
+  #   class == "I" ~ individuals * detection_prevalence * average_symptomatic_period/(average_exposed_period + average_symptomatic_period),
+  #   class == "Incid" ~ 0 # empty rows for incidence tracker
+  #   ))
 
   # order correctly
   inital_state$class <- factor(inital_state$class, levels = c("S","E","I","R","Incid"))
