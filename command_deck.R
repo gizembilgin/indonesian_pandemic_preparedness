@@ -16,7 +16,7 @@ age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
 
 #simulation configuration
-TOGGLE_time_horizon = 365 #scope of analysis to one year
+TOGGLE_simulation_days = 365+365 #scope of analysis to one year + assume detected within a year of introduction
 TOGGLE_detection_prevalence = 0.0001 #percentage prevalence on day of detection
 TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
@@ -112,7 +112,7 @@ parameters = list(
 )
 
 workshop <- run_disease_model(
-  time_horizon = TOGGLE_time_horizon,
+  time_horizon = TOGGLE_simulation_days,
   vaccination_strategies = TOGGLE_vaccination_strategy
 )
 incidence_log_tidy <- workshop$incidence_log_tidy
