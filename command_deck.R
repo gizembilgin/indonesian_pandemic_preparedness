@@ -15,15 +15,19 @@ for (function_script in list.files(path="02_functions/", full.name = TRUE)){sour
 age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")
 TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
 
-#simulation configuration
-TOGGLE_simulation_days = 365+365 #scope of analysis to one year + assume detected within a year of introduction
-TOGGLE_detection_prevalence = 0.0001 #percentage prevalence on day of detection
-TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
-
 # pathogen characteristics
 TOGGLE_R0_to_fit = 2
 TOGGLE_average_symptomatic_period = 7
 TOGGLE_average_exposed_period = 7
+
+#simulation configuration
+TOGGLE_simulation_days = 365 #scope of analysis to one year + assume detected within a year of introduction
+TOGGLE_days_to_detection = estimate_days_to_detection(outcome_threshold = 2,
+                                                      gen_interval = TOGGLE_average_symptomatic_period,
+                                                      IR_outcome = 0.01, #dummy flu-like set up
+                                                      develop_outcome = TOGGLE_average_symptomatic_period,
+                                                      R0 = TOGGLE_R0_to_fit)
+TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
 TOGGLES_project_severe_disease = list(
   point_estimate = 0.05/100,
@@ -63,6 +67,7 @@ TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID
 
 if (exists("FLEET_ADMIRAL_OVERRIDE")){
   if ("setting" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_setting = FLEET_ADMIRAL_OVERRIDE$setting
+  if ("days_to_detection" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_days_to_detection = FLEET_ADMIRAL_OVERRIDE$days_to_detection
   if ("vaccine_delivery_start_date" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$vaccine_delivery_start_date = FLEET_ADMIRAL_OVERRIDE$vaccine_delivery_start_date
   
   if ("R0" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_R0_to_fit = FLEET_ADMIRAL_OVERRIDE$R0
@@ -74,6 +79,9 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
   if ("strategy" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$strategy = FLEET_ADMIRAL_OVERRIDE$strategy
   if ("vaccine_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity
 }
+
+TOGGLE_simulation_days                                  <- TOGGLE_simulation_days + TOGGLE_days_to_detection
+TOGGLE_vaccination_strategy$vaccine_delivery_start_date <- TOGGLE_vaccination_strategy$vaccine_delivery_start_date + TOGGLE_days_to_detection
 #_______________________________________________________________________________
 
 
@@ -83,9 +91,8 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
 loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
 
 inital_state <- configure_inital_state(
-  detection_prevalence = TOGGLE_detection_prevalence,
-  average_symptomatic_period = TOGGLE_average_symptomatic_period,
-  average_exposed_period  = TOGGLE_average_exposed_period 
+  #average_symptomatic_period = TOGGLE_average_symptomatic_period,
+  #average_exposed_period  = TOGGLE_average_exposed_period 
 )
 
 fitted_beta <- fit_beta_to_R0(
@@ -112,7 +119,7 @@ parameters = list(
 )
 
 workshop <- run_disease_model(
-  time_horizon = TOGGLE_simulation_days,
+  simulation_days = TOGGLE_simulation_days,
   vaccination_strategies = TOGGLE_vaccination_strategy
 )
 incidence_log_tidy <- workshop$incidence_log_tidy
