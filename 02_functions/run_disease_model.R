@@ -1,5 +1,5 @@
 
-run_disease_model <- function(time_horizon = 365,
+run_disease_model <- function(simulation_days = 365,
                               vaccination_strategies = list(),
                               
                               this_inital_state = inital_state,
@@ -8,7 +8,8 @@ run_disease_model <- function(time_horizon = 365,
                               this_age_group_labels = age_group_labels) {
   
   
-  workshop <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies)
+  workshop <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies,
+                                            time_horizon = simulation_days)
   vaccination_history <- workshop$vaccination_history
   indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon
   rm(workshop)
@@ -17,9 +18,9 @@ run_disease_model <- function(time_horizon = 365,
   skeleton_state <- this_inital_state %>% select(-individuals)
   
   
-  # run for entire time_horizon without vaccination (baseline)
+  # run for entire simulation_days without vaccination (baseline)
   sol_no_vaccine = as.data.frame(ode(y=state,
-                          times=seq(0,time_horizon,by=1),
+                          times=seq(0,simulation_days,by=1),
                           func=this_configure_ODEs,
                           parms=this_parameters)) 
   
@@ -37,7 +38,7 @@ run_disease_model <- function(time_horizon = 365,
 if (nrow(vaccination_history) != 0){
 
     # run with daily time steps when vaccine being delivered
-    time_sequence <- seq(min(vaccination_history$time), time_horizon, by = 1)
+    time_sequence <- seq(min(vaccination_history$time), simulation_days, by = 1)
 
     for (this_phase in unique(vaccination_history$phase)){   
       for (this_supply in unique(vaccination_history$supply[is.na(vaccination_history$supply)==FALSE])){
@@ -188,7 +189,7 @@ if (nrow(vaccination_history) != 0){
         if (this_phase != "healthcare workers"){
 
           sol <- as.data.frame(ode(y=next_state,
-                                   times=seq(this_time-1,time_horizon,by=1),
+                                   times=seq(this_time-1,simulation_days,by=1),
                                    func=this_configure_ODEs,
                                    parms=this_parameters))
           #remove rows already attached to sol_log
