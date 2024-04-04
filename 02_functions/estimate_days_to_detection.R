@@ -6,7 +6,7 @@ estimate_days_to_detection <- function (
     develop_outcome,   # time to developing outcome (days)
     R0                 # basic reproduction number
 ) {
-  (log(outcome_threshold/IR_outcome, base = R0) + 1)*gen_interval + develop_outcome
+  round((log(outcome_threshold/IR_outcome, base = R0) + 1)*gen_interval + develop_outcome)
 }
 
 # application to wild-type COVID-19
