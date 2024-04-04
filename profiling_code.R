@@ -11,6 +11,6 @@ profvis::profvis({
   vaccination_history_permutations <- configure_vaccination_history(LIST_vaccination_strategies = TOGGLE_vaccination_strategy)
 })
 profvis::profvis({
-  incidence_log_tidy<- run_disease_model(time_horizon = TOGGLE_simulation_days,
+  incidence_log_tidy<- run_disease_model(simulation_days = TOGGLE_simulation_days,
                                          vaccination_strategies = TOGGLE_vaccination_strategy)
 })
