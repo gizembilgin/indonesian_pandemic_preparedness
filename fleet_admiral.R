@@ -77,7 +77,6 @@ length(LIST_setting)*length(LIST_vaccine_delivery_start_date)*
 
 ship_log <- ship_log_key <- days_to_detection_key <- indicator_log <- data.frame()
 
-
 for (setting in LIST_setting){
   for (vaccine_derived_immunity in LIST_vaccine_derived_immunity){
     for(infection_derived_immunity in LIST_infection_derived_immunity){
@@ -123,12 +122,12 @@ for (setting in LIST_setting){
                  source("command_deck.R") #NB: 05/04/2024 30 seconds
                  
                  this_simulation_ID <- random_id(n = 1, bytes = 8)
-                 
+
                  this_simulation <- incidence_log_tidy %>%
                    mutate(run_ID = this_simulation_ID) %>%
                    filter(time>0) %>%
                    select(-simulation_time)
-                 
+
                  #save as a separate key rather than columns on the dataframe to save space
                  this_simulation_key <- data.frame(
                    run_ID = this_simulation_ID,
@@ -141,12 +140,12 @@ for (setting in LIST_setting){
                    vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity,
                    days_to_detection = days_to_detection
                  )
-                 
+
                  this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
                    mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
                           daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic,
                           days_to_detection = days_to_detection)
-                 
+
                  ship_log = rbind(ship_log,this_simulation)
                  ship_log_key = rbind(ship_log_key, this_simulation_key)
                  indicator_log = rbind(indicator_log,this_simulation_indicator)

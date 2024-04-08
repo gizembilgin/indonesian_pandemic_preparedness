@@ -119,26 +119,26 @@ parameters = list(
 )
 
 workshop <- run_disease_model(
-  simulation_days = TOGGLE_simulation_days,
-  vaccination_strategies = TOGGLE_vaccination_strategy
+ simulation_days = TOGGLE_simulation_days,
+ vaccination_strategies = TOGGLE_vaccination_strategy
 )
 
+
 incidence_log_tidy <- workshop$incidence_log_tidy %>%
-  mutate(simulation_time = time,
-         time = time - TOGGLE_days_to_detection)
-
+ mutate(simulation_time = time,
+        time = time - TOGGLE_days_to_detection)
 indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon %>%
-  mutate(vaccine_delivery_start_date   = vaccine_delivery_start_date   - TOGGLE_days_to_detection,
-         time_horizon  = time_horizon  - TOGGLE_days_to_detection)
+ mutate(vaccine_delivery_start_date   = vaccine_delivery_start_date   - TOGGLE_days_to_detection,
+        time_horizon  = time_horizon  - TOGGLE_days_to_detection)
 
-rm(workshop)
+ rm(workshop)
 
 # severe_disease_log_tidy <- project_severe_disease(
-#   point_estimate = TOGGLE_severe_disease_point_estimate,
-#   age_distribution = TOGGLE_severe_disease_age_distribution,
-#   VE = TOGGLE_severe_disease_VE,
-#   comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk,
-#   this_incidence_log_tidy = incidence_log_tidy,
-#   this_pop = loaded_setting_characteristics$population_by_comorbidity
+#  point_estimate = TOGGLE_severe_disease_point_estimate,
+#  age_distribution = TOGGLE_severe_disease_age_distribution,
+#  VE = TOGGLE_severe_disease_VE,
+#  comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk,
+#  this_incidence_log_tidy = incidence_log_tidy,
+#  this_pop = loaded_setting_characteristics$population_by_comorbidity
 # )
 #_______________________________________________________________________________
