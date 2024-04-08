@@ -98,6 +98,8 @@ for (setting in LIST_setting){
            # ggplot(workshop) + geom_histogram(aes(x=days_to_detection))
            # length(unique(workshop$days_to_detection)) #length ~ 85 with ROUND_days_to_detection == 1; and ~ 25 with ROUND_days_to_detection == 7
            
+           days_to_detection_key <- rbind(days_to_detection_key,days_to_detection_df)
+           
            for(days_to_detection in unique(days_to_detection_df$days_to_detection)){
              for (rollout_modifier in LIST_rollout_modifier){
                for (daily_vaccine_delivery_realistic in LIST_daily_vaccine_delivery_realistic){
@@ -161,6 +163,7 @@ rm(this_simulation, this_simulation_indicator)
 
 time_of_result = Sys.time()
 time_of_result = gsub(':','-',time_of_result)
+save(days_to_detection_key,file = paste0("04_shiny/x_results/days_to_detection_key",time_of_result,".Rdata"))
 save(ship_log_key,file = paste0("04_shiny/x_results/ship_log_key",time_of_result,".Rdata"))
 save(ship_log,file = paste0("04_shiny/x_results/ship_log",time_of_result,".Rdata"))
 indicator_log <- unique(indicator_log)
