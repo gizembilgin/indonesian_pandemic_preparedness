@@ -50,9 +50,21 @@ LIST_strategy = list(
 #parameters impacting days to detection
 LIST_outcome_threshold = c(1,2,5,10)
 LIST_gen_interval = c(7, 14, 28)
-LIST_IR_outcome = c(0.01, 0.1, 0.25, 0.5, 0.65)
+LIST_IR_outcome = c(0.01, # COVID-19 WT and influenza like
+                    0.1,  # diptheria and SARS like
+                    0.25, # Lassa fever and MERS like
+                    0.5,  # TB, cholera, JEV and HIV like
+                    0.65  # plague and Ebola like
+                    #NB: need to include est for presentations!
+                    )
 LIST_develop_outcome = c(7, 14, 28)
-ROUND_days_to_detection = 7
+ROUND_days_to_detection = 1
+
+# LIST_outcome_threshold = c(2)
+# LIST_gen_interval = c(7)
+# LIST_IR_outcome = c(0.01, 0.1, 0.25, 0.5, 0.65)
+# LIST_develop_outcome = c(14)
+# ROUND_days_to_detection = 1
 #_______________________________________________________________________________
 
 
@@ -108,12 +120,14 @@ for (setting in LIST_setting){
                    vaccine_derived_immunity = vaccine_derived_immunity
                  )
                  
-                 source("command_deck.R")
+                 source("command_deck.R") #NB: 05/04/2024 30 seconds
                  
                  this_simulation_ID <- random_id(n = 1, bytes = 8)
                  
                  this_simulation <- incidence_log_tidy %>%
-                   mutate(run_ID = this_simulation_ID)
+                   mutate(run_ID = this_simulation_ID) %>%
+                   filter(time>0) %>%
+                   select(-simulation_time)
                  
                  #save as a separate key rather than columns on the dataframe to save space
                  this_simulation_key <- data.frame(
