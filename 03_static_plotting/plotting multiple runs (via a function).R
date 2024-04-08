@@ -21,7 +21,11 @@ plot_simulations (
     var_2_range = NA,
     default_configuration =
       list(
-        R0 = 2,
+        R0 = 2,            # basic reproduction number
+        outcome_threshold = 2, # threshold number of this outcome for detection
+        gen_interval = 7,      # generation interval (days)
+        IR_outcome = 0.01,     # incidence rate for this outcome
+        develop_outcome = 14,  # time to developing outcome (days)
         vaccine_delivery_start_date = 100,
         phase = c(
           "older adults followed by all adults",
@@ -63,6 +67,10 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      outcome_threshold = 2, # threshold number of this outcome for detection
+      gen_interval = 7,      # generation interval (days)
+      IR_outcome = 0.01,     # incidence rate for this outcome
+      develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase = c(
         "uniform",
@@ -96,6 +104,10 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      outcome_threshold = 2, # threshold number of this outcome for detection
+      gen_interval = 7,      # generation interval (days)
+      IR_outcome = 0.01,     # incidence rate for this outcome
+      develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase =  c( "older adults followed by all adults",
                   "adults then children",               
@@ -133,6 +145,10 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      outcome_threshold = 2, # threshold number of this outcome for detection
+      gen_interval = 7,      # generation interval (days)
+      IR_outcome = 0.01,     # incidence rate for this outcome
+      develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase =  c(
                  "uniform",
@@ -173,6 +189,10 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      outcome_threshold = 2, # threshold number of this outcome for detection
+      gen_interval = 7,      # generation interval (days)
+      IR_outcome = 0.01,     # incidence rate for this outcome
+      develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase =  c(
         "step up",                            
