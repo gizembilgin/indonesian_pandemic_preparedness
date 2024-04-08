@@ -1,7 +1,7 @@
 
 #### SETUP #####################################################################
 #rm(list = ls())
-require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter)
+require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(scales)
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
 
@@ -18,7 +18,8 @@ if (length(list_poss_Rdata) > 0) {
   }
   latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
   load(file = paste0(path_stem,latest_file))
-  load(file = paste0(path_stem,gsub("ship_log","ship_log_key",latest_file))) #load accompanying key
+  load(file = paste0(path_stem,gsub("ship_log","ship_log_key",latest_file))) #load accompanying key(s)
+  load(file = paste0(path_stem,gsub("ship_log","days_to_detection_key",latest_file))) 
 } else{
   stop(paste0("(R Shiny) app: can't find underlying simulation to load! Searching:", path_stem))
 }
@@ -56,7 +57,11 @@ CHOICES = list(
       "x2.0 capacity" = 2),
   vaccine_derived_immunity =
     c("75%" = 0.75,
-      "100%" = 1.0)
+      "100%" = 1.0),
+  outcome_threshold = unique(days_to_detection_key$outcome_threshold),
+  gen_interval = unique(days_to_detection_key$gen_interval),
+  IR_outcome = unique(days_to_detection_key$IR_outcome),
+  develop_outcome = unique(days_to_detection_key$develop_outcome)
 )
 ################################################################################
 
@@ -76,6 +81,16 @@ make_prettySwitch <- function(this_variable, this_label, default = TRUE){
     inputId = this_variable,
     value = default,
     status = "success",
+    fill = TRUE
+  )
+}
+make_prettyRadioButtons <- function(this_variable, this_label,these_choices,this_var_selected){
+  prettyRadioButtons(
+    inputId = this_variable,
+    label = this_label, 
+    choices = these_choices,
+    selected = this_var_selected,
+    inline = TRUE, 
     fill = TRUE
   )
 }
@@ -118,16 +133,28 @@ ui <- fluidPage(
                   make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE),
                   make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
                   make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1),
+                  
+                  make_prettyRadioButtons("outcome_threshold", "threshold number of this outcome for detection", CHOICES$outcome_threshold, 2),
+                  make_prettyRadioButtons("gen_interval", "generation interval (days)", CHOICES$gen_interval, 7),
+                  make_prettyRadioButtons("IR_outcome", "incidence rate for this outcome", CHOICES$IR_outcome, 0.01),
+                  make_prettyRadioButtons("develop_outcome", "time to developing outcome (days)", CHOICES$develop_outcome, 14),
+                  
+                  card(
+                    # card_header(
+                    #   class = "bg-dark",
+                    #   "Display:"
+                    # ),
+                    h5(strong("Display:")),
+                    make_prettySwitch("free_yaxis", "free y-axis"),
+                    make_prettySwitch("display_impact_heatmap", "heatmap"),
+                    make_prettySwitch("display_severity_curve", "severity curve", default = FALSE),
+                    make_prettySwitch("display_age_proportion_on_severity_curve", "age proportions on severity curve", default = FALSE ),
+                    make_prettySwitch("display_vaccine_availability", "dashed line of vaccine availability" ),
+                    make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery"),
+                    #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
+                    uiOutput("SWITCH_plot_dimensions"),
+                  ), 
 
-                  h5(strong("Display:")),
-                  make_prettySwitch("free_yaxis","free y-axis"),
-                  make_prettySwitch("display_impact_heatmap","heatmap"),
-                  make_prettySwitch("display_severity_curve","severity curve", default = FALSE),
-                  make_prettySwitch("display_age_proportion_on_severity_curve","age proportions on severity curve", default = FALSE),
-                  make_prettySwitch("display_vaccine_availability","dashed line of vaccine availability"),
-                  make_prettySwitch("display_end_of_healthcare_worker_delivery","dashed line denoting end of healthcare worker delivery"),
-                  #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
-                  uiOutput("SWITCH_plot_dimensions"),
                   
     ),
     
@@ -160,9 +187,18 @@ server <- function(input, output, session) {
  # output$test <- renderText ({
  #   indicator_plot_ready
  #   })
- # output$test2 <- renderText ({
- #   count_plot_dimensions()
- # })
+ output$test2 <- renderText ({
+   paste(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),is.numeric))
+   paste(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome)
+   paste(sapply(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),as.numeric),is.numeric))
+   estimate_days_to_detection (
+     as.numeric(input$outcome_threshold), # threshold number of this outcome for detection
+     as.numeric(input$gen_interval),      # generation interval (days)
+     as.numeric(input$IR_outcome),        # incidence rate for this outcome
+     as.numeric(input$develop_outcome),   # time to developing outcome (days)
+     as.numeric(input$R0)                # basic reproduction number
+   )
+ })
   
   
   ### Conditional UI components
@@ -245,6 +281,10 @@ server <- function(input, output, session) {
           is.numeric(input$severe_disease_VE)
         )) &
        is.null(input$R0) == FALSE &
+       is.null(input$outcome_threshold) == FALSE &
+       is.null(input$gen_interval) == FALSE &
+       is.null(input$IR_outcome) == FALSE &
+       is.null(input$develop_outcome) == FALSE &
        is.null(input$vaccine_delivery_start_date) == FALSE &
        is.null(input$supply) == FALSE &
        is.null(input$infection_derived_immunity) == FALSE &
@@ -269,7 +309,11 @@ server <- function(input, output, session) {
        var_2_range = select_var(2)[[2]],
        default_configuration =
          list(
-           R0 = input$R0,
+           R0 = as.numeric(input$R0),
+           outcome_threshold = as.numeric(input$outcome_threshold),
+           gen_interval = as.numeric(input$gen_interval), 
+           IR_outcome = as.numeric(input$IR_outcome),  
+           develop_outcome = as.numeric(input$develop_outcome), 
            vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
            phase = c(input$vaccination_strategies,"healthcare workers", "no vaccine"),
            supply = as.numeric(input$supply),

@@ -69,11 +69,11 @@ plot_simulations <- function(
   if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration <- c(this_configuration, daily_vaccine_delivery_realistic = FALSE)
   # calculate days to detection
   workshop = crossing(
-    outcome_threshold = this_configuration$outcome_threshold,
-    gen_interval = this_configuration$gen_interval,
-    IR_outcome = this_configuration$IR_outcome,
-    develop_outcome = this_configuration$develop_outcome,
-    R0 = this_configuration$R0
+    outcome_threshold = as.numeric(this_configuration$outcome_threshold),
+    gen_interval = as.numeric(this_configuration$gen_interval),
+    IR_outcome = as.numeric(this_configuration$IR_outcome),
+    develop_outcome = as.numeric(this_configuration$develop_outcome),
+    R0 = as.numeric(this_configuration$R0)
   ) %>%
     mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
            days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
