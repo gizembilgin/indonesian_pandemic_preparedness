@@ -122,8 +122,15 @@ workshop <- run_disease_model(
   simulation_days = TOGGLE_simulation_days,
   vaccination_strategies = TOGGLE_vaccination_strategy
 )
-incidence_log_tidy <- workshop$incidence_log_tidy
-indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon
+
+incidence_log_tidy <- workshop$incidence_log_tidy %>%
+  mutate(simulation_time = time,
+         time = time - TOGGLE_days_to_detection)
+
+indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon %>%
+  mutate(vaccine_delivery_start_date   = vaccine_delivery_start_date   - TOGGLE_days_to_detection,
+         time_horizon  = time_horizon  - TOGGLE_days_to_detection)
+
 rm(workshop)
 
 # severe_disease_log_tidy <- project_severe_disease(
