@@ -56,14 +56,30 @@ plot_simulations <- function(
   
   
   ### Load simulation
+  # remove var_1 and var_2 this_configuration
   this_configuration = default_configuration[! names(default_configuration) %in% c({{var_1}},{{var_2}})]
-  if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration <- c(this_configuration, daily_vaccine_delivery_realistic = FALSE)
+  # use var_1_range and var_2_range in this_configuration
   if (length(var_1_range)>0){
     if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
   }
   if (length(var_2_range)>0){
     if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
   }
+  # ensure daily_vaccine_delivery_realistic specified
+  if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration <- c(this_configuration, daily_vaccine_delivery_realistic = FALSE)
+  # calculate days to detection
+  workshop = crossing(
+    outcome_threshold = this_configuration$outcome_threshold,
+    gen_interval = this_configuration$gen_interval,
+    IR_outcome = this_configuration$IR_outcome,
+    develop_outcome = this_configuration$develop_outcome,
+    R0 = this_configuration$R0
+  ) %>%
+    mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
+           days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
+    select(days_to_detection)
+  this_configuration$days_to_detection <- as.numeric(workshop$days_to_detection)
+  this_configuration <- this_configuration[! names(this_configuration) %in% c("outcome_threshold","gen_interval","IR_outcome","develop_outcome")]
   
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("healthcare workers","no vaccine" )]
   
