@@ -11,7 +11,13 @@ plot_simulations <- function(
     var_2_range = NA,
     default_configuration =
       list(
-        R0 = 2,
+        # time to detection variables
+        R0 = 2,            # basic reproduction number
+        outcome_threshold = 2, # threshold number of this outcome for detection
+        gen_interval = 7,      # generation interval (days)
+        IR_outcome = 0.01,     # incidence rate for this outcome
+        develop_outcome = 14,  # time to developing outcome (days)
+        # vaccine program variables
         vaccine_delivery_start_date = 100,
         phase = c(
           "older adults followed by all adults",
@@ -24,9 +30,10 @@ plot_simulations <- function(
           "no vaccine"
         ),
         supply = c(0.2),
-        infection_derived_immunity = 1,
         rollout_modifier = 2,
-        vaccine_derived_immunity = 1
+        vaccine_derived_immunity = 1,
+        # all other variables
+        infection_derived_immunity = 1
       ),
     load_simulations = TRUE, #load simulations for each run
     free_yaxis = FALSE,
