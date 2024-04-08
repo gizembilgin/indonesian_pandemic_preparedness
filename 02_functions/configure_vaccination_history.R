@@ -46,7 +46,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   }
   
   # build daily_capacity_df
-  daily_capacity_df <- data.frame(time = seq(LIST_vaccination_strategies$vaccine_delivery_start_date, simulation_days),
+  daily_capacity_df <- data.frame(time = seq(LIST_vaccination_strategies$vaccine_delivery_start_date, time_horizon),
                                          capacity = 0)
   for (this_row in 1:nrow(daily_vaccine_delivery)){
     if (nrow(daily_capacity_df[daily_capacity_df$capacity==0,])>0){
