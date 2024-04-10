@@ -43,7 +43,7 @@ access_simulations <- function(
   this_ship_log <- filter_scenarios(this_ship_log,this_configuration[names(this_configuration) %in% c("phase")] )
   #also subset indicator_log to this_configuration
   this_indicator_log <- indicator_log %>% rename(phase = strategy)
-  this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity")])
+  this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity","days_to_detection")])
   if (load_simulations == TRUE) rm(ship_log)
   
   

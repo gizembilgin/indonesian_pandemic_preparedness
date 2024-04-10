@@ -77,8 +77,8 @@ plot_simulations <- function(
   ) %>%
     mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
            days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
-    select(days_to_detection)
-  this_configuration$days_to_detection <- as.numeric(workshop$days_to_detection)
+    select(days_to_detection,R0)
+  this_configuration$days_to_detection <- workshop
   this_configuration <- this_configuration[! names(this_configuration) %in% c("outcome_threshold","gen_interval","IR_outcome","develop_outcome")]
   
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("healthcare workers","no vaccine" )]

@@ -5,6 +5,9 @@ filter_scenarios <- function(data,configuration,warning_search = 0){
       data = data %>% 
         filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]] | 
                  phase %in% c("no vaccine", "healthcare workers"))
+    } else if (names(configuration[i]) == "days_to_detection"){
+      data = data %>%
+        right_join(configuration[[i]], by = join_by(R0, days_to_detection))
     } else{
       data = data %>% 
         filter(.data[[names(configuration)[[i]]]] %in% configuration[[i]]) 
