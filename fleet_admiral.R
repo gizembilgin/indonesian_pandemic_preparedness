@@ -12,7 +12,7 @@ LIST_setting = c("Indonesia")
 LIST_vaccine_delivery_start_date = c(50,100,200)
 
 #pathogen characteristics
-LIST_R0_to_fit = c(2,3,4)  #  c(1,2,4,6,8) 
+LIST_R0_to_fit = c(2,3,4,5)  #  c(1,2,4,6,8) 
 LIST_infection_derived_immunity = c(0.75,1)
 
 #vaccination strategies

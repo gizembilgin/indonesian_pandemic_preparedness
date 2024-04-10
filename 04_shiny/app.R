@@ -188,16 +188,16 @@ server <- function(input, output, session) {
  #   indicator_plot_ready
  #   })
  output$test2 <- renderText ({
-   paste(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),is.numeric))
-   paste(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome)
-   paste(sapply(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),as.numeric),is.numeric))
-   estimate_days_to_detection (
-     as.numeric(input$outcome_threshold), # threshold number of this outcome for detection
-     as.numeric(input$gen_interval),      # generation interval (days)
-     as.numeric(input$IR_outcome),        # incidence rate for this outcome
-     as.numeric(input$develop_outcome),   # time to developing outcome (days)
-     as.numeric(input$R0)                # basic reproduction number
-   )
+   # paste(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),is.numeric))
+   # paste(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome)
+   # paste(sapply(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),as.numeric),is.numeric))
+   # estimate_days_to_detection (
+   #   as.numeric(input$outcome_threshold), # threshold number of this outcome for detection
+   #   as.numeric(input$gen_interval),      # generation interval (days)
+   #   as.numeric(input$IR_outcome),        # incidence rate for this outcome
+   #   as.numeric(input$develop_outcome),   # time to developing outcome (days)
+   #   as.numeric(input$R0)                # basic reproduction number
+   # )
  })
   
   
