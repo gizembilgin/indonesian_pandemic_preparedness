@@ -68,22 +68,11 @@ load_setting <- function(include_comorbidity = FALSE,
                                   uptake = c(0.95,0.95,0.9,0.95))
   
   
-  #(6/8) % comorb (DUMMY VALUE) - Basic Health Survey
-  comorbidities <- data.frame(age_group = age_group_labels) %>%
-    mutate(proportion = (row_number()-1)*1/length(age_group_labels))
-  
-  
-  #(7/8) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
-  access_to_care <- crossing(age_group = age_group_labels,
-                             proportion = 0.8)
-  
-  
-  #(8/8) modification on R0 based on province (DUMMY) - seroprevalence survey
-  R0_adjustement = 1
-  
-  
-  #derive population_risk_group
+  #(6/8) % comorb 
+  #NB: currently value from Clark et al. (2020, https://doi.org/10.1016/s2214-109x(20)30264-3) but a 
+  #    better estimate could be taken from the  Basic Health Survey 2024 once that is released
   if (include_comorbidity == TRUE){
+    load("01_inputs/comorbidities_CLARK.Rdata")
     population_by_comorbidity <- crossing(age_group = age_group_labels,
                                           comorbidity = c(0, 1)) %>%
       left_join(population, by = "age_group") %>%
@@ -101,9 +90,17 @@ load_setting <- function(include_comorbidity = FALSE,
   } else{
     population_by_comorbidity <- population %>% mutate(comorbidity = 0)
   }
-
   
-
+  
+  #(7/8) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
+  access_to_care <- crossing(age_group = age_group_labels,
+                             proportion = 0.8)
+  
+  
+  #(8/8) modification on R0 based on province - seroprevalence survey
+  R0_adjustement = 1
+  
+  
   loaded_setting_characteristics <- list(population = population,
                                          population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
