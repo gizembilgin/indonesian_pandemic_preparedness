@@ -83,7 +83,7 @@ project_severe_disease(
   VE = 0,
   comorb_increased_risk = 1,
   this_incidence_log_tidy = incidence_log_tidy,
-  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
@@ -97,7 +97,7 @@ project_severe_disease(
   VE = 0,
   comorb_increased_risk = 1,
   this_incidence_log_tidy = incidence_log_tidy,
-  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
@@ -111,7 +111,7 @@ project_severe_disease(
   VE = 0,
   comorb_increased_risk = 1,
   this_incidence_log_tidy = incidence_log_tidy,
-  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%
@@ -127,7 +127,7 @@ project_severe_disease(
       VE_severe_disease = 0,
       comorb_increased_risk = 1
     ), 
-  this_pop = loaded_setting_characteristics$population_by_comorbidity,
+  this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
   filter(vaccination_status == 0 & comorbidity == 0) %>%

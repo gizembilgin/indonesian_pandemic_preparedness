@@ -7,7 +7,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                                           time_horizon = simulation_days,
                                           vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance, 
                                           daily_vaccine_delivery = loaded_setting_characteristics$daily_vaccine_delivery,
-                                          population_by_comorbidity = loaded_setting_characteristics$population_by_comorbidity,
+                                          population = loaded_setting_characteristics$population,
                                           healthcare_workers = loaded_setting_characteristics$healthcare_workers
                                           ){
   
@@ -64,7 +64,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   
   # calculate max supply
   max_supply_abs <- sum(daily_capacity_df$capacity)
-  max_supply_prop <- max_supply_abs / sum(population_by_comorbidity$individuals)
+  max_supply_prop <- max_supply_abs / sum(population$individuals)
   
   # calculate end simulation time for each rollout capacity phase
   find_time <- daily_capacity_df %>% 
@@ -78,7 +78,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   ### DELIVER VACCINES TO healthcare workerS
   this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "healthcare workers",-c(1)]
 
-  workshop_healthcare_worker_target <- healthcare_worker_target <- population_by_comorbidity %>%
+  workshop_healthcare_worker_target <- healthcare_worker_target <- population %>%
     left_join(healthcare_workers, by = "age_group") %>%
     left_join(this_vaccine_acceptance, by = "comorbidity") %>%
     mutate(individuals = individuals * proportion * uptake) %>%
@@ -139,7 +139,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   ### DELIVER VACCINES AS PER ALLOCATION STRATEGIES LISTED
   this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "healthcare workers",-c(1)]
   
-  remainder_of_population_target <- population_by_comorbidity %>%
+  remainder_of_population_target <- population %>%
     left_join(healthcare_workers, by = "age_group") %>%
     left_join(this_vaccine_acceptance, by = "comorbidity") %>%
     mutate(individuals = individuals * (1-proportion) * uptake) %>%
@@ -153,9 +153,9 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     
     #CHECK value of this_supply
     if(this_supply > 1 | this_supply < 0) stop("vaccination supply not within 0 to 1")
-    if (this_supply < sum(healthcare_worker_target$individuals)/sum(population_by_comorbidity$individuals)){
+    if (this_supply < sum(healthcare_worker_target$individuals)/sum(population$individuals)){
       stop(paste0("This supply (",this_supply*100,"%) is not sufficient to reach healthcare workers. Please specify a supply of at least ",
-                  round(sum(healthcare_worker_target$individuals)/sum(population_by_comorbidity$individuals) * 100,digits=0), "%.",
+                  round(sum(healthcare_worker_target$individuals)/sum(population$individuals) * 100,digits=0), "%.",
                   " There is no point comparing vaccine prioritisation decisions without prioritisation decisions."))
     } 
     
@@ -190,7 +190,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       this_supply_modified = min(max_supply_prop,this_supply)
       
       #indicator_supply_delivered == size of priority group uses complete supply      
-      if (sum(this_population_target$individuals) + sum(healthcare_worker_target$individuals) < this_supply * sum(population_by_comorbidity$individuals)) {
+      if (sum(this_population_target$individuals) + sum(healthcare_worker_target$individuals) < this_supply * sum(population$individuals)) {
         this_row$indicator_supply_delivered = FALSE
       } else{
         this_row$indicator_supply_delivered = TRUE
@@ -199,7 +199,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       
       # CALCULATE absolute number of supply and ALIGN this_population_target with supply
-      this_supply_abs = this_supply_modified * sum(population_by_comorbidity$individuals) - sum(healthcare_worker_target$individuals)
+      this_supply_abs = this_supply_modified * sum(population$individuals) - sum(healthcare_worker_target$individuals)
       if (this_supply_abs > sum(this_population_target$individuals)) this_supply_abs = sum(this_population_target$individuals)
 
       
@@ -342,8 +342,8 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       #CHECK: delivery did not exceed supply
       check <- this_vax_history %>%
         summarise(total_daily_delivered = sum(doses_delivered)) %>%
-        filter(total_daily_delivered > this_supply * sum(population_by_comorbidity$individuals)) %>%
-        filter(abs(total_daily_delivered - (this_supply * sum(population_by_comorbidity$individuals)))>1)
+        filter(total_daily_delivered > this_supply * sum(population$individuals)) %>%
+        filter(abs(total_daily_delivered - (this_supply * sum(population$individuals)))>1)
       if (nrow(check)>0) stop("vaccine delivery exceeded supply")
 
       this_target_population_delivery <- this_vax_history %>%
@@ -370,7 +370,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
                  (supply == this_supply | is.na(supply))) %>%
         group_by(age_group,comorbidity) %>%
         summarise(doses_delivered = sum(doses_delivered), .groups = "keep") %>%
-        left_join(population_by_comorbidity, by = c("age_group","comorbidity")) %>%
+        left_join(population, by = c("age_group","comorbidity")) %>%
         filter(individuals < doses_delivered)
       
       if (nrow(check)>0){stop(paste("too many doses delivered to some combination of", 

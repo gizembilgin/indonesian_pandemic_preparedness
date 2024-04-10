@@ -73,7 +73,7 @@ load_setting <- function(include_comorbidity = FALSE,
   #    better estimate could be taken from the  Basic Health Survey 2024 once that is released
   if (include_comorbidity == TRUE){
     load("01_inputs/comorbidities_CLARK.Rdata")
-    population_by_comorbidity <- crossing(age_group = age_group_labels,
+    population <- crossing(age_group = age_group_labels,
                                           comorbidity = c(0, 1)) %>%
       left_join(population, by = "age_group") %>%
       left_join(comorbidities, by = "age_group") %>%
@@ -85,10 +85,9 @@ load_setting <- function(include_comorbidity = FALSE,
           )
       ) %>%
       select(-proportion)
-    population_by_comorbidity$age_group <- factor(population_by_comorbidity$age_group, levels = age_group_labels)
-    if (abs(sum(population_by_comorbidity$individuals) - sum(population$individuals))>0) stop("population_by_comorbidity != population")
+    population$age_group <- factor(population$age_group, levels = age_group_labels)
   } else{
-    population_by_comorbidity <- population %>% mutate(comorbidity = 0)
+    population <- population %>% mutate(comorbidity = 0)
   }
   
   
@@ -102,7 +101,6 @@ load_setting <- function(include_comorbidity = FALSE,
   
   
   loaded_setting_characteristics <- list(population = population,
-                                         population_by_comorbidity = population_by_comorbidity,
                                          contact_matrix = contact_matrix,
                                          healthcare_workers = healthcare_workers,
                                          daily_vaccine_delivery = daily_vaccine_delivery,

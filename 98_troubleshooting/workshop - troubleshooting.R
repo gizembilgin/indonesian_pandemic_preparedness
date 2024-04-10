@@ -37,7 +37,7 @@ vaccination_history %>%
 # <chr>           <dbl>           <dbl>
 # 60 to 110           0        4831546.
 # 60 to 110           1       20399861.
-loaded_setting_characteristics$population_by_comorbidity[loaded_setting_characteristics$population_by_comorbidity$age_group == "60 to 110",]
+loaded_setting_characteristics$population[loaded_setting_characteristics$population$age_group == "60 to 110",]
 # age_group comorbidity individuals
 # <chr>           <dbl>           <dbl>
 # 60 to 110           0        5368384

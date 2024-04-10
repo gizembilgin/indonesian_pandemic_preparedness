@@ -16,7 +16,7 @@ project_severe_disease <- function(data = data.frame(),
                                        
                                      ),
                                    
-                                   this_pop = loaded_setting_characteristics$population_by_comorbidity,
+                                   this_pop = loaded_setting_characteristics$population,
                                    this_setting = TOGGLE_setting,
                                    
                                    return_severity = FALSE #option to output severity matrix instead of severe_disease_log_tidy)

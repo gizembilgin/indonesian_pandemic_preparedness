@@ -10,6 +10,9 @@ fit_beta_to_R0 <- function(R0_to_fit = 2,
                            age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
   
   num_age_groups = length(age_group_labels)
+  this_pop <- this_pop %>%
+    group_by(age_group) %>%
+    summarise(individuals = sum(individuals), .groups = "keep")
 
   contact_matrix_adjust = matrix(data = 0, 
                                  nrow = num_age_groups, 

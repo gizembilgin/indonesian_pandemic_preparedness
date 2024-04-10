@@ -139,6 +139,6 @@ indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_tim
 #  VE = TOGGLE_severe_disease_VE,
 #  comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk,
 #  this_incidence_log_tidy = incidence_log_tidy,
-#  this_pop = loaded_setting_characteristics$population_by_comorbidity
+#  this_pop = loaded_setting_characteristics$population
 # )
 #_______________________________________________________________________________
