@@ -5,9 +5,8 @@ configure_ODEs <- function(t, state, parameters){
   with(as.list(c(state,parameters)),{
     
     D = 1 #num_vax_doses
-    RISK = 2 #num_risk_groups
     num_disease_classes = 4
-    
+    RISK = length(state)/((num_disease_classes + 1)*J*(D+1)) #num_risk_groups
     A=J*(D+1)*RISK # +1 is unvax
     
     S=state[1:A]
@@ -33,10 +32,13 @@ configure_ODEs <- function(t, state, parameters){
 
     #construct ODEs
     unvax = 1:J
-    for (r in 2:RISK){
-      unvax = c(unvax, 
-                ((1:(r-1))*J*(D+1)+1):((1:(r-1))*J*(D+1)+J)
-      )}
+    if (RISK>1){
+      for (r in 2:RISK){
+        unvax = c(unvax, 
+                  ((1:(r-1))*J*(D+1)+1):((1:(r-1))*J*(D+1)+J)
+        )}
+    }
+
     vax   = unvax + J
     
     dS[unvax] = omega*R[unvax]  - tau*S[unvax] 

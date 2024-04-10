@@ -1,6 +1,7 @@
 
 
-load_setting <- function(this_setting = "Indonesia",
+load_setting <- function(include_comorbidity = FALSE,
+                         this_setting = "Indonesia",
                          age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
   
   ### IMPORT
@@ -82,20 +83,25 @@ load_setting <- function(this_setting = "Indonesia",
   
   
   #derive population_risk_group
-  population_by_comorbidity <- crossing(age_group = age_group_labels,
-                                       comorbidity = c(0, 1)) %>%
-    left_join(population, by = "age_group") %>%
-    left_join(comorbidities, by = "age_group") %>%
-    mutate(
-      individuals =
-        case_when(
-          comorbidity == 0 ~ (1 - proportion) * individuals,
-          comorbidity == 1 ~ proportion * individuals
-        )
-    ) %>%
-    select(-proportion)
-  population_by_comorbidity$age_group <- factor(population_by_comorbidity$age_group, levels = age_group_labels)
-  if (abs(sum(population_by_comorbidity$individuals) - sum(population$individuals))>0) stop("population_by_comorbidity != population")
+  if (include_comorbidity == TRUE){
+    population_by_comorbidity <- crossing(age_group = age_group_labels,
+                                          comorbidity = c(0, 1)) %>%
+      left_join(population, by = "age_group") %>%
+      left_join(comorbidities, by = "age_group") %>%
+      mutate(
+        individuals =
+          case_when(
+            comorbidity == 0 ~ (1 - proportion) * individuals,
+            comorbidity == 1 ~ proportion * individuals
+          )
+      ) %>%
+      select(-proportion)
+    population_by_comorbidity$age_group <- factor(population_by_comorbidity$age_group, levels = age_group_labels)
+    if (abs(sum(population_by_comorbidity$individuals) - sum(population$individuals))>0) stop("population_by_comorbidity != population")
+  } else{
+    population_by_comorbidity <- population %>% mutate(comorbidity = 0)
+  }
+
   
 
   loaded_setting_characteristics <- list(population = population,

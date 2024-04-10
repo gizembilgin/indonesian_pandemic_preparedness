@@ -126,7 +126,8 @@ for (setting in LIST_setting){
                  this_simulation <- incidence_log_tidy %>%
                    mutate(run_ID = this_simulation_ID) %>%
                    filter(time>0) %>%
-                   select(-simulation_time)
+                   ungroup() %>%
+                   select(-simulation_time,-comorbidity) #as run without comorbidity
 
                  #save as a separate key rather than columns on the dataframe to save space
                  this_simulation_key <- data.frame(
