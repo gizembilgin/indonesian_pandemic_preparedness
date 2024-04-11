@@ -1,14 +1,14 @@
 
 
 access_simulations <- function(
-    load_simulations = TRUE, #load ship_log every run of accessing the simulation ~ 3 seconds
+    simulations_source = "load", #options: "load", "memory", "generate"
     this_configuration,
     outcome = "cases",
     TOGGLES_project_severe_disease = list()
 ){
   
   ### Load simulations (optional for each run)
-  if (load_simulations == TRUE){
+  if (simulations_source == "load"){
     path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
     list_poss_Rdata = list.files(
       path = path_stem,
@@ -28,6 +28,9 @@ access_simulations <- function(
       stop(paste0("access_simulations: can't find underlying simulation to load! Searching:", path_stem))
     }
   }
+  if (simulations_source == "generate"){
+
+  }
   
   
   
@@ -44,7 +47,7 @@ access_simulations <- function(
   #also subset indicator_log to this_configuration
   this_indicator_log <- indicator_log %>% rename(phase = strategy)
   this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity","days_to_detection")])
-  if (load_simulations == TRUE) rm(ship_log)
+  if (simulations_source != "memory") rm(ship_log)
   
   
   

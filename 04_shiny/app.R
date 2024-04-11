@@ -330,7 +330,7 @@ server <- function(input, output, session) {
        colour_healthcare_workers_phase = 0, #input$colour_healthcare_workers_phase,
        display_vaccine_availability = input$display_vaccine_availability,
        display_end_of_healthcare_worker_delivery = input$display_end_of_healthcare_worker_delivery,
-       load_simulations = FALSE
+       simulations_source = "generate"
      )
    }
   }

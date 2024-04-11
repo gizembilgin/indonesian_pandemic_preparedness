@@ -35,7 +35,7 @@ plot_simulations <- function(
         # all other variables
         infection_derived_immunity = 1
       ),
-    load_simulations = TRUE, #load simulations for each run
+    simulations_source = "load", #load simulations for each run
     free_yaxis = FALSE,
     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
     display_severity_curve = 0,
@@ -84,7 +84,7 @@ plot_simulations <- function(
   include_strategies <- default_configuration$phase[! default_configuration$phase %in% c("healthcare workers","no vaccine" )]
   
   to_plot <- to_plot_loaded <- access_simulations(
-    load_simulations,
+    simulations_source,
     this_configuration,
     TOGGLES_project_severe_disease,
     outcome = this_outcome
