@@ -1,80 +1,128 @@
 generate_simulations <- function(
-    
-    LIST_setting = "Indonesia",
-    LIST_R0_to_fit = 2,
-    LIST_infection_derived_immunity = 1,  
-    
-    LIST_vaccine_derived_immunity = 1,
-    LIST_vaccine_delivery_start_date = 100,
-    LIST_rollout_modifier = 1,
-    LIST_daily_vaccine_delivery_realistic = FALSE,
-
-    LIST_outcome_threshold = 2,
-    LIST_gen_interval = 7,
-    LIST_IR_outcome = 0.01,
-    LIST_develop_outcome = 14,
-    ROUND_days_to_detection = 1
-    
+    this_configuration = list(
+      setting = "Indonesia",
+      R0 = 2,
+      infection_derived_immunity = 1,
+      
+      vaccine_derived_immunity = 1,
+      vaccine_delivery_start_date = 100,
+      supply = 0.2,
+      rollout_modifier = 1,
+      strategy_name = c("uniform", "step up", "step down"),
+      daily_vaccine_delivery_realistic = FALSE,
+      
+      outcome_threshold = 2,
+      gen_interval = 7,
+      develop_outcome = 14,
+      IR_outcome = 0.01,
+      ROUND_days_to_detection = 1
+    ),
+    assign_run_ID = FALSE
 ){
   
-  # length(LIST_setting)*length(LIST_vaccine_delivery_start_date)*
-  # length(LIST_R0_to_fit)*length(LIST_infection_derived_immunity)*
-  # length(LIST_rollout_modifier)*length(LIST_vaccine_derived_immunity) *
-  # length(LIST_daily_vaccine_delivery_realistic)
+  # length(this_configuration$setting)*length(this_configuration$vaccine_delivery_start_date)*
+  # length(this_configuration$R0)*length(this_configuration$infection_derived_immunity)*
+  # length(this_configuration$rollout_modifier)*length(this_configuration$vaccine_derived_immunity) *
+  # length(this_configuration$daily_vaccine_delivery_realistic)
   
+  LIST_strategy = list()
+  if ("uniform" %in% this_configuration$strategy_name){
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("uniform",
+                list(c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")))
+  } 
+  if ("older adults followed by all adults" %in% this_configuration$strategy_name){
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("older adults followed by all adults",
+                list(c("60 to 110")),
+                list(c("18 to 29","30 to 59")))
+  }
+  if ("adults then children" %in% this_configuration$strategy_name){
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("adults then children",
+                list(c("18 to 29","30 to 59","60 to 110")),
+                list(c("0 to 4","5 to 17")))
+  }
+  if ("children then adults" %in% this_configuration$strategy_name){ LIST_strategy[[length(LIST_strategy)+1]] <- 
+    list("children then adults", 
+              list(c("0 to 4","5 to 17")), 
+              list(c("18 to 29","30 to 59","60 to 110")))
+  }
+  if ("step up" %in% this_configuration$strategy_name) {
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("step up",
+                list(c("0 to 4")),
+                list(c("5 to 17")),
+                list(c("18 to 29")),
+                list(c("30 to 59")),
+                list(c("60 to 110")))
+  }
+  if ("step down" %in% this_configuration$strategy_name) { LIST_strategy[[length(LIST_strategy)+1]] <- 
+    list("step down",
+              list(c("60 to 110")),
+              list(c("30 to 59")),
+              list(c("18 to 29")),
+              list(c("5 to 17")),
+              list(c("0 to 4")))
+  }
+
   ship_log <- ship_log_key <- days_to_detection_key <- indicator_log <- data.frame()
   
-  for (setting in LIST_setting){
-    for (vaccine_derived_immunity in LIST_vaccine_derived_immunity){
-      for(infection_derived_immunity in LIST_infection_derived_immunity){
-        for (vaccine_delivery_start_date in LIST_vaccine_delivery_start_date){
-          for (R0_to_fit in LIST_R0_to_fit){
-            
-            days_to_detection_df = crossing(
-              outcome_threshold = LIST_outcome_threshold,
-              gen_interval = LIST_gen_interval,
-              IR_outcome = LIST_IR_outcome,
-              develop_outcome = LIST_develop_outcome,
-              R0 = R0_to_fit
-            ) %>%
-              mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
-                     #days_to_detection = round(days_to_detection)) %>%
-                     days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
-              arrange(days_to_detection)
-            # ggplot(workshop) + geom_histogram(aes(x=days_to_detection))
-            # length(unique(workshop$days_to_detection)) #length ~ 85 with ROUND_days_to_detection == 1; and ~ 25 with ROUND_days_to_detection == 7
-            
-            days_to_detection_key <- rbind(days_to_detection_key,days_to_detection_df)
-            
-            for(days_to_detection in unique(days_to_detection_df$days_to_detection)){
-              for (rollout_modifier in LIST_rollout_modifier){
-                for (daily_vaccine_delivery_realistic in LIST_daily_vaccine_delivery_realistic){
+  for (vaccine_derived_immunity in this_configuration$vaccine_derived_immunity){
+    for(infection_derived_immunity in this_configuration$infection_derived_immunity){
+      for (vaccine_delivery_start_date in this_configuration$vaccine_delivery_start_date){
+        for (R0_to_fit in this_configuration$R0){
+          
+          days_to_detection_df = crossing(
+            outcome_threshold = this_configuration$outcome_threshold,
+            gen_interval = this_configuration$gen_interval,
+            IR_outcome = this_configuration$IR_outcome,
+            develop_outcome = this_configuration$develop_outcome,
+            R0 = R0_to_fit
+          ) %>%
+            mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
+                   #days_to_detection = round(days_to_detection)) %>%
+                   days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
+            arrange(days_to_detection)
+          # ggplot(workshop) + geom_histogram(aes(x=days_to_detection))
+          # length(unique(workshop$days_to_detection)) #length ~ 85 with ROUND_days_to_detection == 1; and ~ 25 with ROUND_days_to_detection == 7
+          
+          days_to_detection_key <- rbind(days_to_detection_key,days_to_detection_df)
+          
+          for(days_to_detection in unique(days_to_detection_df$days_to_detection)){
+            for (rollout_modifier in this_configuration$rollout_modifier){
+              for (daily_vaccine_delivery_realistic in this_configuration$daily_vaccine_delivery_realistic){
+                
+                FLEET_ADMIRAL_OVERRIDE = list(
+                  setting = this_configuration$setting,
+                  days_to_detection = days_to_detection,
+                  vaccine_delivery_start_date = vaccine_delivery_start_date,
                   
+                  R0 = R0_to_fit,
+                  infection_derived_immunity = infection_derived_immunity,
                   
-                  FLEET_ADMIRAL_OVERRIDE = list(
-                    setting = setting,
-                    days_to_detection = days_to_detection,
-                    vaccine_delivery_start_date = vaccine_delivery_start_date,
-                    
-                    R0 = R0_to_fit,
-                    infection_derived_immunity = infection_derived_immunity,
-                    
-                    supply = LIST_supply,
-                    rollout_modifier = rollout_modifier,
-                    daily_vaccine_delivery_realistic = daily_vaccine_delivery_realistic,
-                    strategy = LIST_strategy,
-                    vaccine_derived_immunity = vaccine_derived_immunity
-                  )
-                  
-                  source("command_deck.R") #NB: 11/04/2024 12 seconds
-                  
+                  supply = this_configuration$supply,
+                  rollout_modifier = rollout_modifier,
+                  daily_vaccine_delivery_realistic = daily_vaccine_delivery_realistic,
+                  strategy = LIST_strategy,
+                  vaccine_derived_immunity = vaccine_derived_immunity
+                )
+                
+                source("command_deck.R") #NB: 11/04/2024 12 seconds
+                
+                this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
+                  mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
+                         daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic,
+                         days_to_detection = days_to_detection)
+                this_simulation <- incidence_log_tidy %>%
+                  filter(time>0) %>%
+                  ungroup() %>%
+                  select(-simulation_time,-comorbidity) #as run without comorbidity
+                
+                
+                if (assign_run_ID == TRUE){
                   this_simulation_ID <- random_id(n = 1, bytes = 8)
-                  
-                  this_simulation <- incidence_log_tidy %>%
-                    mutate(run_ID = this_simulation_ID) %>%
-                    filter(time>0) %>%
-                    ungroup() %>%
-                    select(-simulation_time,-comorbidity) #as run without comorbidity
+                  this_simulation$run_ID = this_simulation_ID
                   
                   #save as a separate key rather than columns on the dataframe to save space
                   this_simulation_key <- data.frame(
@@ -88,17 +136,11 @@ generate_simulations <- function(
                     vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity,
                     days_to_detection = days_to_detection
                   )
-                  
-                  this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
-                    mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
-                           daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic,
-                           days_to_detection = days_to_detection)
-                  
-                  ship_log = rbind(ship_log,this_simulation)
                   ship_log_key = rbind(ship_log_key, this_simulation_key)
-                  indicator_log = rbind(indicator_log,this_simulation_indicator)
-                  
                 }
+                
+                ship_log = rbind(ship_log,this_simulation)
+                indicator_log = rbind(indicator_log,this_simulation_indicator)
               }
             }
           }

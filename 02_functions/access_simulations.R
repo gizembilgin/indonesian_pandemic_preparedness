@@ -27,30 +27,32 @@ access_simulations <- function(
     } else{
       stop(paste0("access_simulations: can't find underlying simulation to load! Searching:", path_stem))
     }
+    
+    ### Subset ship_log to this_configuration
+    #NB: leaving supply here to allow cascade to be reconstructed
+    #find relevant run_IDs in key
+    this_ship_log_key <-  filter_scenarios(ship_log_key,this_configuration[! names(this_configuration) %in% c("supply","phase")])
+    #subset ship_log to run_IDs and then phases as well
+    this_ship_log <- ship_log %>%
+      filter(run_ID %in% this_ship_log_key$run_ID) %>%
+      left_join(this_ship_log_key, by = "run_ID") %>%
+      select(-run_ID)
+    this_ship_log <- filter_scenarios(this_ship_log,this_configuration[names(this_configuration) %in% c("phase")] )
+    #also subset indicator_log to this_configuration
+    this_indicator_log <- indicator_log %>% rename(phase = strategy)
+    this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity","days_to_detection")])
+    
+    rm(ship_log)
   }
   if (simulations_source == "generate"){
-
+    result <- generate_simulations(this_configuration)
+    this_ship_log = result$ship_log
+    this_indicator_log = result$indicator_log
   }
   
   
   
-  ### Subset ship_log to this_configuration
-  #NB: leaving supply here to allow cascade to be reconstructed
-  #find relevant run_IDs in key
-  this_ship_log_key <-  filter_scenarios(ship_log_key,this_configuration[! names(this_configuration) %in% c("supply","phase")])
-  #subset ship_log to run_IDs and then phases as well
-  this_ship_log <- ship_log %>%
-    filter(run_ID %in% this_ship_log_key$run_ID) %>%
-    left_join(this_ship_log_key, by = "run_ID") %>%
-    select(-run_ID)
-  this_ship_log <- filter_scenarios(this_ship_log,this_configuration[names(this_configuration) %in% c("phase")] )
-  #also subset indicator_log to this_configuration
-  this_indicator_log <- indicator_log %>% rename(phase = strategy)
-  this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity","days_to_detection")])
-  if (simulations_source != "memory") rm(ship_log)
-  
-  
-  
+
   ### Reconstruct complete incidence from cascade of simulation
   this_ship_log <- this_ship_log %>%
     mutate(flag_reconstructed = 0) #NB: include as flag so option to not include in incidence plot
