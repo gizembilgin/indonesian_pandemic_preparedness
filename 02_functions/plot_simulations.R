@@ -341,7 +341,7 @@ plot_simulations <- function(
       TOGGLES_project_severe_disease = TOGGLES_project_severe_disease, 
       return_severity = TRUE
     ) %>%
-      filter(vaccination_status == 0 & comorbidity == 0) %>%
+      filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
       ggplot() +
       geom_col(aes(x=age_group,y=case_fatality_rate)) +
       facet_wrap(~ pathogen, ncol = 1,scales = "free") 

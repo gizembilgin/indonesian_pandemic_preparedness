@@ -86,28 +86,34 @@ project_severe_disease <- function(data = data.frame(),
   ## (2/3) by comorbidity
   # see Supplementary Material S2.4 of https://doi.org/10.1186/s12889-023-17374-0
   # need incidence rate (case_fatality_rate), pop with comorbidity, pop without comorbitiy, RR (comorb_increased_risk)
-  workshop <- this_pop %>% 
-    select(age_group, comorbidity, individuals) %>%
-    pivot_wider(names_from = "comorbidity", 
-                values_from = "individuals",
-                names_prefix = "comorb_")
-  matrix_of_severe_disease <- matrix_of_severe_disease %>%
-    #select(-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
-    left_join(workshop, by = "age_group") %>%
-    mutate(case_fatality_rate_0 = case_fatality_rate*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
-           case_fatality_rate_1 = case_fatality_rate*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
-    mutate(case_fatality_rate_1 = case_when(
-      is.nan(case_fatality_rate_1) ~ case_fatality_rate_0, #is NaN because no comorb in age group 0 to 4, but retain for checks
-      TRUE ~ case_fatality_rate_1
-      ))
-  #wrangle to tidy structure
-  matrix_of_severe_disease <- matrix_of_severe_disease %>%
-    select(-individuals,-case_fatality_rate,-comorb_0,-comorb_1) %>%
-    pivot_longer(cols = c("case_fatality_rate_0", "case_fatality_rate_1"),
-                 names_to = "comorbidity",
-                 values_to = "case_fatality_rate",
-                 names_prefix = "case_fatality_rate_") %>%
-    mutate(comorbidity = as.numeric(comorbidity)) 
+  if (length(unique(this_pop$comorbidity))>1){
+    workshop <- this_pop %>%
+      select(age_group, comorbidity, individuals) %>%
+      pivot_wider(names_from = "comorbidity",
+                  values_from = "individuals",
+                  names_prefix = "comorb_")
+    matrix_of_severe_disease <- matrix_of_severe_disease %>%
+      #select(-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
+      left_join(workshop, by = "age_group") %>%
+      mutate(case_fatality_rate_0 = case_fatality_rate*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
+             case_fatality_rate_1 = case_fatality_rate*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
+      mutate(case_fatality_rate_1 = case_when(
+        is.nan(case_fatality_rate_1) ~ case_fatality_rate_0, #is NaN because no comorb in age group 0 to 4, but retain for checks
+        TRUE ~ case_fatality_rate_1
+        ))
+    #wrangle to tidy structure
+    matrix_of_severe_disease <- matrix_of_severe_disease %>%
+      select(-individuals,-case_fatality_rate,-comorb_0,-comorb_1) %>%
+      pivot_longer(cols = c("case_fatality_rate_0", "case_fatality_rate_1"),
+                   names_to = "comorbidity",
+                   values_to = "case_fatality_rate",
+                   names_prefix = "case_fatality_rate_")
+  } else { # if only one
+    matrix_of_severe_disease <- matrix_of_severe_disease %>%
+      mutate(comorbidity = FALSE) %>%
+      select(-individuals)
+  }
+
   
   # #CHECK: point estimate retained. pop-level estimate = sum over age and comorb(this estimate * prop of population in this group)
   check <- matrix_of_severe_disease %>%
@@ -122,11 +128,11 @@ project_severe_disease <- function(data = data.frame(),
   workshop = data.frame()
   for (this_VE_severe_disease in VE_severe_disease){ #allowing multiple values of VE_severe_disease
     this_matrix_of_severe_disease <- crossing(matrix_of_severe_disease,
-                                         vaccination_status = c(0,1)) %>%
+                                         vaccination_status = c(FALSE,TRUE)) %>%
       mutate(
         case_fatality_rate = case_when(
-          vaccination_status == 0 ~ case_fatality_rate,
-          vaccination_status == 1 ~ case_fatality_rate * (1 - this_VE_severe_disease)
+          vaccination_status == FALSE ~ case_fatality_rate,
+          vaccination_status == TRUE ~ case_fatality_rate * (1 - this_VE_severe_disease)
         ), 
         VE_severe_disease = this_VE_severe_disease
       )

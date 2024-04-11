@@ -93,7 +93,7 @@ if (nrow(vaccination_history) != 0){
             
             if (nrow(todays_vaccinations)>0){
               todays_vaccinations_by_class <- prev_state %>%
-                filter(class != "Incid" & vaccination_status == 0) %>%
+                filter(class != "Incid" & vaccination_status == FALSE) %>%
                 left_join(todays_vaccinations, by = c("age_group","comorbidity")) %>%
                 mutate(doses_delivered = case_when(
                   is.na(doses_delivered) ~ 0,
@@ -116,8 +116,8 @@ if (nrow(vaccination_history) != 0){
                 filter(class != "Incid") %>%
                 left_join(todays_vaccinations_by_class, by = join_by(class, age_group, comorbidity), relationship = "many-to-many") %>% #vaccination status is many to many
                 mutate(individuals = case_when(
-                  vaccination_status == 0 ~ individuals - doses_delivered,
-                  vaccination_status == 1 ~ individuals + doses_delivered
+                  vaccination_status == FALSE ~ individuals - doses_delivered,
+                  vaccination_status == TRUE ~ individuals + doses_delivered
                 )) %>%
                 select(-doses_delivered)
               if(abs(sum(next_state$individuals[next_state$class != "Incid"]) - sum(this_inital_state$individuals))>1){stop(paste("next state at time step",this_time,"not equal to inital population size!"))}
@@ -132,7 +132,7 @@ if (nrow(vaccination_history) != 0){
             #   summarise(doses_delivered = sum(doses_delivered), .groups = "keep")
             # 
             # actual_numbers <- next_state %>% 
-            #   filter(vaccination_status == 1 &
+            #   filter(vaccination_status == TRUE &
             #            individuals != 0) %>%
             #   group_by(age_group,comorbidity) %>%
             #   summarise(individuals = sum(individuals), .groups = "keep")
@@ -215,8 +215,8 @@ if (nrow(vaccination_history) != 0){
   
 
   # make tidy
-  key = crossing(comorbidity = c(0,1),
-                 vaccination_status = c(0,1),
+  key = crossing(comorbidity = unique(inital_state$comorbidity),
+                 vaccination_status = c(FALSE,TRUE),
                  age_group = this_age_group_labels) %>%
     mutate(dummy = row_number())
   

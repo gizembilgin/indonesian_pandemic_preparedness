@@ -86,7 +86,7 @@ project_severe_disease(
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
-  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
@@ -100,7 +100,7 @@ project_severe_disease(
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
-  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
@@ -114,7 +114,7 @@ project_severe_disease(
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
-  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
@@ -130,7 +130,7 @@ project_severe_disease(
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
-  filter(vaccination_status == 0 & comorbidity == 0) %>%
+  filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
   geom_col(aes(x=age_group,y=case_fatality_rate)) +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")

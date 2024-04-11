@@ -77,7 +77,7 @@ vaccination_history %>%
   group_by(age_group,comorbidity) %>%
   summarise(doses_delivered = sum(doses_delivered))
 next_state %>% 
-  filter(vaccination_status == 1 &
+  filter(vaccination_status == TRUE &
            individuals != 0) %>%
   group_by(age_group,comorbidity) %>%
   summarise(individuals = sum(individuals), .groups = "keep")

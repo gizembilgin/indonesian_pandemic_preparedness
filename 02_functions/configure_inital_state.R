@@ -7,9 +7,9 @@ configure_inital_state <- function(index_case_age_group = c("30 to 59"),
                                    population = loaded_setting_characteristics$population) {
   
   inital_state <- crossing(population,
-                           vaccination_status = c(0, 1)) %>%
+                           vaccination_status = c(FALSE, TRUE)) %>%
     mutate(individuals =
-             case_when(vaccination_status != 0 ~ 0, # no one is vaccinated at the initial time point
+             case_when(vaccination_status != FALSE ~ 0, # no one is vaccinated at the initial time point
                        TRUE ~ individuals)) 
   
   index_case <- inital_state %>%
@@ -47,7 +47,7 @@ configure_inital_state <- function(index_case_age_group = c("30 to 59"),
     arrange(class,comorbidity,vaccination_status,age_group)  
   
   if(abs(sum(round(inital_state$individuals)) - sum(population$individuals))>1) stop("configure_inital_state: inital state does not match population")
-  if(sum(inital_state$individuals[inital_state$vaccination_status != 0]) > 0 ) stop("configure_inital_state: inital state contains vaccinated individuals")
+  if(sum(inital_state$individuals[inital_state$vaccination_status != FALSE]) > 0 ) stop("configure_inital_state: inital state contains vaccinated individuals")
   
   return(inital_state)
 }

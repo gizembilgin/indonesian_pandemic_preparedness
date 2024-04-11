@@ -21,30 +21,30 @@ LIST_vaccine_derived_immunity = c(0.75,1)
 LIST_supply = c(0.2,0.5,0.8)
 LIST_daily_vaccine_delivery_realistic = c(TRUE,FALSE) #TBD if we need to run this for ALL permutations
 LIST_strategy = list(
-  #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
+  #list all strategies as individual lists (c(age groups), c(comorbidity status where TRUE = has a comorbidity))
   list("older adults followed by all adults",
-       list(c("60 to 110"),c(0,1)),
-       list(c("18 to 29","30 to 59"),c(0,1))),
+       list(c("60 to 110")),
+       list(c("18 to 29","30 to 59"))),
   list("adults then children",
-       list(c("18 to 29","30 to 59","60 to 110"),c(0,1)),
-       list(c("0 to 4","5 to 17"),c(0,1))),
+       list(c("18 to 29","30 to 59","60 to 110")),
+       list(c("0 to 4","5 to 17"))),
   list("children then adults", 
-       list(c("0 to 4","5 to 17"),c(0,1)), 
-       list(c("18 to 29","30 to 59","60 to 110"),c(0,1))),
+       list(c("0 to 4","5 to 17")), 
+       list(c("18 to 29","30 to 59","60 to 110"))),
   list("step up",
-       list(c("0 to 4"),c(0,1)),
-       list(c("5 to 17"),c(0,1)),
-       list(c("18 to 29"),c(0,1)),
-       list(c("30 to 59"),c(0,1)),
-       list(c("60 to 110"),c(0,1))),
+       list(c("0 to 4")),
+       list(c("5 to 17")),
+       list(c("18 to 29")),
+       list(c("30 to 59")),
+       list(c("60 to 110"))),
   list("step down",
-       list(c("60 to 110"),c(0,1)),
-       list(c("30 to 59"),c(0,1)),
-       list(c("18 to 29"),c(0,1)),
-       list(c("5 to 17"),c(0,1)),
-       list(c("0 to 4"),c(0,1))),
+       list(c("60 to 110")),
+       list(c("30 to 59")),
+       list(c("18 to 29")),
+       list(c("5 to 17")),
+       list(c("0 to 4"))),
   list("uniform",
-       list(c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),c(0,1)))
+       list(c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")))
   )
 
 #parameters impacting days to detection
@@ -119,7 +119,7 @@ for (setting in LIST_setting){
                    vaccine_derived_immunity = vaccine_derived_immunity
                  )
                  
-                 source("command_deck.R") #NB: 05/04/2024 30 seconds
+                 source("command_deck.R") #NB: 11/04/2024 12 seconds
                  
                  this_simulation_ID <- random_id(n = 1, bytes = 8)
 

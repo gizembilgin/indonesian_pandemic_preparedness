@@ -54,15 +54,15 @@ TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
                                    rollout_modifier = 1,
                                    daily_vaccine_delivery_realistic = FALSE,
-                                   strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where 1 = has a comorbidity))
+                                   strategy = list( #list all strategies as individual lists (c(age groups), c(comorbidity status where TRUE = has a comorbidity))
                                      list("older adults followed by all adults",
-                                          list(c("60 to 110"),c(0,1)),
-                                          list(c("18 to 29","30 to 59"),c(0,1))),
+                                          list(c("60 to 110")),
+                                          list(c("18 to 29","30 to 59"))),
                                      list("all adults at the same time",
-                                          list(c("18 to 29","30 to 59","60 to 110"),c(0,1))),
+                                          list(c("18 to 29","30 to 59","60 to 110"))),
                                      list("children before adults", 
-                                          list(c("0 to 4","5 to 17"),c(0,1)), 
-                                          list(c("18 to 29","30 to 59","60 to 110"),c(0,1)))                                                     )
+                                          list(c("0 to 4","5 to 17")), 
+                                          list(c("18 to 29","30 to 59","60 to 110")))                                                     )
 )
 
 if (exists("FLEET_ADMIRAL_OVERRIDE")){
@@ -132,13 +132,4 @@ indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_tim
         time_horizon  = time_horizon  - TOGGLE_days_to_detection)
 
  rm(workshop)
-
-# severe_disease_log_tidy <- project_severe_disease(
-#  point_estimate = TOGGLE_severe_disease_point_estimate,
-#  age_distribution = TOGGLE_severe_disease_age_distribution,
-#  VE = TOGGLE_severe_disease_VE,
-#  comorb_increased_risk = TOGGLE_severe_disease_comorb_increased_risk,
-#  this_incidence_log_tidy = incidence_log_tidy,
-#  this_pop = loaded_setting_characteristics$population
-# )
 #_______________________________________________________________________________

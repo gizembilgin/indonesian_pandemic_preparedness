@@ -64,7 +64,7 @@ load_setting <- function(include_comorbidity = FALSE,
   
   #(5/8) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
   vaccine_acceptance = data.frame(phase = c(rep("healthcare workers",2),rep("vaccination strategy",2)),
-                                  comorbidity = rep(c(0,1),2),
+                                  comorbidity = rep(c(FALSE,TRUE),2),
                                   uptake = c(0.95,0.95,0.9,0.95))
   
   
@@ -74,20 +74,20 @@ load_setting <- function(include_comorbidity = FALSE,
   if (include_comorbidity == TRUE){
     load("01_inputs/comorbidities_CLARK.Rdata")
     population <- crossing(age_group = age_group_labels,
-                                          comorbidity = c(0, 1)) %>%
+                                          comorbidity = c(FALSE,TRUE)) %>%
       left_join(population, by = "age_group") %>%
       left_join(comorbidities, by = "age_group") %>%
       mutate(
         individuals =
           case_when(
-            comorbidity == 0 ~ (1 - proportion) * individuals,
-            comorbidity == 1 ~ proportion * individuals
+            comorbidity == FALSE ~ (1 - proportion) * individuals,
+            comorbidity == TRUE ~ proportion * individuals
           )
       ) %>%
       select(-proportion)
     population$age_group <- factor(population$age_group, levels = age_group_labels)
   } else{
-    population <- population %>% mutate(comorbidity = 0)
+    population <- population %>% mutate(comorbidity = FALSE)
   }
   
   
