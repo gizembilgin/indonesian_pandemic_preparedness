@@ -82,7 +82,7 @@ plot_simulations (
       rollout_modifier = 1,
       vaccine_derived_immunity = 1
     ),
-  simulations_source = "load", #load simulations for each run
+  simulations_source = "generate", #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
