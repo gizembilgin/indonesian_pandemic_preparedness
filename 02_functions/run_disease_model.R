@@ -144,7 +144,7 @@ if (nrow(vaccination_history) != 0){
             
               #order correctly
               next_state$class <- factor(next_state$class, levels = c("S","E","I","R"))
-              next_state$age_group <- factor(next_state$age_group, levels = age_group_labels)
+              next_state$age_group <- factor(next_state$age_group, levels = this_age_group_labels)
               next_state <- next_state %>%
                 arrange(class,comorbidity,vaccination_status,age_group)  
               
@@ -215,7 +215,7 @@ if (nrow(vaccination_history) != 0){
   
 
   # make tidy
-  key = crossing(comorbidity = unique(inital_state$comorbidity),
+  key = crossing(comorbidity = unique(this_inital_state$comorbidity),
                  vaccination_status = c(FALSE,TRUE),
                  age_group = this_age_group_labels) %>%
     mutate(dummy = row_number())

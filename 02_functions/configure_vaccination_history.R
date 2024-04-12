@@ -26,7 +26,7 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
     if (is.list(this_strategy) == FALSE) stop("vaccination strategies not provided as a list")
     for (this_stage in this_strategy){
       if (is.list(this_stage) == FALSE) stop("not all vaccination strategies entered as lists")
-      if (sum(!this_stage[[1]] %in% age_group_labels) != 0) stop("you appear to have mistyped an age_group when defining your vaccination strategies")
+      if (sum(!this_stage[[1]] %in% unique(healthcare_workers$age_group)) != 0) stop("you appear to have mistyped an age_group when defining your vaccination strategies")
       if (length(this_stage) == 1) this_stage[[2]] = c(FALSE,TRUE)
       if (sum(!this_stage[[2]] %in% c(FALSE,TRUE)) != 0) stop("you appear to have mistyped comorbidity status when defining your vaccination strategies")
     }

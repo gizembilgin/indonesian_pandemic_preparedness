@@ -120,7 +120,11 @@ parameters = list(
 
 workshop <- run_disease_model(
  simulation_days = TOGGLE_simulation_days,
- vaccination_strategies = TOGGLE_vaccination_strategy
+ vaccination_strategies = TOGGLE_vaccination_strategy,
+ this_inital_state = inital_state,
+ this_configure_ODEs = configure_ODEs,
+ this_parameters = parameters,
+ this_age_group_labels = age_group_labels
 )
 
 
