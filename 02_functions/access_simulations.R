@@ -7,6 +7,7 @@ access_simulations <- function(
     TOGGLES_project_severe_disease = list()
 ){
   
+  
   ### Load simulations (optional for each run)
   if (simulations_source == "load"){
     path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
@@ -43,10 +44,11 @@ access_simulations <- function(
     this_indicator_log <- filter_scenarios(this_indicator_log,this_configuration[! names(this_configuration) %in% c("supply","R0","vaccine_derived_immunity","infection_derived_immunity","days_to_detection")])
     
     rm(ship_log)
-  }
-  if (simulations_source == "generate"){
+  } else if (simulations_source == "generate"){
     result <- generate_simulations(this_configuration)
-    this_ship_log = result$ship_log
+    this_ship_log = result$ship_log %>%
+      left_join(result$ship_log_key, by = "run_ID") %>%
+      select(-run_ID)
     this_indicator_log = result$indicator_log
   }
   
@@ -87,34 +89,36 @@ access_simulations <- function(
       supply_loop = supply_loop[supply_loop>0]
       supply_loop = as.numeric(sort(supply_loop))
       
-      for (this_supply in supply_loop[supply_loop != max(supply_loop)]){
-        
-        next_supply = supply_loop[which(supply_loop == this_supply)+1]
-        next_supply_times = this_workshop %>% 
-          filter(supply == next_supply) 
-        check = next_supply_times %>% 
-          group_by(time,phase) %>% 
-          summarise(n=n(), .groups = "keep") %>%
-          ungroup() %>%
-          select(n) %>%
-          unique()
-        if (nrow(check)>1){stop("fleet_admiral: next_supply_times has unequal entries across phases")}
-        next_supply_times = next_supply_times %>%
-          ungroup() %>%
-          select(time) %>%
-          unique()
-        
-        cascade_contribution <- this_workshop %>%
-          filter(supply == this_supply &
-                   phase != "healthcare workers" &
-                   !(time %in% next_supply_times$time)) %>%
-          ungroup() %>%
-          select(-supply) %>%
-          crossing(supply = supply_loop[supply_loop > this_supply])  %>%
-          mutate(flag_reconstructed = 1)
-        
-        additional_rows = rbind(additional_rows,cascade_contribution)
-        
+      if (length(supply_loop)>1){
+        for (this_supply in supply_loop[supply_loop != max(supply_loop)]){
+          
+          next_supply = supply_loop[which(supply_loop == this_supply)+1]
+          next_supply_times = this_workshop %>% 
+            filter(supply == next_supply) 
+          check = next_supply_times %>% 
+            group_by(time,phase) %>% 
+            summarise(n=n(), .groups = "keep") %>%
+            ungroup() %>%
+            select(n) %>%
+            unique()
+          if (nrow(check)>1){stop("fleet_admiral: next_supply_times has unequal entries across phases")}
+          next_supply_times = next_supply_times %>%
+            ungroup() %>%
+            select(time) %>%
+            unique()
+          
+          cascade_contribution <- this_workshop %>%
+            filter(supply == this_supply &
+                     phase != "healthcare workers" &
+                     !(time %in% next_supply_times$time)) %>%
+            ungroup() %>%
+            select(-supply) %>%
+            crossing(supply = supply_loop[supply_loop > this_supply])  %>%
+            mutate(flag_reconstructed = 1)
+          
+          additional_rows = rbind(additional_rows,cascade_contribution)
+          
+        }
       }
     }
   }
@@ -137,19 +141,21 @@ access_simulations <- function(
         for (this_vaccine_delivery_start_date in unique(loop_level_2$vaccine_delivery_start_date)){
           loop_level_3 <- loop_level_2 %>% filter(vaccine_delivery_start_date == this_vaccine_delivery_start_date)
           
-          for (this_rollout_modifier in unique(loop_level_3$rollout_modifier))
-          replacement_rows <- this_ship_log_completed %>%
-            filter(rollout_modifier == this_rollout_modifier &
-                     vaccine_delivery_start_date == this_vaccine_delivery_start_date &
-                     phase == this_phase & 
-                     supply == min(workshop$supply)) %>%
+          for (this_rollout_modifier in unique(loop_level_3$rollout_modifier)){
+            replacement_rows <- this_ship_log_completed %>%
+              filter(rollout_modifier == this_rollout_modifier &
+                       vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+                       phase == this_phase & 
+                       supply == min(workshop$supply)) %>%
               mutate(supply = this_supply)
-          this_ship_log_completed <- this_ship_log_completed %>%
-            filter(! (rollout_modifier == this_rollout_modifier &
-                     vaccine_delivery_start_date == this_vaccine_delivery_start_date &
-                     phase == this_phase & 
-                     supply == this_supply))
-          this_ship_log_completed = rbind(this_ship_log_completed, replacement_rows)
+            this_ship_log_completed <- this_ship_log_completed %>%
+              filter(! (rollout_modifier == this_rollout_modifier &
+                          vaccine_delivery_start_date == this_vaccine_delivery_start_date &
+                          phase == this_phase & 
+                          supply == this_supply))
+            this_ship_log_completed = rbind(this_ship_log_completed, replacement_rows)
+          }
+
           
         }
       }
@@ -162,7 +168,7 @@ access_simulations <- function(
     summarise(n=n(), .groups = "keep") %>%
     filter(n != max(this_ship_log_completed$time))
   if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in this_ship_log_completed")}
-  rm(this_ship_log,cascade_contribution,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
+  rm(this_ship_log,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
   
   if ("supply" %in% names(this_configuration)){#NB: couldn't remove earlier as needed to reconstruct the cascade
     

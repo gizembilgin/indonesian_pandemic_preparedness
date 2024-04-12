@@ -105,7 +105,6 @@ load_setting <- function(include_comorbidity = FALSE,
                                          healthcare_workers = healthcare_workers,
                                          daily_vaccine_delivery = daily_vaccine_delivery,
                                          vaccine_acceptance = vaccine_acceptance,
-                                         comorbidities = comorbidities,
                                          access_to_care = access_to_care,
                                          R0_adjustement = R0_adjustement)
   

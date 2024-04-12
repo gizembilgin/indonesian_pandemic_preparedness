@@ -1,3 +1,5 @@
+require(ids)
+
 generate_simulations <- function(
     this_configuration = list(
       setting = "Indonesia",
@@ -8,16 +10,17 @@ generate_simulations <- function(
       vaccine_delivery_start_date = 100,
       supply = 0.2,
       rollout_modifier = 1,
-      strategy_name = c("uniform", "step up", "step down"),
+      phase = c("uniform", "step up", "step down"),
       daily_vaccine_delivery_realistic = FALSE,
       
       outcome_threshold = 2,
       gen_interval = 7,
       develop_outcome = 14,
-      IR_outcome = 0.01,
-      ROUND_days_to_detection = 1
-    ),
-    assign_run_ID = FALSE
+      IR_outcome = 0.01
+    ) #,
+    ,
+    ROUND_days_to_detection = 1
+    # assign_run_ID = FALSE
 ){
   
   # length(this_configuration$setting)*length(this_configuration$vaccine_delivery_start_date)*
@@ -26,29 +29,30 @@ generate_simulations <- function(
   # length(this_configuration$daily_vaccine_delivery_realistic)
   
   LIST_strategy = list()
-  if ("uniform" %in% this_configuration$strategy_name){
+  if ("uniform" %in% this_configuration$phase){
     LIST_strategy[[length(LIST_strategy)+1]] <- 
       list("uniform",
                 list(c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")))
   } 
-  if ("older adults followed by all adults" %in% this_configuration$strategy_name){
+  if ("older adults followed by all adults" %in% this_configuration$phase){
     LIST_strategy[[length(LIST_strategy)+1]] <- 
       list("older adults followed by all adults",
                 list(c("60 to 110")),
                 list(c("18 to 29","30 to 59")))
   }
-  if ("adults then children" %in% this_configuration$strategy_name){
+  if ("adults then children" %in% this_configuration$phase){
     LIST_strategy[[length(LIST_strategy)+1]] <- 
       list("adults then children",
                 list(c("18 to 29","30 to 59","60 to 110")),
                 list(c("0 to 4","5 to 17")))
   }
-  if ("children then adults" %in% this_configuration$strategy_name){ LIST_strategy[[length(LIST_strategy)+1]] <- 
-    list("children then adults", 
-              list(c("0 to 4","5 to 17")), 
-              list(c("18 to 29","30 to 59","60 to 110")))
+  if ("children then adults" %in% this_configuration$phase){ 
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("children then adults",
+           list(c("0 to 4", "5 to 17")),
+           list(c("18 to 29", "30 to 59", "60 to 110")))
   }
-  if ("step up" %in% this_configuration$strategy_name) {
+  if ("step up" %in% this_configuration$phase) {
     LIST_strategy[[length(LIST_strategy)+1]] <- 
       list("step up",
                 list(c("0 to 4")),
@@ -57,15 +61,16 @@ generate_simulations <- function(
                 list(c("30 to 59")),
                 list(c("60 to 110")))
   }
-  if ("step down" %in% this_configuration$strategy_name) { LIST_strategy[[length(LIST_strategy)+1]] <- 
-    list("step down",
-              list(c("60 to 110")),
-              list(c("30 to 59")),
-              list(c("18 to 29")),
-              list(c("5 to 17")),
-              list(c("0 to 4")))
+  if ("step down" %in% this_configuration$phase) { 
+    LIST_strategy[[length(LIST_strategy)+1]] <- 
+      list("step down",
+           list(c("60 to 110")),
+           list(c("30 to 59")),
+           list(c("18 to 29")),
+           list(c("5 to 17")),
+           list(c("0 to 4")))
   }
-
+  
   ship_log <- ship_log_key <- days_to_detection_key <- indicator_log <- data.frame()
   
   for (vaccine_derived_immunity in this_configuration$vaccine_derived_immunity){
@@ -108,7 +113,7 @@ generate_simulations <- function(
                   vaccine_derived_immunity = vaccine_derived_immunity
                 )
                 
-                source("command_deck.R") #NB: 11/04/2024 12 seconds
+                source("command_deck.R", local = TRUE) #NB: 11/04/2024 12 seconds
                 
                 this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
                   mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
@@ -117,10 +122,10 @@ generate_simulations <- function(
                 this_simulation <- incidence_log_tidy %>%
                   filter(time>0) %>%
                   ungroup() %>%
-                  select(-simulation_time,-comorbidity) #as run without comorbidity
+                  select(-simulation_time)
                 
                 
-                if (assign_run_ID == TRUE){
+                # if (assign_run_ID == TRUE){
                   this_simulation_ID <- random_id(n = 1, bytes = 8)
                   this_simulation$run_ID = this_simulation_ID
                   
@@ -137,7 +142,7 @@ generate_simulations <- function(
                     days_to_detection = days_to_detection
                   )
                   ship_log_key = rbind(ship_log_key, this_simulation_key)
-                }
+                # }
                 
                 ship_log = rbind(ship_log,this_simulation)
                 indicator_log = rbind(indicator_log,this_simulation_indicator)

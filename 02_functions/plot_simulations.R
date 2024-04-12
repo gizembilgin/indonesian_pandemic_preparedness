@@ -2,16 +2,13 @@
 require(scales)
 
 plot_simulations <- function(
-    var_1, #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
-    var_2 = NA,
-    yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-    this_outcome = "cases", #options: "cases","deaths"
-    TOGGLES_project_severe_disease = list(),
-    var_1_range = NA,
-    var_2_range = NA,
+    
+    # configure underlying simulations
+    simulations_source = "load", #options: "load", "memory", "generate"
     default_configuration =
       list(
         # time to detection variables
+        setting = "Indonesia",
         R0 = 2,            # basic reproduction number
         outcome_threshold = 2, # threshold number of this outcome for detection
         gen_interval = 7,      # generation interval (days)
@@ -31,11 +28,22 @@ plot_simulations <- function(
         ),
         supply = c(0.2),
         rollout_modifier = 2,
+        daily_vaccine_delivery_realistic = FALSE,
         vaccine_derived_immunity = 1,
         # all other variables
         infection_derived_immunity = 1
-      ),
-    simulations_source = "load", #load simulations for each run
+      ),    
+    
+    # configure plot
+    var_1, 
+    var_2 = NA,
+    yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
+    this_outcome = "cases", #options: "cases","deaths"
+    TOGGLES_project_severe_disease = list(),
+    var_1_range = NA,
+    var_2_range = NA,
+
+    # modify plot aesthetics
     free_yaxis = FALSE,
     display_impact_heatmap = 1, #options: 0 (no), 1 (yes)
     display_severity_curve = 0,
@@ -44,6 +52,7 @@ plot_simulations <- function(
     colour_healthcare_workers_phase = 1, #options: 0 (no), 1 (yes)
     display_vaccine_availability = 1, #options: 0 (no), 1 (yes)
     display_end_of_healthcare_worker_delivery = 1  #options: 0 (no), 1 (yes)
+    
 ){
   
   ### FORCE
@@ -58,18 +67,25 @@ plot_simulations <- function(
   ### Load simulation
   this_configuration = default_configuration
   
+  # remove var_1 and var_2 this_configuration
+  this_configuration = this_configuration[! names(this_configuration) %in% c({{var_1}},{{var_2}})]
+  
+  # use var_1_range and var_2_range in this_configuration
+  if (length(var_1_range)>0){
+    if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
+  }
+  if (length(var_2_range)>0){
+    if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
+  }
+  if (simulations_source == "generate" & length(var_1_range) == 0) stop("you must specify var_1_range to generate this simulation")
+  if (simulations_source == "generate" & is.na(var_2) == FALSE & length(var_2_range) == 0) stop("you must specify var_2_range to generate this simulation")
+  
+  if (! "setting" %in% this_configuration) this_configuration$setting = "Indonesia"
+  if (! "daily_vaccine_delivery_realistic" %in% this_configuration) this_configuration$daily_vaccine_delivery_realistic = FALSE
+  
   if (simulations_source != "generate"){
-    # remove var_1 and var_2 this_configuration
-    this_configuration = this_configuration[! names(this_configuration) %in% c({{var_1}},{{var_2}})]
-    # use var_1_range and var_2_range in this_configuration
-    if (length(var_1_range)>0){
-      if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1
-    }
-    if (length(var_2_range)>0){
-      if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
-    }
-    # ensure daily_vaccine_delivery_realistic specified
-    if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration <- c(this_configuration, daily_vaccine_delivery_realistic = FALSE)
+    ROUND_days_to_detection = 1
+    
     # calculate days to detection
     workshop = crossing(
       outcome_threshold = as.numeric(this_configuration$outcome_threshold),
