@@ -6,6 +6,13 @@ estimate_days_to_detection <- function (
     develop_outcome,   # time to developing outcome (days)
     R0                 # basic reproduction number
 ) {
+  
+  outcome_threshold = as.numeric(outcome_threshold)
+  gen_interval = as.numeric(gen_interval)
+  IR_outcome = as.numeric(IR_outcome)
+  develop_outcome = as.numeric(develop_outcome)
+  R0 = as.numeric(R0)
+  
   round((log(outcome_threshold/IR_outcome, base = R0) + 1)*gen_interval + develop_outcome)
 }
 

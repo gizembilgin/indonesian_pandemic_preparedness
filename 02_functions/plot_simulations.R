@@ -70,6 +70,10 @@ plot_simulations <- function(
   # remove var_1 and var_2 this_configuration
   this_configuration = this_configuration[! names(this_configuration) %in% c({{var_1}},{{var_2}})]
   
+  # make numeric numeric!
+  if (var_1 %in% c("R0","vaccine_delivery_start_date","supply","rollout_modifier","vaccine_derived_immunity","infection_derived_immunity")) var_1_range = as.numeric(var_1_range)
+  if (var_2 %in% c("R0","vaccine_delivery_start_date","supply","rollout_modifier","vaccine_derived_immunity","infection_derived_immunity")) var_2_range = as.numeric(var_2_range)
+  
   # use var_1_range and var_2_range in this_configuration
   if (length(var_1_range)>0){
     if (is.na(var_1_range[1]) == FALSE) this_configuration = c(this_configuration, var_1 = list(var_1_range)); names(this_configuration)[names(this_configuration) == "var_1"] = var_1

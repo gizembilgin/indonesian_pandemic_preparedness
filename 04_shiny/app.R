@@ -42,8 +42,8 @@ CHOICES = list(
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
   vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "healthcare workers")]),
-  R0 = unique(ship_log_key$R0) ,
-  vaccine_delivery_start_date = unique(ship_log_key$vaccine_delivery_start_date) ,
+  R0 = seq(2,6) ,
+  vaccine_delivery_start_date = c(50,100,200) ,
   supply = 
     c("20%" = 0.2,
       "50%" = 0.5,
@@ -322,6 +322,7 @@ server <- function(input, output, session) {
            vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity),
            daily_vaccine_delivery_realistic = input$daily_vaccine_delivery_realistic
          ),
+       
        free_yaxis = input$free_yaxis,
        display_impact_heatmap = input$display_impact_heatmap,
        display_severity_curve = input$display_severity_curve,

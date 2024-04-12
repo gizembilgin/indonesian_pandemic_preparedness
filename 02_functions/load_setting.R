@@ -6,7 +6,7 @@ load_setting <- function(include_comorbidity = FALSE,
   
   ### IMPORT
   #(1/8) age-structure
-  load("01_inputs/population_MASTER.Rdata")
+  load(paste0(gsub("/04_shiny","",getwd()),"/01_inputs/population_MASTER.Rdata"))
   if (! this_setting %in% unique(population_MASTER$name_english) || ! this_setting %in% unique(population_MASTER$name_indonesian)){  
     stop("this_setting does not exist in population_MASTER")
   }
@@ -22,7 +22,7 @@ load_setting <- function(include_comorbidity = FALSE,
   
   
   #(2/8) contact patterns
-  load("01_inputs/contact_matrix_MASTER.Rdata")
+  load(paste0(gsub("/04_shiny","",getwd()),"/01_inputs/contact_matrix_MASTER.Rdata"))
   contact_matrix <- contact_matrix_MASTER %>%
     filter(name_english == this_setting | name_indonesian == this_setting) %>%
     select(age_of_individual, age_of_contact, contacts)
@@ -72,7 +72,7 @@ load_setting <- function(include_comorbidity = FALSE,
   #NB: currently value from Clark et al. (2020, https://doi.org/10.1016/s2214-109x(20)30264-3) but a 
   #    better estimate could be taken from the  Basic Health Survey 2024 once that is released
   if (include_comorbidity == TRUE){
-    load("01_inputs/comorbidities_CLARK.Rdata")
+    load(paste0(gsub("/04_shiny","",getwd()),"/01_inputs/comorbidities_CLARK.Rdata"))
     population <- crossing(age_group = age_group_labels,
                                           comorbidity = c(FALSE,TRUE)) %>%
       left_join(population, by = "age_group") %>%

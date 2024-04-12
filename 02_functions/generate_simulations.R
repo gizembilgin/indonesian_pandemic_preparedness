@@ -113,7 +113,7 @@ generate_simulations <- function(
                   vaccine_derived_immunity = vaccine_derived_immunity
                 )
                 
-                source("command_deck.R", local = TRUE) #NB: 11/04/2024 12 seconds
+                source(paste0(gsub("/04_shiny","",getwd()),"/command_deck.R"), local = TRUE) #NB: 11/04/2024 12 seconds
                 
                 this_simulation_indicator <- indicator_delivery_within_time_horizon %>%
                   mutate(setting = FLEET_ADMIRAL_OVERRIDE$setting,
