@@ -168,10 +168,10 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
       
       #ASSIGN priority number
       for (priority_num in 1:length(this_strategy)){
-        this_strategy <- unlist(this_strategy[priority_num])
-        if (length(this_strategy[this_strategy  %in% c(TRUE,FALSE)]) == 0) this_strategy <- c(this_strategy,unique(this_population_target$comorbidity))
-        this_population_target$priority[ this_population_target$age_group %in% this_strategy &
-                                           this_population_target$comorbidity %in% this_strategy] <- priority_num
+        this_strategy_unlisted <- unlist(this_strategy[priority_num])
+        if (length(this_strategy_unlisted[this_strategy_unlisted  %in% c(TRUE,FALSE)]) == 0) this_strategy_unlisted <- c(this_strategy_unlisted,unique(this_population_target$comorbidity))
+        this_population_target$priority[ this_population_target$age_group %in% this_strategy_unlisted &
+                                           this_population_target$comorbidity %in% this_strategy_unlisted] <- priority_num
       }
       this_population_target <- this_population_target %>%
         filter(is.na(priority) == FALSE)

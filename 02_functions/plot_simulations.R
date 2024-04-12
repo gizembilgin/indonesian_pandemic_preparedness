@@ -77,7 +77,7 @@ plot_simulations <- function(
   if (length(var_2_range)>0){
     if (is.na(var_2_range[1]) == FALSE) this_configuration = c(this_configuration, var_2 = list(var_2_range)); names(this_configuration)[names(this_configuration) == "var_2"] = var_2
   }
-  if (simulations_source == "generate" & length(var_1_range) == 0) stop("you must specify var_1_range to generate this simulation")
+  if (simulations_source == "generate" & is.na(var_1_range[1]) & var_1 != "pathogen") stop("you must specify var_1_range to generate this simulation")
   if (simulations_source == "generate" & is.na(var_2) == FALSE & length(var_2_range) == 0) stop("you must specify var_2_range to generate this simulation")
   
   if (! "setting" %in% this_configuration) this_configuration$setting = "Indonesia"

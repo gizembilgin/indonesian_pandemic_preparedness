@@ -28,9 +28,9 @@ plot_simulations (
         develop_outcome = 14,  # time to developing outcome (days)
         vaccine_delivery_start_date = 100,
         phase = c(
-          "older adults followed by all adults",
-          "adults then children",               
-          "children then adults",                
+          #"older adults followed by all adults",
+          #"adults then children",               
+          #"children then adults",                
           "step up",                            
           "step down",                           
           "uniform", 
@@ -62,7 +62,7 @@ plot_simulations (
   this_outcome = "cases",    #options: cases, deaths
   TOGGLES_project_severe_disease = list(),
   free_yaxis = FALSE,
-  var_1_range = c(2,3,4),
+  var_1_range = c(2,3,4,5),
   var_2_range = c(50,100,200),
   default_configuration =
     list(
@@ -82,7 +82,7 @@ plot_simulations (
       rollout_modifier = 1,
       vaccine_derived_immunity = 1
     ),
-  simulations_source = "generate", #load simulations for each run
+  simulations_source = "load", #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
@@ -109,20 +109,20 @@ plot_simulations (
       IR_outcome = 0.01,     # incidence rate for this outcome
       develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
-      phase =  c( "older adults followed by all adults",
-                  "adults then children",               
-                  "children then adults",                
+      phase =  c( #"older adults followed by all adults",
+                  #"adults then children",               
+                  #"children then adults",                
                   "step up",                            
                   "step down",                           
                   "uniform", 
                   "healthcare workers",
                   "no vaccine" ),
-      supply = c(0.8),
+      supply = c(0.2),
       infection_derived_immunity = 1,
       rollout_modifier = 2,
       vaccine_derived_immunity = 1
     ),
-  simulations_source = "load", #load simulations for each run
+  simulations_source = "generate", #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,
@@ -200,13 +200,13 @@ plot_simulations (
         "uniform" ,
         "healthcare workers",
         "no vaccine" ),
-      supply = c(0.5),
+      supply = c(0.2),
       infection_derived_immunity = 1,
       rollout_modifier = 2,
       vaccine_derived_immunity = 1,
       daily_vaccine_delivery_realistic = FALSE
     ),
-  simulations_source = "load", #load simulations for each run
+  simulations_source = "generate", #load simulations for each run
   #options: 0 (no), 1 (yes)
   display_severity_curve = 1, 
   colour_healthcare_workers_phase = 0,
