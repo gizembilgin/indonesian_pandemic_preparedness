@@ -95,10 +95,6 @@ pathogen_characteristics_inputs <- list(
   make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
 )
 
-# pathogen_characteristics_inputs <- selectInput(inputId = "this_outcome",
-#               label = "Outcome:",
-#               choices = c("cases","deaths","presentations"))
-
 vaccination_strategy_inputs <- list(
   make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
                             CHOICES$vaccine_delivery_start_date, 100),
