@@ -4,7 +4,7 @@ access_simulations <- function(
     simulations_source = "load", #options: "load", "memory", "generate"
     this_configuration,
     outcome = "cases",
-    TOGGLES_project_severe_disease = list()
+    TOGGLES_project_deaths = list()
 ){
   
   
@@ -184,11 +184,11 @@ access_simulations <- function(
     
   } else if (outcome == "deaths"){
     
-    if (length(TOGGLES_project_severe_disease) == 0 ) stop("access_simulations: you have selected to output deaths but not specified TOGGLE_project_severe_disease")
+    if (length(TOGGLES_project_deaths) == 0 ) stop("access_simulations: you have selected to output deaths but not specified TOGGLES_project_deaths")
     
-    this_ship_log_completed <- project_severe_disease( 
+    this_ship_log_completed <- project_deaths( 
       data = this_ship_log_completed,
-      TOGGLES_project_severe_disease
+      TOGGLES_project_deaths
       ) %>%
       group_by(pathogen,time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
       summarise(incidence = sum(deaths), .groups = "keep") 

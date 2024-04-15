@@ -39,7 +39,7 @@ plot_simulations <- function(
     var_2 = NA,
     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
     this_outcome = "cases", #options: "cases","deaths"
-    TOGGLES_project_severe_disease = list(),
+    TOGGLES_project_deaths = list(),
     var_1_range = NA,
     var_2_range = NA,
 
@@ -59,9 +59,9 @@ plot_simulations <- function(
   if (exists("var_2") == FALSE | is.null(var_2)) var_2 = NA
   if (is.na(var_2) == FALSE &&  var_2 == "none") var_2 = NA
   if (is.na(var_2)) var_2_range = NA
-  if (this_outcome == "cases") TOGGLES_project_severe_disease = list()
+  if (this_outcome == "cases") TOGGLES_project_deaths = list()
   if (this_outcome == "cases") display_severity_curve = 0
-  if (this_outcome != "cases" & length(TOGGLES_project_severe_disease) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_severe_disease")
+  if (this_outcome != "cases" & length(TOGGLES_project_deaths) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_deaths")
   
   
   ### Load simulation
@@ -110,7 +110,7 @@ plot_simulations <- function(
   to_plot <- to_plot_loaded <- access_simulations(
     simulations_source,
     this_configuration,
-    TOGGLES_project_severe_disease,
+    TOGGLES_project_deaths,
     outcome = this_outcome
     )
   
@@ -361,8 +361,8 @@ plot_simulations <- function(
   ### Include severity_plot
   if (display_severity_curve == 1){
     
-    extra_plot <- project_severe_disease(
-      TOGGLES_project_severe_disease = TOGGLES_project_severe_disease, 
+    extra_plot <- project_deaths(
+      TOGGLES_project_deaths = TOGGLES_project_deaths, 
       return_severity = TRUE
     ) %>%
       filter(vaccination_status == FALSE & comorbidity == FALSE) %>%

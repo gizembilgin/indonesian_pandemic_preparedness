@@ -29,14 +29,14 @@ TOGGLE_days_to_detection = estimate_days_to_detection(outcome_threshold = 2,
                                                       R0 = TOGGLE_R0_to_fit)
 TOGGLE_NPI = 0 #0 means no NPI since used as (1-NPI)*transmission
 
-TOGGLES_project_severe_disease = list(
+TOGGLES_project_deaths = list(
   point_estimate = 0.05/100,
   # age_distribution = data.frame(
   #   age_group = age_group_labels,
   #   relative_risk = c(0.1,0.5,1.4,2.7,10.4)
   # )
   age_distribution = "Plague",
-  VE_severe_disease = 1,
+  VE_death = 1,
   comorb_increased_risk = 2
   
 )

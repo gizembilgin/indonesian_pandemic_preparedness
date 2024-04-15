@@ -15,7 +15,7 @@ plot_simulations (
     var_2 = NA,
     yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
     this_outcome = "cases",    #options: cases, deaths
-    TOGGLES_project_severe_disease = list(),
+    TOGGLES_project_deaths = list(),
     free_yaxis = FALSE,
     var_1_range = c(2,3,4),
     var_2_range = NA,
@@ -60,7 +60,7 @@ plot_simulations (
   var_2 = "vaccine_delivery_start_date",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
   this_outcome = "cases",    #options: cases, deaths
-  TOGGLES_project_severe_disease = list(),
+  TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(2,3,4,5),
   var_2_range = c(50,100,200),
@@ -97,7 +97,7 @@ plot_simulations (
   var_2 = NA,
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
   this_outcome = "cases",    #options: cases, deaths
-  TOGGLES_project_severe_disease = list(),
+  TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(50,100),
   var_2_range = NA,
@@ -138,7 +138,7 @@ plot_simulations (
   var_2 = "rollout_modifier",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
   this_outcome = "cases",    #options: cases, deaths
-  TOGGLES_project_severe_disease = list(),
+  TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(2,3,4),
   var_2_range = NA,
@@ -177,10 +177,10 @@ plot_simulations (
   var_2 = NA,
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
   this_outcome = "deaths",    #options: cases, deaths
-  TOGGLES_project_severe_disease = list(
+  TOGGLES_project_deaths = list(
     point_estimate =  1 / 100,
     age_distribution = c("SARS", "Plague", "Diptheria"),
-    VE_severe_disease = 1,
+    VE_death = 1,
     comorb_increased_risk = 1
   ),
   free_yaxis = FALSE,

@@ -76,7 +76,7 @@ save(age_specific_severity_MASTER, file = "01_inputs/age_specific_severity_MASTE
 
 ### CHECK applied ##############################################################
 #Option 1: specify pt est and age dn
-project_severe_disease(
+project_deaths(
   point_estimate =  0.05/100,
   age_distribution = data.frame(age_group = age_group_labels,
                                 relative_risk = c(0.1, 0.5, 1.4, 2.7, 10.4)), 
@@ -91,7 +91,7 @@ project_severe_disease(
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #Option 2: specify pt est and select age dn
-project_severe_disease(
+project_deaths(
   point_estimate =  0.05/100,
   age_distribution = "Plague", 
   VE = 0,
@@ -105,7 +105,7 @@ project_severe_disease(
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #Option 3: select severity profile of a known pathogen
-project_severe_disease(
+project_deaths(
   point_estimate =  NA,
   age_distribution = "Plague", 
   VE = 0,
@@ -119,12 +119,12 @@ project_severe_disease(
   geom_col(aes(x=age_group,y=case_fatality_rate))
 
 #CHECK: plot all pathogen shapes with fixed severity point estimate
-project_severe_disease(
-  TOGGLES_project_severe_disease = 
+project_deaths(
+  TOGGLES_project_deaths = 
     list(
       point_estimate =  1 / 100,
       age_distribution = unique(age_specific_severity_MASTER$pathogen),
-      VE_severe_disease = 0,
+      VE_death = 0,
       comorb_increased_risk = 1
     ), 
   this_pop = loaded_setting_characteristics$population,

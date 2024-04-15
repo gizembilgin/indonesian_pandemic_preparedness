@@ -89,8 +89,8 @@ make_prettyRadioButtons <- function(this_variable, this_label,these_choices,this
 }
 
 pathogen_characteristics_inputs <- list(
-  uiOutput("TOGGLES_project_severe_disease_age_distribution"),
-  uiOutput("TOGGLES_project_severe_disease_VE"),
+  uiOutput("TOGGLES_project_deaths_age_distribution"),
+  uiOutput("TOGGLES_project_deaths_VE"),
   #uiOutput("TOGGLES_project_comorb_increased_risk"),
   make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
   make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
@@ -205,12 +205,12 @@ server <- function(input, output, session) {
   
   
   ### Conditional UI components
-  output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
-    if(input$this_outcome != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
+  output$TOGGLES_project_deaths_age_distribution <- renderUI({
+    if(input$this_outcome != "cases") selectInput(inputId = "deaths_age_distribution",label = "Age distribution:", 
                                                  choices = sort(unique(age_specific_severity_MASTER$pathogen)), selected = "Plague", multiple = TRUE)
   })
-  output$TOGGLES_project_severe_disease_VE <- renderUI({
-    if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_VE", label = "Vaccine effectiveness against severe disease:", value = 1)
+  output$TOGGLES_project_deaths_VE <- renderUI({
+    if(input$this_outcome != "cases") numericInput(inputId = "deaths_VE", label = "Vaccine effectiveness against death:", value = 1)
   })
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
   #   if(input$this_outcome != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
@@ -237,7 +237,7 @@ server <- function(input, output, session) {
     if (length(input$rollout_modifier)>1)            plot_dimension_vector = c(plot_dimension_vector,"rollout_modifier")
     if (length(input$infection_derived_immunity)>1)  plot_dimension_vector = c(plot_dimension_vector,"infection_derived_immunity")
     if (length(input$vaccine_derived_immunity)>1)    plot_dimension_vector = c(plot_dimension_vector,"vaccine_derived_immunity")
-    if (input$this_outcome != "cases" & length(input$severe_disease_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
+    if (input$this_outcome != "cases" & length(input$deaths_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
     
     if (is.null(input$switch_plot_dimensions) == FALSE && input$switch_plot_dimensions == TRUE) plot_dimension_vector <- rev(plot_dimension_vector)
     
@@ -276,8 +276,8 @@ server <- function(input, output, session) {
   call_plot <- function(){
    if ((input$this_outcome == "cases" |
         (
-          is.character(input$severe_disease_age_distribution) &
-          is.numeric(input$severe_disease_VE)
+          is.character(input$deaths_age_distribution) &
+          is.numeric(input$deaths_VE)
         )) &
        is.null(input$R0) == FALSE &
        is.null(input$outcome_threshold) == FALSE &
@@ -290,13 +290,13 @@ server <- function(input, output, session) {
        is.null(input$rollout_modifier) == FALSE &
        is.null(input$vaccine_derived_immunity) == FALSE) {
      
-     this_TOGGLES_project_severe_disease <- list(
+     this_TOGGLES_project_deaths <- list(
        point_estimate =  as.numeric(input$IR_outcome),
-       age_distribution = input$severe_disease_age_distribution,
-       VE_death =  as.numeric(input$severe_disease_VE),
+       age_distribution = input$deaths_age_distribution,
+       VE_death =  as.numeric(input$deaths_VE),
        comorb_increased_risk = 1
      )
-     if (input$this_outcome == "cases") this_TOGGLES_project_severe_disease <- list()
+     if (input$this_outcome == "cases") this_TOGGLES_project_deaths <- list()
      
      withProgress(message = "running underlying simulations",{
        plot_simulations(
@@ -304,7 +304,7 @@ server <- function(input, output, session) {
          var_2 = select_var(2)[[1]],
          yaxis_title = input$yaxis_title,
          this_outcome = input$this_outcome,
-         TOGGLES_project_severe_disease = this_TOGGLES_project_severe_disease, 
+         TOGGLES_project_deaths = this_TOGGLES_project_deaths, 
          var_1_range = select_var(1)[[2]],
          var_2_range = select_var(2)[[2]],
          default_configuration =
