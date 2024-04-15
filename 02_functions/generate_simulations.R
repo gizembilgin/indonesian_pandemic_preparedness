@@ -151,7 +151,7 @@ generate_simulations <- function(
               }
             }
           }
-          incProgress(1/num_simuations)
+          if (isRunning()) incProgress(1/num_simuations) #if Shiny is running
         }
       }
     }
