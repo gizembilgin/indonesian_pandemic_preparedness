@@ -5,6 +5,7 @@ require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); requi
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
 load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
+is_local <- Sys.getenv("SHINY_PORT") == "" #boolean of whether this shiny is being hosted locally or on posit.co
 ################################################################################
 
 
@@ -54,6 +55,7 @@ CHOICES = list(
   ), 
   develop_outcome = c(7,14,28)
 )
+if (is_local) CHOICES$outcome = c("cases","deaths","presentations") else  CHOICES$outcome = c("cases","deaths")
 ################################################################################
 
 
@@ -115,7 +117,7 @@ pathogen_detection_inputs <- list(
 plot_aesthetics_inputs <- list(
   selectInput(inputId = "this_outcome",
               label = "Outcome:",
-              choices = c("cases","deaths","presentations")),
+              choices = CHOICES$outcome),
   selectInput(inputId = "yaxis_title",
               label = "Incidence statistic:",
               choices = CHOICES$incidence_statistic,
@@ -291,7 +293,7 @@ server <- function(input, output, session) {
      this_TOGGLES_project_severe_disease <- list(
        point_estimate =  as.numeric(input$IR_outcome),
        age_distribution = input$severe_disease_age_distribution,
-       VE_severe_disease =  as.numeric(input$severe_disease_VE),
+       VE_death =  as.numeric(input$severe_disease_VE),
        comorb_increased_risk = 1
      )
      if (input$this_outcome == "cases") this_TOGGLES_project_severe_disease <- list()
