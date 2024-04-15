@@ -4,25 +4,6 @@
 require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(scales)
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
-
-path_stem <- paste0(gsub("/04_shiny","",getwd()),"/04_shiny/x_results/")
-list_poss_Rdata = list.files(
-  path = path_stem,
-  pattern = "ship_log*"
-)
-if (length(list_poss_Rdata) > 0) {
-  list_poss_Rdata_details = double()
-  for (j in 1:length(list_poss_Rdata)) {
-    list_poss_Rdata_details = rbind(list_poss_Rdata_details,
-                                    file.info(paste0(path_stem, list_poss_Rdata[[j]]))$mtime)
-  }
-  latest_file = list_poss_Rdata[[which.max(list_poss_Rdata_details)]]
-  load(file = paste0(path_stem,latest_file))
-  load(file = paste0(path_stem,gsub("ship_log","ship_log_key",latest_file))) #load accompanying key(s)
-  load(file = paste0(path_stem,gsub("ship_log","days_to_detection_key",latest_file))) 
-} else{
-  stop(paste0("(R Shiny) app: can't find underlying simulation to load! Searching:", path_stem))
-}
 load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
 ################################################################################
 
@@ -41,27 +22,37 @@ CHOICES = list(
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
-  vaccination_strategies = unique(ship_log$phase[! ship_log$phase %in% c("no vaccine", "healthcare workers")]),
+  vaccination_strategies = c("uniform",
+                             "older adults followed by all adults","adults then children","children then adults",
+                             "step up", "step down"),
   R0 = seq(2,6) ,
-  vaccine_delivery_start_date = c(50,100,200) ,
+  vaccine_delivery_start_date = c(25,50,100,150,200) ,
   supply = 
     c("20%" = 0.2,
       "50%" = 0.5,
       "80%" = 0.8), 
   infection_derived_immunity = 
-    c("75%" = 0.75,
+    c("50%"  = 0.5,
+      "75%"  = 0.75,
       "100%" = 1.0), 
   rollout_modifier = 
-    c("x0.5 capacity" = 0.5,
-      "at capacity" = 1,
-      "x2.0 capacity" = 2),
+    c("x0.5 COVID-19 capacity" = 0.5,
+      "at COVID-19  capacity" = 1,
+      "x2.0 COVID-19  capacity" = 2),
   vaccine_derived_immunity =
-    c("75%" = 0.75,
-      "100%" = 1.0),
-  outcome_threshold = unique(days_to_detection_key$outcome_threshold),
-  gen_interval = unique(days_to_detection_key$gen_interval),
-  IR_outcome = unique(days_to_detection_key$IR_outcome),
-  develop_outcome = unique(days_to_detection_key$develop_outcome)
+    c("50%"  = 0.5,
+      "75%"  = 0.75,
+      "100%" = 1.0), 
+  outcome_threshold = c(1,2,5,10),
+  gen_interval = c(7,14,28),
+  IR_outcome = c(0.01, # COVID-19 WT and influenza like
+                 0.1,  # diptheria and SARS like
+                 0.25, # Lassa fever and MERS like
+                 0.5,  # TB, cholera, JEV and HIV like
+                 0.65  # plague and Ebola like
+                 #NB: need to include est for presentations!
+  ), 
+  develop_outcome = c(7,14,28)
 )
 ################################################################################
 
@@ -120,10 +111,9 @@ ui <- fluidPage(
                               choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
                   
                   #TOGGLES_project_severe_disease
-                  uiOutput("TOGGLES_project_severe_disease_point_estimate"),
                   uiOutput("TOGGLES_project_severe_disease_age_distribution"),
                   uiOutput("TOGGLES_project_severe_disease_VE"),
-                  uiOutput("TOGGLES_project_comorb_increased_risk"),
+                  #uiOutput("TOGGLES_project_comorb_increased_risk"),
                   
                   make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
                   make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
@@ -134,10 +124,10 @@ ui <- fluidPage(
                   make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
                   make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1),
                   
-                  make_prettyRadioButtons("outcome_threshold", "threshold number of this outcome for detection", CHOICES$outcome_threshold, 2),
-                  make_prettyRadioButtons("gen_interval", "generation interval (days)", CHOICES$gen_interval, 7),
-                  make_prettyRadioButtons("IR_outcome", "incidence rate for this outcome", CHOICES$IR_outcome, 0.01),
-                  make_prettyRadioButtons("develop_outcome", "time to developing outcome (days)", CHOICES$develop_outcome, 14),
+                  make_prettyRadioButtons("outcome_threshold", "Threshold number of this outcome for detection:", CHOICES$outcome_threshold, 2),
+                  make_prettyRadioButtons("gen_interval", "Generation interval (days):", CHOICES$gen_interval, 7),
+                  make_prettyRadioButtons("IR_outcome", "Population-level estimate (%):", CHOICES$IR_outcome, 0.01),
+                  make_prettyRadioButtons("develop_outcome", "Time to developing outcome (days):", CHOICES$develop_outcome, 14),
                   
                   card(
                     # card_header(
@@ -202,9 +192,6 @@ server <- function(input, output, session) {
   
   
   ### Conditional UI components
-  output$TOGGLES_project_severe_disease_point_estimate <- renderUI({
-    if(input$this_outcome != "cases") numericInput(inputId = "severe_disease_point_estimate", label = "Population-level estimate (%):", value = 0.01)
-  })
   output$TOGGLES_project_severe_disease_age_distribution <- renderUI({
     if(input$this_outcome != "cases") selectInput(inputId = "severe_disease_age_distribution",label = "Age distribution:", 
                                                  choices = sort(unique(age_specific_severity_MASTER$pathogen)), selected = "Plague", multiple = TRUE)
@@ -276,7 +263,6 @@ server <- function(input, output, session) {
   call_plot <- function(){
    if ((input$this_outcome == "cases" |
         (
-          is.numeric(input$severe_disease_point_estimate) &
           is.character(input$severe_disease_age_distribution) &
           is.numeric(input$severe_disease_VE)
         )) &
@@ -292,9 +278,9 @@ server <- function(input, output, session) {
        is.null(input$vaccine_derived_immunity) == FALSE) {
      
      this_TOGGLES_project_severe_disease <- list(
-       point_estimate =  input$severe_disease_point_estimate,
+       point_estimate =  as.numeric(input$IR_outcome),
        age_distribution = input$severe_disease_age_distribution,
-       VE_severe_disease =  input$severe_disease_VE,
+       VE_severe_disease =  as.numeric(input$severe_disease_VE),
        comorb_increased_risk = 1
      )
      if (input$this_outcome == "cases") this_TOGGLES_project_severe_disease <- list()
