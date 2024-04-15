@@ -1,7 +1,7 @@
 
 #### SETUP #####################################################################
 #rm(list = ls())
-require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(scales)
+require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(bsicons); require(scales)
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
 load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
@@ -85,86 +85,101 @@ make_prettyRadioButtons <- function(this_variable, this_label,these_choices,this
     fill = TRUE
   )
 }
+
+pathogen_characteristics_inputs <- list(
+  uiOutput("TOGGLES_project_severe_disease_age_distribution"),
+  uiOutput("TOGGLES_project_severe_disease_VE"),
+  #uiOutput("TOGGLES_project_comorb_increased_risk"),
+  make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
+  make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
+  make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
+)
+
+# pathogen_characteristics_inputs <- selectInput(inputId = "this_outcome",
+#               label = "Outcome:",
+#               choices = c("cases","deaths","presentations"))
+
+vaccination_strategy_inputs <- list(
+  make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
+                            CHOICES$vaccine_delivery_start_date, 100),
+  make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
+  selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
+              choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
+  make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
+  make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE)
+)
+
+pathogen_detection_inputs <- list(
+  make_prettyRadioButtons("outcome_threshold", "Threshold number of this outcome for detection:", CHOICES$outcome_threshold, 2),
+  make_prettyRadioButtons("gen_interval", "Generation interval (days):", CHOICES$gen_interval, 7),
+  make_prettyRadioButtons("IR_outcome", "Population-level estimate (%):", CHOICES$IR_outcome, 0.01),
+  make_prettyRadioButtons("develop_outcome", "Time to developing outcome (days):", CHOICES$develop_outcome, 14) 
+)
+
+plot_aesthetics_inputs <- list(
+  selectInput(inputId = "this_outcome",
+              label = "Outcome:",
+              choices = c("cases","deaths","presentations")),
+  selectInput(inputId = "yaxis_title",
+              label = "Incidence statistic:",
+              choices = CHOICES$incidence_statistic,
+              selected = "incidence"),
+  make_prettySwitch("free_yaxis", "free y-axis"),
+  make_prettySwitch("display_impact_heatmap", "heatmap"),
+  make_prettySwitch("display_severity_curve", "severity curve", default = FALSE),
+  make_prettySwitch("display_age_proportion_on_severity_curve", "age proportions on severity curve", default = FALSE ),
+  make_prettySwitch("display_vaccine_availability", "dashed line of vaccine availability" ),
+  make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery"),
+  #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
+  uiOutput("SWITCH_plot_dimensions")
+)
 ################################################################################
 
 
 
 
 ##### USER INTERFACE DEFINITION ################################################
-ui <- fluidPage(
+ui <- page_sidebar(
   
-  titlePanel("Mathematical modelling of future pandemics to assist with Indonesian pandemic preparedness "),
+  title = "Mathematical modelling of future pandemics to assist with Indonesian pandemic preparedness",
   
-  sidebarLayout(
-    
-    ### Widgets ################################################################ 
-    sidebarPanel( width = 3,
-                  
-                  selectInput(inputId = "yaxis_title",
-                              label = "Incidence statistic:",
-                              choices = CHOICES$incidence_statistic,
-                              selected = "incidence"),
-                  selectInput(inputId = "this_outcome",
-                              label = "Outcome:",
-                              choices = c("cases","deaths","presentations")),
-                  selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
-                              choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
-                  
-                  #TOGGLES_project_severe_disease
-                  uiOutput("TOGGLES_project_severe_disease_age_distribution"),
-                  uiOutput("TOGGLES_project_severe_disease_VE"),
-                  #uiOutput("TOGGLES_project_comorb_increased_risk"),
-                  
-                  make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
-                  make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
-                                            CHOICES$vaccine_delivery_start_date, 100),
-                  make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
-                  make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
-                  make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE),
-                  make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
-                  make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1),
-                  
-                  make_prettyRadioButtons("outcome_threshold", "Threshold number of this outcome for detection:", CHOICES$outcome_threshold, 2),
-                  make_prettyRadioButtons("gen_interval", "Generation interval (days):", CHOICES$gen_interval, 7),
-                  make_prettyRadioButtons("IR_outcome", "Population-level estimate (%):", CHOICES$IR_outcome, 0.01),
-                  make_prettyRadioButtons("develop_outcome", "Time to developing outcome (days):", CHOICES$develop_outcome, 14),
-                  
-                  card(
-                    # card_header(
-                    #   class = "bg-dark",
-                    #   "Display:"
-                    # ),
-                    h5(strong("Display:")),
-                    make_prettySwitch("free_yaxis", "free y-axis"),
-                    make_prettySwitch("display_impact_heatmap", "heatmap"),
-                    make_prettySwitch("display_severity_curve", "severity curve", default = FALSE),
-                    make_prettySwitch("display_age_proportion_on_severity_curve", "age proportions on severity curve", default = FALSE ),
-                    make_prettySwitch("display_vaccine_availability", "dashed line of vaccine availability" ),
-                    make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery"),
-                    #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
-                    uiOutput("SWITCH_plot_dimensions"),
-                  ), 
-
-                  
-    ),
-    
-    
-    
-    ### Outputs ################################################################
-    mainPanel( width = 9,
-               
-               waiter::useWaiter(),
-               
-               verbatimTextOutput ("test"),
-               textOutput("test2"),
-               
-               textOutput("WARNING_no_plot"),
-               plotOutput("OUTPUT_plot", height = "800px"),
-               actionButton(inputId = "update_plot",
-                            label = "Update plot")
-               
+  sidebar = sidebar(
+    title = "User toggles",
+    width = 500,
+    accordion(
+      accordion_panel(title = "Characteristics of the pathogen",
+                      icon = bsicons::bs_icon("virus2"),
+                      pathogen_characteristics_inputs
+      ),
+      
+      accordion_panel(title = "Vaccination strategies",
+                      icon = bsicons::bs_icon("universal-access"),
+                      vaccination_strategy_inputs
+      ),
+      
+      accordion_panel(title = "Detection of pathogen",
+                      icon = bsicons::bs_icon("stopwatch"),
+                      pathogen_detection_inputs
+      ),
+      
+      accordion_panel(title = "Plot aesthetics",
+                      icon = bsicons::bs_icon("toggles"),
+                      plot_aesthetics_inputs
+      ), 
+      open = FALSE
     )
-  )
+  ),
+
+  ### MAINPANEL
+  waiter::useWaiter(),
+  
+  verbatimTextOutput ("test"),
+  textOutput("test2"),
+  textOutput("WARNING_no_plot"),
+  plotOutput("OUTPUT_plot", height = "800px"),
+  actionButton(inputId = "update_plot",
+               label = "Update plot")
+
 )
 ################################################################################
 
