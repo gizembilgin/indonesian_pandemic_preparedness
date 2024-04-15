@@ -285,40 +285,42 @@ server <- function(input, output, session) {
      )
      if (input$this_outcome == "cases") this_TOGGLES_project_severe_disease <- list()
      
-     plot_simulations(
-       var_1 = select_var(1)[[1]],
-       var_2 = select_var(2)[[1]],
-       yaxis_title = input$yaxis_title,
-       this_outcome = input$this_outcome,
-       TOGGLES_project_severe_disease = this_TOGGLES_project_severe_disease, 
-       var_1_range = select_var(1)[[2]],
-       var_2_range = select_var(2)[[2]],
-       default_configuration =
-         list(
-           R0 = as.numeric(input$R0),
-           outcome_threshold = as.numeric(input$outcome_threshold),
-           gen_interval = as.numeric(input$gen_interval), 
-           IR_outcome = as.numeric(input$IR_outcome),  
-           develop_outcome = as.numeric(input$develop_outcome), 
-           vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
-           phase = c(input$vaccination_strategies,"healthcare workers", "no vaccine"),
-           supply = as.numeric(input$supply),
-           infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
-           rollout_modifier =  as.numeric(input$rollout_modifier),
-           vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity),
-           daily_vaccine_delivery_realistic = input$daily_vaccine_delivery_realistic
-         ),
-       
-       free_yaxis = input$free_yaxis,
-       display_impact_heatmap = input$display_impact_heatmap,
-       display_severity_curve = input$display_severity_curve,
-       display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
-       display_var_1 = 0,
-       colour_healthcare_workers_phase = 0, #input$colour_healthcare_workers_phase,
-       display_vaccine_availability = input$display_vaccine_availability,
-       display_end_of_healthcare_worker_delivery = input$display_end_of_healthcare_worker_delivery,
-       simulations_source = "generate"
-     )
+     withProgress(message = "running underlying simulations",{
+       plot_simulations(
+         var_1 = select_var(1)[[1]],
+         var_2 = select_var(2)[[1]],
+         yaxis_title = input$yaxis_title,
+         this_outcome = input$this_outcome,
+         TOGGLES_project_severe_disease = this_TOGGLES_project_severe_disease, 
+         var_1_range = select_var(1)[[2]],
+         var_2_range = select_var(2)[[2]],
+         default_configuration =
+           list(
+             R0 = as.numeric(input$R0),
+             outcome_threshold = as.numeric(input$outcome_threshold),
+             gen_interval = as.numeric(input$gen_interval), 
+             IR_outcome = as.numeric(input$IR_outcome),  
+             develop_outcome = as.numeric(input$develop_outcome), 
+             vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
+             phase = c(input$vaccination_strategies,"healthcare workers", "no vaccine"),
+             supply = as.numeric(input$supply),
+             infection_derived_immunity =  as.numeric(input$infection_derived_immunity),
+             rollout_modifier =  as.numeric(input$rollout_modifier),
+             vaccine_derived_immunity =  as.numeric(input$vaccine_derived_immunity),
+             daily_vaccine_delivery_realistic = input$daily_vaccine_delivery_realistic
+           ),
+         
+         free_yaxis = input$free_yaxis,
+         display_impact_heatmap = input$display_impact_heatmap,
+         display_severity_curve = input$display_severity_curve,
+         display_age_proportion_on_severity_curve = input$display_age_proportion_on_severity_curve,
+         display_var_1 = 0,
+         colour_healthcare_workers_phase = 0, #input$colour_healthcare_workers_phase,
+         display_vaccine_availability = input$display_vaccine_availability,
+         display_end_of_healthcare_worker_delivery = input$display_end_of_healthcare_worker_delivery,
+         simulations_source = "generate"
+       )
+     })
    }
   }
   

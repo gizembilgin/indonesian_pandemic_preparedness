@@ -23,10 +23,11 @@ generate_simulations <- function(
     # assign_run_ID = FALSE
 ){
   
-  # length(this_configuration$setting)*length(this_configuration$vaccine_delivery_start_date)*
-  # length(this_configuration$R0)*length(this_configuration$infection_derived_immunity)*
-  # length(this_configuration$rollout_modifier)*length(this_configuration$vaccine_derived_immunity) *
-  # length(this_configuration$daily_vaccine_delivery_realistic)
+  num_simuations = 
+    length(this_configuration$vaccine_derived_immunity) *
+    length(this_configuration$infection_derived_immunity) *
+    length(this_configuration$vaccine_delivery_start_date) *
+    length(this_configuration$R0)
   
   LIST_strategy = list()
   if ("uniform" %in% this_configuration$phase){
@@ -146,9 +147,11 @@ generate_simulations <- function(
                 
                 ship_log = rbind(ship_log,this_simulation)
                 indicator_log = rbind(indicator_log,this_simulation_indicator)
+                
               }
             }
           }
+          incProgress(1/num_simuations)
         }
       }
     }
