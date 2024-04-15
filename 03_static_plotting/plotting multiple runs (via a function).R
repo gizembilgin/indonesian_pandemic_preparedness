@@ -59,7 +59,7 @@ plot_simulations (
   var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = "vaccine_delivery_start_date",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "cases",    #options: cases, deaths
+  this_outcome = "presentations",    #options: cases, deaths,presentations
   TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(2,3,4,5),

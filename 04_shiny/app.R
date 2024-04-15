@@ -206,14 +206,14 @@ server <- function(input, output, session) {
   
   ### Conditional UI components
   output$TOGGLES_project_deaths_age_distribution <- renderUI({
-    if(input$this_outcome != "cases") selectInput(inputId = "deaths_age_distribution",label = "Age distribution:", 
+    if(input$this_outcome == "deaths") selectInput(inputId = "deaths_age_distribution",label = "Age distribution:", 
                                                  choices = sort(unique(age_specific_severity_MASTER$pathogen)), selected = "Plague", multiple = TRUE)
   })
   output$TOGGLES_project_deaths_VE <- renderUI({
-    if(input$this_outcome != "cases") numericInput(inputId = "deaths_VE", label = "Vaccine effectiveness against death:", value = 1)
+    if(input$this_outcome == "deaths") numericInput(inputId = "deaths_VE", label = "Vaccine effectiveness against death:", value = 1)
   })
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
-  #   if(input$this_outcome != "cases")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
+  #   if(input$this_outcome == "deaths")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
   # })
   output$SWITCH_plot_dimensions <- renderUI({
     if(select_var(1)[[1]] != "R0" & length(count_plot_dimensions())>1) make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE)
@@ -237,7 +237,7 @@ server <- function(input, output, session) {
     if (length(input$rollout_modifier)>1)            plot_dimension_vector = c(plot_dimension_vector,"rollout_modifier")
     if (length(input$infection_derived_immunity)>1)  plot_dimension_vector = c(plot_dimension_vector,"infection_derived_immunity")
     if (length(input$vaccine_derived_immunity)>1)    plot_dimension_vector = c(plot_dimension_vector,"vaccine_derived_immunity")
-    if (input$this_outcome != "cases" & length(input$deaths_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
+    if (input$this_outcome == "deaths" & length(input$deaths_age_distribution)>1)    plot_dimension_vector = c(plot_dimension_vector,"pathogen")
     
     if (is.null(input$switch_plot_dimensions) == FALSE && input$switch_plot_dimensions == TRUE) plot_dimension_vector <- rev(plot_dimension_vector)
     
@@ -274,7 +274,7 @@ server <- function(input, output, session) {
   }
   #call_plot: calls the plotting function after checking all required inputs provided
   call_plot <- function(){
-   if ((input$this_outcome == "cases" |
+   if ((input$this_outcome %in% c("presentations","cases") |
         (
           is.character(input$deaths_age_distribution) &
           is.numeric(input$deaths_VE)
@@ -296,7 +296,7 @@ server <- function(input, output, session) {
        VE_death =  as.numeric(input$deaths_VE),
        comorb_increased_risk = 1
      )
-     if (input$this_outcome == "cases") this_TOGGLES_project_deaths <- list()
+     if (input$this_outcome %in% c("presentations","cases")) this_TOGGLES_project_deaths <- list()
      
      withProgress(message = "running underlying simulations",{
        plot_simulations(

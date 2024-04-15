@@ -61,7 +61,7 @@ plot_simulations <- function(
   if (is.na(var_2)) var_2_range = NA
   if (this_outcome == "cases") TOGGLES_project_deaths = list()
   if (this_outcome == "cases") display_severity_curve = 0
-  if (this_outcome != "cases" & length(TOGGLES_project_deaths) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_deaths")
+  if (this_outcome == "deaths" & length(TOGGLES_project_deaths) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_deaths")
   
   
   ### Load simulation

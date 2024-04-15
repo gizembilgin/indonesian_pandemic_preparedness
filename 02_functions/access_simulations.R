@@ -1,7 +1,7 @@
 
 
 access_simulations <- function(
-    simulations_source = "load", #options: "load", "memory", "generate"
+    simulations_source = "generate", #options: "load", "memory", "generate"
     this_configuration,
     outcome = "cases",
     TOGGLES_project_deaths = list()
@@ -195,7 +195,10 @@ access_simulations <- function(
     
   } else if (outcome == "presentations"){
     
-    load(file = paste0(gsub("indonesian_pandemic_preparedness","data",getwd()),"/x_results/presentations_to_care_model_age_groups.Rdata"))
+    presentations_file_location <- paste0(gsub("indonesian_pandemic_preparedness","data",getwd()),"/x_results/presentations_to_care_model_age_groups.Rdata")
+    presentations_file_location <- paste0(gsub("/04_shiny","",presentations_file_location))
+    load(file = presentations_file_location)
+    
     this_ship_log_completed <- this_ship_log_completed %>%
       group_by(time,phase,age_group,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
       summarise(incidence = sum(incidence), .groups = "keep") %>%
