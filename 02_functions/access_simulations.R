@@ -3,7 +3,7 @@
 access_simulations <- function(
     simulations_source = "generate", #options: "load", "memory", "generate"
     this_configuration,
-    outcome = "cases",
+    outcome = "infections",
     TOGGLES_project_deaths = list()
 ){
   
@@ -177,7 +177,7 @@ access_simulations <- function(
 
   }
 
-  if (outcome == "cases"){
+  if (outcome == "infections"){
     this_ship_log_completed <- this_ship_log_completed %>%
       group_by(time,phase,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
       summarise(incidence = sum(incidence), .groups = "keep") 

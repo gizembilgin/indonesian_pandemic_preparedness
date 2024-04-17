@@ -19,13 +19,13 @@ workshop = workshop_RAW %>%
     value > 1 ~ 1,
     TRUE ~ value
   )) %>%
-  rename(case_fatality_rate = value)
+  rename(infection_fatality_ratio = value)
 ################################################################################
 
 
 
 ### PLOT imported data #########################################################
-ggplot(workshop,aes(x=age,y=case_fatality_rate)) + 
+ggplot(workshop,aes(x=age,y=infection_fatality_ratio)) + 
   #ylim(0,1)+
   geom_point() +
   geom_smooth(method = "loess")+
@@ -44,7 +44,7 @@ for (this_pathogen in unique(workshop$pathogen)){
   this_workshop_expanded = data.frame()
   for (this_row_index in 1:nrow(this_workshop)){
     this_row = this_workshop[this_row_index,]
-    this_row = crossing(this_row[,c("statistic","pathogen","case_fatality_rate")],
+    this_row = crossing(this_row[,c("statistic","pathogen","infection_fatality_ratio")],
                         age_group_single  = seq(this_row$age_start,this_row$age_end))
     this_workshop_expanded = rbind(this_workshop_expanded,this_row)
   }
@@ -55,16 +55,16 @@ for (this_pathogen in unique(workshop$pathogen)){
     mutate(age_group= cut(age_group_single,breaks = age_groups_num, include.lowest = T, labels = age_group_labels)) %>%
     group_by(statistic,pathogen,name_english,name_indonesian,age_group) %>%
     mutate(individuals = individuals/sum(individuals),
-           case_fatality_rate = case_fatality_rate * individuals) %>%
+           infection_fatality_ratio = infection_fatality_ratio * individuals) %>%
     group_by(statistic,pathogen,name_english,name_indonesian,age_group) %>%
-    summarise(case_fatality_rate = sum(case_fatality_rate), .groups = "keep")
+    summarise(infection_fatality_ratio = sum(infection_fatality_ratio), .groups = "keep")
   
   workshop_model_age_groups = rbind(workshop_model_age_groups,this_workshop)
 }
 workshop = workshop_model_age_groups
 rm(this_workshop, workshop_model_age_groups, this_workshop_expanded)
 
-ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=case_fatality_rate)) + 
+ggplot(workshop[workshop$name_english == "Indonesia",],aes(x=age_group,y=infection_fatality_ratio)) + 
   #ylim(0,1)+
   geom_col() +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
@@ -88,7 +88,7 @@ project_deaths(
 ) %>%
   filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=case_fatality_rate))
+  geom_col(aes(x=age_group,y=infection_fatality_ratio))
 
 #Option 2: specify pt est and select age dn
 project_deaths(
@@ -102,7 +102,7 @@ project_deaths(
 ) %>%
   filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=case_fatality_rate))
+  geom_col(aes(x=age_group,y=infection_fatality_ratio))
 
 #Option 3: select severity profile of a known pathogen
 project_deaths(
@@ -116,7 +116,7 @@ project_deaths(
 ) %>%
   filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=case_fatality_rate))
+  geom_col(aes(x=age_group,y=infection_fatality_ratio))
 
 #CHECK: plot all pathogen shapes with fixed severity point estimate
 project_deaths(
@@ -132,7 +132,7 @@ project_deaths(
 ) %>%
   filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
   ggplot() +
-  geom_col(aes(x=age_group,y=case_fatality_rate)) +
+  geom_col(aes(x=age_group,y=infection_fatality_ratio)) +
   facet_wrap(~ pathogen, ncol = 3,scales = "free")
 ################################################################################
 
@@ -144,11 +144,11 @@ project_deaths(
 #   left_join(population, by = "age_group") %>%
 #   group_by(pathogen) %>%
 #   mutate(proportion = individuals/sum(individuals),
-#          interim = case_fatality_rate * proportion) %>%
-#   summarise(case_fatality_rate = sum(interim)) %>%
-#   arrange(case_fatality_rate)
+#          interim = infection_fatality_ratio * proportion) %>%
+#   summarise(infection_fatality_ratio = sum(interim)) %>%
+#   arrange(infection_fatality_ratio)
 
-# pathogen       case_fatality_rate
+# pathogen       infection_fatality_ratio
 # 1 COVID-19 WT                0.0124
 # 2 Influenza 1918             0.0213
 # 3 Diptheria                  0.0817

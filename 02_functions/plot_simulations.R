@@ -38,7 +38,7 @@ plot_simulations <- function(
     var_1, 
     var_2 = NA,
     yaxis_title, #options: incidence, cumulative_incidence, cumulative_incidence_averted
-    this_outcome = "cases", #options: "cases","deaths"
+    this_outcome = "infections", #options: "infections","deaths"
     TOGGLES_project_deaths = list(),
     var_1_range = NA,
     var_2_range = NA,
@@ -59,8 +59,8 @@ plot_simulations <- function(
   if (exists("var_2") == FALSE | is.null(var_2)) var_2 = NA
   if (is.na(var_2) == FALSE &&  var_2 == "none") var_2 = NA
   if (is.na(var_2)) var_2_range = NA
-  if (this_outcome == "cases") TOGGLES_project_deaths = list()
-  if (this_outcome == "cases") display_severity_curve = 0
+  if (this_outcome == "infections") TOGGLES_project_deaths = list()
+  if (this_outcome == "infections") display_severity_curve = 0
   if (this_outcome == "deaths" & length(TOGGLES_project_deaths) == 0) stop("plot_simulations: you have selected to plot severe outcomes but not specified TOGGLES_project_deaths")
   
   
@@ -367,12 +367,12 @@ plot_simulations <- function(
     ) %>%
       filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
       ggplot() +
-      geom_col(aes(x=age_group,y=case_fatality_rate)) +
+      geom_col(aes(x=age_group,y=infection_fatality_ratio)) +
       facet_wrap(~ pathogen, ncol = 1,scales = "free") 
     
     if (display_age_proportion_on_severity_curve == 1){
       extra_plot <- extra_plot +
-        geom_text(aes(x=age_group,y=case_fatality_rate ,label = as.character(round(pop_proportion ,digits=2))), 
+        geom_text(aes(x=age_group,y=infection_fatality_ratio ,label = as.character(round(pop_proportion ,digits=2))), 
                   color = "white", size = 4, position = position_stack(vjust = 0.5))
     }
     

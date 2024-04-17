@@ -47,7 +47,7 @@ CHOICES = list(
   ), 
   develop_outcome = c(7,14,21,28)
 )
-if (is_local) CHOICES$outcome = c("cases","deaths","presentations") else  CHOICES$outcome = c("cases","deaths")
+if (is_local) CHOICES$outcome = c("infections","deaths","presentations") else  CHOICES$outcome = c("infections","deaths")
 ################################################################################
 
 
@@ -269,7 +269,7 @@ server <- function(input, output, session) {
   }
   #call_plot: calls the plotting function after checking all required inputs provided
   call_plot <- function(){
-   if ((input$this_outcome %in% c("presentations","cases") |
+   if ((input$this_outcome %in% c("presentations","infections") |
         (
           is.character(input$deaths_age_distribution) &
           is.numeric(input$deaths_VE)
@@ -291,7 +291,7 @@ server <- function(input, output, session) {
        VE_death =  as.numeric(input$deaths_VE),
        comorb_increased_risk = 1
      )
-     if (input$this_outcome %in% c("presentations","cases")) this_TOGGLES_project_deaths <- list()
+     if (input$this_outcome %in% c("presentations","infections")) this_TOGGLES_project_deaths <- list()
      
      withProgress(message = "running underlying simulations",{
        plot_simulations(

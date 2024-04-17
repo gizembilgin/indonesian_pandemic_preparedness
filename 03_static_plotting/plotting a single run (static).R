@@ -90,7 +90,7 @@ to_plot <- to_plot %>%
 plot_list[[length(plot_list)+1]] <- ggplot(to_plot) + 
   geom_line(aes(x=time,y=vaccine_effect,color=as.factor(phase),linetype = as.factor(supply)),linewidth = 1.25)  +
   labs(color="", linetype = "") +
-  ylab("cumulative cases averted by vaccine") +
+  ylab("cumulative infections averted by vaccine") +
   xlim(0,time_horizon) + 
   geom_vline(mapping = NULL, xintercept = min(vaccination_history_permutations$time[vaccination_history_permutations$phase == "healthcare workers"]), linetype="dashed") + 
   geom_vline(mapping = NULL, xintercept = max(vaccination_history_permutations$time[vaccination_history_permutations$phase == "healthcare workers"]), linetype="dashed") + 

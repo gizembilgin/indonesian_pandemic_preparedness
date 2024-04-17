@@ -39,11 +39,11 @@ project_deaths <- function(data = data.frame(),
     age_distribution = age_specific_severity_MASTER %>%
       filter(pathogen %in% age_distribution &
                (name_english == this_setting | name_indonesian == this_setting)) %>%
-      select(pathogen,age_group,case_fatality_rate) %>% 
+      select(pathogen,age_group,infection_fatality_ratio) %>% 
       group_by(pathogen)
     
     #if point_estimate explicitly specified, than we are using the imported age_distribution as relative_risk not the given incidence
-    if(is.na(point_estimate) == FALSE) age_distribution <- age_distribution %>% rename(relative_risk = case_fatality_rate)
+    if(is.na(point_estimate) == FALSE) age_distribution <- age_distribution %>% rename(relative_risk = infection_fatality_ratio)
   }
   
   
@@ -58,16 +58,16 @@ project_deaths <- function(data = data.frame(),
     mutate(pop_proportion = individuals/sum(individuals))
   
   if (is.na(point_estimate)){
-    #if no point estimate specified, then use estimate of case_fatality_rate imported
+    #if no point estimate specified, then use estimate of infection_fatality_ratio imported
     matrix_of_deaths <- matrix_of_deaths %>%
       left_join(age_distribution, by = "age_group")
   } else{
     # modify the point_estimate of death by the age-specific relative risk, then re-scale all values to retain population-level estimate
     matrix_of_deaths <- age_distribution %>%
       left_join(matrix_of_deaths, by = "age_group") %>%
-      mutate(case_fatality_rate = relative_risk * point_estimate,
-             adj = case_fatality_rate*pop_proportion,
-             case_fatality_rate = case_fatality_rate * point_estimate/sum(adj)) %>%
+      mutate(infection_fatality_ratio = relative_risk * point_estimate,
+             adj = infection_fatality_ratio*pop_proportion,
+             infection_fatality_ratio = infection_fatality_ratio * point_estimate/sum(adj)) %>%
       select(-adj)
     
     # #CHECK: age distribution retained
@@ -77,7 +77,7 @@ project_deaths <- function(data = data.frame(),
       mutate(original_ratio = relative_risk / min(relative_risk)) %>%
       select(-relative_risk) %>%
       left_join(matrix_of_deaths, join_by_list) %>%
-      mutate(derived_ratio = case_fatality_rate / min(case_fatality_rate)) %>%
+      mutate(derived_ratio = infection_fatality_ratio / min(infection_fatality_ratio)) %>%
       filter(round(derived_ratio, digits = 2) != round(original_ratio, digits = 2))
     if (nrow(check)>0){stop("project_deaths: age distribution not applied correctly  - age distribution NOT retained")}
   }
@@ -85,7 +85,7 @@ project_deaths <- function(data = data.frame(),
   
   ## (2/3) by comorbidity
   # see Supplementary Material S2.4 of https://doi.org/10.1186/s12889-023-17374-0
-  # need incidence rate (case_fatality_rate), pop with comorbidity, pop without comorbitiy, RR (comorb_increased_risk)
+  # need incidence rate (infection_fatality_ratio), pop with comorbidity, pop without comorbitiy, RR (comorb_increased_risk)
   if (length(unique(this_pop$comorbidity))>1){
     workshop <- this_pop %>%
       select(age_group, comorbidity, individuals) %>%
@@ -95,19 +95,19 @@ project_deaths <- function(data = data.frame(),
     matrix_of_deaths <- matrix_of_deaths %>%
       #select(-pop_proportion) %>% #CHECKED: individuals = comorb_0 + comorb_1
       left_join(workshop, by = "age_group") %>%
-      mutate(case_fatality_rate_0 = case_fatality_rate*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
-             case_fatality_rate_1 = case_fatality_rate*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
-      mutate(case_fatality_rate_1 = case_when(
-        is.nan(case_fatality_rate_1) ~ case_fatality_rate_0, #is NaN because no comorb in age group 0 to 4, but retain for checks
-        TRUE ~ case_fatality_rate_1
+      mutate(infection_fatality_ratio_0 = infection_fatality_ratio*individuals/(comorb_0*(1+(comorb_increased_risk*comorb_1/comorb_0))),
+             infection_fatality_ratio_1 = infection_fatality_ratio*individuals/(comorb_1*(1+comorb_0/(comorb_1*comorb_increased_risk))))%>%
+      mutate(infection_fatality_ratio_1 = case_when(
+        is.nan(infection_fatality_ratio_1) ~ infection_fatality_ratio_0, #is NaN because no comorb in age group 0 to 4, but retain for checks
+        TRUE ~ infection_fatality_ratio_1
         ))
     #wrangle to tidy structure
     matrix_of_deaths <- matrix_of_deaths %>%
-      select(-individuals,-case_fatality_rate,-comorb_0,-comorb_1) %>%
-      pivot_longer(cols = c("case_fatality_rate_0", "case_fatality_rate_1"),
+      select(-individuals,-infection_fatality_ratio,-comorb_0,-comorb_1) %>%
+      pivot_longer(cols = c("infection_fatality_ratio_0", "infection_fatality_ratio_1"),
                    names_to = "comorbidity",
-                   values_to = "case_fatality_rate",
-                   names_prefix = "case_fatality_rate_")
+                   values_to = "infection_fatality_ratio",
+                   names_prefix = "infection_fatality_ratio_")
   } else { # if only one
     matrix_of_deaths <- matrix_of_deaths %>%
       mutate(comorbidity = FALSE) %>%
@@ -118,7 +118,7 @@ project_deaths <- function(data = data.frame(),
   # #CHECK: point estimate retained. pop-level estimate = sum over age and comorb(this estimate * prop of population in this group)
   check <- matrix_of_deaths %>%
     left_join(this_pop,by = join_by(age_group, comorbidity)) %>%
-    mutate(interim = case_fatality_rate * individuals/sum(individuals))
+    mutate(interim = infection_fatality_ratio * individuals/sum(individuals))
   if("pathogen" %in% names(check)) check_multiplier = length(unique(check$pathogen)) else check_multiplier = 1
   check <- sum(check$interim) / check_multiplier
   if (round(check, digits = 6) != point_estimate & is.na(point_estimate) == FALSE ) stop("project_deaths: age or comorbidity distribution not applied correctly  - point estimate NOT retained")
@@ -130,9 +130,9 @@ project_deaths <- function(data = data.frame(),
     this_matrix_of_deaths <- crossing(matrix_of_deaths,
                                          vaccination_status = c(FALSE,TRUE)) %>%
       mutate(
-        case_fatality_rate = case_when(
-          vaccination_status == FALSE ~ case_fatality_rate,
-          vaccination_status == TRUE ~ case_fatality_rate * (1 - this_VE_death)
+        infection_fatality_ratio = case_when(
+          vaccination_status == FALSE ~ infection_fatality_ratio,
+          vaccination_status == TRUE ~ infection_fatality_ratio * (1 - this_VE_death)
         ), 
         VE_death = this_VE_death
       )
@@ -153,8 +153,8 @@ project_deaths <- function(data = data.frame(),
   deaths_log_tidy <- data %>%
     left_join(matrix_of_deaths, by = c("age_group","comorbidity","vaccination_status"),
               relationship = "many-to-many") %>% # if multiple pathogens
-    mutate(deaths = incidence * case_fatality_rate) %>%
-    select(-case_fatality_rate)
+    mutate(deaths = incidence * infection_fatality_ratio) %>%
+    select(-infection_fatality_ratio)
   #_____________________________________________________________________________
   
   

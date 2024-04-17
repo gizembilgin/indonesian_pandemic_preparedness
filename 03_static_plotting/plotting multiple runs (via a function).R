@@ -14,7 +14,7 @@ plot_simulations (
     var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
     var_2 = NA,
     yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-    this_outcome = "cases",    #options: cases, deaths
+    this_outcome = "infections",    #options: infections, deaths
     TOGGLES_project_deaths = list(),
     free_yaxis = FALSE,
     var_1_range = c(2,3,4),
@@ -59,7 +59,7 @@ plot_simulations (
   var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = "vaccine_delivery_start_date",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "presentations",    #options: cases, deaths,presentations
+  this_outcome = "presentations",    #options: infections, deaths,presentations
   TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(2,3,4,5),
@@ -96,7 +96,7 @@ plot_simulations (
   var_1 = "vaccine_delivery_start_date",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = NA,
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "cases",    #options: cases, deaths
+  this_outcome = "infections",    #options: infections, deaths
   TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(50,100),
@@ -137,7 +137,7 @@ plot_simulations (
   var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = "rollout_modifier",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "cases",    #options: cases, deaths
+  this_outcome = "infections",    #options: infections, deaths
   TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
   var_1_range = c(2,3,4),
@@ -176,7 +176,7 @@ plot_simulations (
   var_1 = "pathogen",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = NA,
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "deaths",    #options: cases, deaths
+  this_outcome = "deaths",    #options: infections, deaths
   TOGGLES_project_deaths = list(
     point_estimate =  1 / 100,
     age_distribution = c("SARS", "Plague", "Diptheria"),
