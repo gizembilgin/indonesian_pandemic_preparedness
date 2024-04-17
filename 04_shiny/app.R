@@ -13,47 +13,39 @@ is_local <- Sys.getenv("SHINY_PORT") == "" #boolean of whether this shiny is bei
 
 ##### CONFIGURE CHOICES ########################################################
 CHOICES = list(
-  variable = 
-    c("basic reproduction number" = "R0",
-      "vaccine delivery start date" = "vaccine_delivery_start_date",
-      "infection derived immunity" = "infection_derived_immunity",
-      "rollout modifier" = "rollout_modifier",
-      "vaccine derived immunity" = "vaccine_derived_immunity"), 
   incidence_statistic = 
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
-  vaccination_strategies = c("uniform",
-                             "older adults followed by all adults","adults then children","children then adults",
-                             "step up", "step down"),
+  vaccination_strategies = 
+    c("uniform",
+      "older adults followed by all adults","adults then children","children then adults",
+      "step up", "step down"),
   R0 = seq(2,6) ,
-  vaccine_delivery_start_date = c(25,50,100,150,200) ,
+  vaccine_delivery_start_date = c(50,100,150,200) ,
   supply = 
     c("20%" = 0.2,
       "50%" = 0.5,
       "80%" = 0.8), 
-  infection_derived_immunity = 
-    c("50%"  = 0.5,
+  immunity = 
+    c("25%"  = 0.25,
+      "50%"  = 0.5,
       "75%"  = 0.75,
       "100%" = 1.0), 
   rollout_modifier = 
-    c("x0.5 COVID-19 capacity" = 0.5,
-      "at COVID-19  capacity" = 1,
+    c("x0.5 COVID-19 capacity"  = 0.5,
+      "at COVID-19  capacity"   = 1,
       "x2.0 COVID-19  capacity" = 2),
-  vaccine_derived_immunity =
-    c("50%"  = 0.5,
-      "75%"  = 0.75,
-      "100%" = 1.0), 
-  outcome_threshold = c(1,2,5,10),
-  gen_interval = c(7,14,28),
-  IR_outcome = c(0.01, # COVID-19 WT and influenza like
-                 0.1,  # diptheria and SARS like
-                 0.25, # Lassa fever and MERS like
-                 0.5,  # TB, cholera, JEV and HIV like
-                 0.65  # plague and Ebola like
+  outcome_threshold = c(1,2,5,10,25),
+  gen_interval = c(7,14,21,28),
+  IR_outcome = c("1%"  = 0.01, # COVID-19 WT and influenza like
+                 "10%" = 0.1,  # diptheria and SARS like
+                 "25%" = 0.25, # Lassa fever and MERS like
+                 "50%" = 0.5,  # TB, cholera, JEV and HIV like
+                 "65%" = 0.65  # plague and Ebola like
                  #NB: need to include est for presentations!
   ), 
-  develop_outcome = c(7,14,28)
+  develop_outcome = c(7,14,21,28)
 )
 if (is_local) CHOICES$outcome = c("cases","deaths","presentations") else  CHOICES$outcome = c("cases","deaths")
 ################################################################################
@@ -89,32 +81,35 @@ make_prettyRadioButtons <- function(this_variable, this_label,these_choices,this
 }
 
 pathogen_characteristics_inputs <- list(
-  uiOutput("TOGGLES_project_deaths_age_distribution"),
-  uiOutput("TOGGLES_project_deaths_VE"),
-  #uiOutput("TOGGLES_project_comorb_increased_risk"),
   make_checkboxGroupButtons("R0", "Basic reproduction number:", CHOICES$R0, 2),
-  make_checkboxGroupButtons("infection_derived_immunity", "Protection from infection-derived immunity:", CHOICES$infection_derived_immunity, 1),
-  make_checkboxGroupButtons("vaccine_derived_immunity","Protection from vaccine-derived immunity:", CHOICES$vaccine_derived_immunity, 1)
+  uiOutput("TOGGLES_project_deaths_age_distribution"),
+  make_prettyRadioButtons("IR_outcome", "Infection fatality ratio (%):", CHOICES$IR_outcome, 0.01),
+  make_checkboxGroupButtons("infection_derived_immunity", "Infection-derived protection against re-infection:", CHOICES$immunity, 1),
+  make_checkboxGroupButtons("vaccine_derived_immunity","Vaccine effectiveness against infection:", CHOICES$immunity, 1),
+  uiOutput("TOGGLES_project_deaths_VE")
 )
 
 vaccination_strategy_inputs <- list(
+  selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
+              choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
   make_checkboxGroupButtons("vaccine_delivery_start_date", "Days between pathogen detected and vaccine first delivered:", 
                             CHOICES$vaccine_delivery_start_date, 100),
   make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
-  selectInput(inputId = "vaccination_strategies",label = "Vaccination strategies:", 
-              choices = CHOICES$vaccination_strategies, selected = "uniform", multiple = TRUE),
   make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
   make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE)
 )
 
 pathogen_detection_inputs <- list(
+  selectInput(inputId = "detection_outcome",
+              label = "Outcome used for detection:",
+              choices = c("deaths","presentations"),
+              selected = "deaths"),
   make_prettyRadioButtons("outcome_threshold", "Threshold number of this outcome for detection:", CHOICES$outcome_threshold, 2),
   make_prettyRadioButtons("gen_interval", "Generation interval (days):", CHOICES$gen_interval, 7),
-  make_prettyRadioButtons("IR_outcome", "Population-level estimate (%):", CHOICES$IR_outcome, 0.01),
   make_prettyRadioButtons("develop_outcome", "Time to developing outcome (days):", CHOICES$develop_outcome, 14) 
 )
 
-plot_aesthetics_inputs <- list(
+plot_configuration_inputs <- list(
   selectInput(inputId = "this_outcome",
               label = "Outcome:",
               choices = CHOICES$outcome),
@@ -160,9 +155,9 @@ ui <- page_sidebar(
                       pathogen_detection_inputs
       ),
       
-      accordion_panel(title = "Plot aesthetics",
+      accordion_panel(title = "Plot configuration",
                       icon = bsicons::bs_icon("toggles"),
-                      plot_aesthetics_inputs
+                      plot_configuration_inputs
       ), 
       open = FALSE
     )
@@ -206,11 +201,11 @@ server <- function(input, output, session) {
   
   ### Conditional UI components
   output$TOGGLES_project_deaths_age_distribution <- renderUI({
-    if(input$this_outcome == "deaths") selectInput(inputId = "deaths_age_distribution",label = "Age distribution:", 
+    if(input$this_outcome == "deaths") selectInput(inputId = "deaths_age_distribution",label = "Age distribution of severity:", 
                                                  choices = sort(unique(age_specific_severity_MASTER$pathogen)), selected = "Plague", multiple = TRUE)
   })
   output$TOGGLES_project_deaths_VE <- renderUI({
-    if(input$this_outcome == "deaths") numericInput(inputId = "deaths_VE", label = "Vaccine effectiveness against death:", value = 1)
+    if(input$this_outcome == "deaths") make_checkboxGroupButtons("deaths_VE","Vaccine effectiveness against death:", CHOICES$immunity, 1) 
   })
   # output$TOGGLES_project_comorb_increased_risk <- renderUI({
   #   if(input$this_outcome == "deaths")  numericInput(inputId = "comorb_increased_risk", label = "Increased RR of individuals with comorbidities:", value = 1)
