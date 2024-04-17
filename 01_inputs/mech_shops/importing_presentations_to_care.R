@@ -23,7 +23,7 @@ presentations_to_care = pop_RAW %>%
   summarise(proportion = sum(interim)) %>%
   rename(age_group = agegroup_MODEL)
 
-save(presentations_to_care, file = paste0(gsub("indonesian_pandemic_preparedness","data",getwd()),"/x_results/presentations_to_care_model_age_groups.Rdata"))
+save(presentations_to_care, file = "01_inputs/presentations_to_care.Rdata")
 
 ggplot(presentations_to_care) + 
   geom_col(aes(age_group,proportion))

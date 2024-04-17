@@ -17,6 +17,7 @@ CHOICES = list(
     c("incidence" = "incidence",
       "cumulative incidence" = "cumulative_incidence",
       "cumulative incidence averted" = "cumulative_incidence_averted"), 
+  outcome = c("infections","deaths","presentations"),
   vaccination_strategies = 
     c("uniform",
       "older adults followed by all adults","adults then children","children then adults",
@@ -47,7 +48,6 @@ CHOICES = list(
   ), 
   develop_outcome = c(7,14,21,28)
 )
-if (is_local) CHOICES$outcome = c("infections","deaths","presentations") else  CHOICES$outcome = c("infections","deaths")
 ################################################################################
 
 

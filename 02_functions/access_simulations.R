@@ -195,9 +195,7 @@ access_simulations <- function(
     
   } else if (outcome == "presentations"){
     
-    presentations_file_location <- paste0(gsub("indonesian_pandemic_preparedness","data",getwd()),"/x_results/presentations_to_care_model_age_groups.Rdata")
-    presentations_file_location <- paste0(gsub("/04_shiny","",presentations_file_location))
-    load(file = presentations_file_location)
+    load(file = paste0(gsub("/04_shiny","","01_inputs/presentations_to_care.Rdata")))
     
     this_ship_log_completed <- this_ship_log_completed %>%
       group_by(time,phase,age_group,supply,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>%
