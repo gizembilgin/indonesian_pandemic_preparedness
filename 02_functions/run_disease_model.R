@@ -1,6 +1,7 @@
 
 run_disease_model <- function(simulation_days = 365,
                               vaccination_strategies = list(),
+                              vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance,
                               
                               this_inital_state = inital_state,
                               this_configure_ODEs = configure_ODEs,

@@ -76,11 +76,11 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   
 
   ### DELIVER VACCINES TO healthcare workerS
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase == "healthcare workers",-c(1)]
+  this_vaccine_acceptance <- vaccine_acceptance %>% filter(health_care_worker == TRUE)
 
   workshop_healthcare_worker_target <- healthcare_worker_target <- population %>%
     left_join(healthcare_workers, by = "age_group") %>%
-    left_join(this_vaccine_acceptance, by = "comorbidity") %>%
+    left_join(this_vaccine_acceptance, by = c("comorbidity","age_group")) %>%
     mutate(individuals = individuals * proportion * uptake) %>%
     filter(individuals != 0) %>%
     select(-uptake) %>%
@@ -137,11 +137,11 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   
   
   ### DELIVER VACCINES AS PER ALLOCATION STRATEGIES LISTED
-  this_vaccine_acceptance <- vaccine_acceptance[vaccine_acceptance$phase != "healthcare workers",-c(1)]
+  this_vaccine_acceptance <- vaccine_acceptance %>% filter(health_care_worker == FALSE)
   
   remainder_of_population_target <- population %>%
     left_join(healthcare_workers, by = "age_group") %>%
-    left_join(this_vaccine_acceptance, by = "comorbidity") %>%
+    left_join(this_vaccine_acceptance, by = c("comorbidity","age_group")) %>%
     mutate(individuals = individuals * (1-proportion) * uptake) %>%
     select(-proportion,-uptake)
   

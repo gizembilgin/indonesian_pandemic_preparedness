@@ -51,6 +51,7 @@ TOGGLE_infection_derived_immunity = 1
 
 #vaccination strategy
 TOGGLE_vaccine_derived_immunity = 0.8
+TOGGLE_vaccine_acceptance_overwrite = data.frame()
 TOGGLE_vaccination_strategy = list(vaccine_delivery_start_date = 100, #NB: COVID-19 was closer to 365
                                    supply = c(0.1,0.2,0.3,0.4), #list all supply scenarios
                                    rollout_modifier = 1,
@@ -78,6 +79,7 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
   if ("rollout_modifier" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier
   if ("daily_vaccine_delivery_realistic" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic
   if ("strategy" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$strategy = FLEET_ADMIRAL_OVERRIDE$strategy
+  if ("vaccine_acceptance" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_acceptance_overwrite = FLEET_ADMIRAL_OVERRIDE$vaccine_acceptance
   if ("vaccine_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity
 }
 
@@ -89,7 +91,8 @@ TOGGLE_vaccination_strategy$vaccine_delivery_start_date <- TOGGLE_vaccination_st
 
 ### Run model            
 ################################################################################
-loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
+loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting,
+                                               vaccine_acceptance_overwrite = TOGGLE_vaccine_acceptance_overwrite)
 
 inital_state <- configure_inital_state(
   #average_symptomatic_period = TOGGLE_average_symptomatic_period,
@@ -122,6 +125,7 @@ parameters = list(
 workshop <- run_disease_model(
  simulation_days = TOGGLE_simulation_days,
  vaccination_strategies = TOGGLE_vaccination_strategy,
+ vaccine_acceptance = loaded_setting_characteristics$vaccine_acceptance,
  this_inital_state = inital_state,
  this_configure_ODEs = configure_ODEs,
  this_parameters = parameters,
