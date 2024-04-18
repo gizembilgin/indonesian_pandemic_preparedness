@@ -27,4 +27,12 @@ save(presentations_to_care, file = "01_inputs/presentations_to_care.Rdata")
 
 ggplot(presentations_to_care) + 
   geom_col(aes(age_group,proportion))
+
+presentations_to_care %>%
+  left_join(population, by = "age_group") %>%
+  mutate(interim = individuals/sum(individuals),
+         interim = proportion * interim) %>%
+  summarise(presentation_ratio = sum(interim)) %>%
+  arrange(presentation_ratio)
+#0.385
 rm(presentations_to_care)

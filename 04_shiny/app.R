@@ -305,6 +305,7 @@ server <- function(input, output, session) {
          default_configuration =
            list(
              R0 = as.numeric(input$R0),
+             detection_outcome = input$detection_outcome,
              outcome_threshold = as.numeric(input$outcome_threshold),
              gen_interval = as.numeric(input$gen_interval), 
              IR_outcome = as.numeric(input$IR_outcome),  

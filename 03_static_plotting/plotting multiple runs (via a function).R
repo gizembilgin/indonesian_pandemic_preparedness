@@ -25,6 +25,7 @@ plot_simulations (
         outcome_threshold = 2, # threshold number of this outcome for detection
         gen_interval = 7,      # generation interval (days)
         IR_outcome = 0.01,     # incidence rate for this outcome
+        detection_outcome = "deaths",
         develop_outcome = 14,  # time to developing outcome (days)
         vaccine_delivery_start_date = 100,
         phase = c(
@@ -70,6 +71,7 @@ plot_simulations (
       outcome_threshold = 2, # threshold number of this outcome for detection
       gen_interval = 7,      # generation interval (days)
       IR_outcome = 0.5,     # incidence rate for this outcome
+      detection_outcome = "deaths",
       develop_outcome = 7,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase = c(
@@ -107,6 +109,7 @@ plot_simulations (
       outcome_threshold = 2, # threshold number of this outcome for detection
       gen_interval = 7,      # generation interval (days)
       IR_outcome = 0.01,     # incidence rate for this outcome
+      detection_outcome = "deaths",
       develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       phase =  c( #"older adults followed by all adults",
@@ -145,6 +148,7 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      detection_outcome = "deaths",
       outcome_threshold = 2, # threshold number of this outcome for detection
       gen_interval = 7,      # generation interval (days)
       IR_outcome = 0.01,     # incidence rate for this outcome
@@ -189,6 +193,7 @@ plot_simulations (
   default_configuration =
     list(
       R0 = 2,
+      detection_outcome = "deaths",
       outcome_threshold = 2, # threshold number of this outcome for detection
       gen_interval = 7,      # generation interval (days)
       IR_outcome = 0.01,     # incidence rate for this outcome

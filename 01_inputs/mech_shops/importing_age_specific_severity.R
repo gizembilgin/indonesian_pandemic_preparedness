@@ -77,12 +77,13 @@ save(age_specific_severity_MASTER, file = "01_inputs/age_specific_severity_MASTE
 ### CHECK applied ##############################################################
 #Option 1: specify pt est and age dn
 project_deaths(
-  point_estimate =  0.05/100,
-  age_distribution = data.frame(age_group = age_group_labels,
-                                relative_risk = c(0.1, 0.5, 1.4, 2.7, 10.4)), 
-  VE = 0,
-  comorb_increased_risk = 1,
-  this_incidence_log_tidy = incidence_log_tidy,
+  TOGGLES_project_deaths = list(
+    point_estimate =  0.05/100,
+    age_distribution = data.frame(age_group = age_group_labels,
+                                  relative_risk = c(0.1, 0.5, 1.4, 2.7, 10.4)), 
+    VE_death = 0,
+    comorb_increased_risk = 1
+  ),
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
@@ -92,11 +93,12 @@ project_deaths(
 
 #Option 2: specify pt est and select age dn
 project_deaths(
-  point_estimate =  0.05/100,
-  age_distribution = "Plague", 
-  VE = 0,
-  comorb_increased_risk = 1,
-  this_incidence_log_tidy = incidence_log_tidy,
+  TOGGLES_project_deaths = list(
+    point_estimate =  0.05/100,
+    age_distribution = "Plague", 
+    VE_death = 0,
+    comorb_increased_risk = 1
+  ),
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
@@ -106,11 +108,12 @@ project_deaths(
 
 #Option 3: select severity profile of a known pathogen
 project_deaths(
-  point_estimate =  NA,
-  age_distribution = "Plague", 
-  VE = 0,
-  comorb_increased_risk = 1,
-  this_incidence_log_tidy = incidence_log_tidy,
+  TOGGLES_project_deaths = list(
+    point_estimate =  NA,
+    age_distribution = "Plague", 
+    VE_death = 0,
+    comorb_increased_risk = 1
+  ),
   this_pop = loaded_setting_characteristics$population,
   return_severity = TRUE
 ) %>%
@@ -138,15 +141,15 @@ project_deaths(
 
 
 ### CHECK pop-level severity estimates
-# age_specific_severity_MASTER %>%
-#   filter(name_english == "Indonesia") %>%
-#   select(-name_english,-name_indonesian,-statistic) %>%
-#   left_join(population, by = "age_group") %>%
-#   group_by(pathogen) %>%
-#   mutate(proportion = individuals/sum(individuals),
-#          interim = infection_fatality_ratio * proportion) %>%
-#   summarise(infection_fatality_ratio = sum(interim)) %>%
-#   arrange(infection_fatality_ratio)
+age_specific_severity_MASTER %>%
+  filter(name_english == "Indonesia") %>%
+  select(-name_english,-name_indonesian,-statistic) %>%
+  left_join(population, by = "age_group") %>%
+  group_by(pathogen) %>%
+  mutate(proportion = individuals/sum(individuals),
+         interim = infection_fatality_ratio * proportion) %>%
+  summarise(infection_fatality_ratio = sum(interim)) %>%
+  arrange(infection_fatality_ratio)
 
 # pathogen       infection_fatality_ratio
 # 1 COVID-19 WT                0.0124

@@ -10,6 +10,7 @@ plot_simulations <- function(
         # time to detection variables
         setting = "Indonesia",
         R0 = 2,            # basic reproduction number
+        detection_outcome = "deaths",
         outcome_threshold = 2, # threshold number of this outcome for detection
         gen_interval = 7,      # generation interval (days)
         IR_outcome = 0.01,     # incidence rate for this outcome
@@ -91,14 +92,21 @@ plot_simulations <- function(
     ROUND_days_to_detection = 1
     
     # calculate days to detection
+    
     workshop = crossing(
-      outcome_threshold = as.numeric(this_configuration$outcome_threshold),
-      gen_interval = as.numeric(this_configuration$gen_interval),
-      IR_outcome = as.numeric(this_configuration$IR_outcome),
-      develop_outcome = as.numeric(this_configuration$develop_outcome),
-      R0 = as.numeric(this_configuration$R0)
+      this_outcome = this_configuration$detection_outcome,
+      this_outcome_threshold = this_configuration$outcome_threshold,
+      this_gen_interval = this_configuration$gen_interval,
+      this_IR_outcome = this_configuration$IR_outcome,
+      this_develop_outcome = this_configuration$develop_outcome,
+      this_R0 = R0_to_fit
     ) %>%
-      mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
+      mutate(days_to_detection = estimate_days_to_detection(outcome = this_outcome,
+                                                            outcome_threshold = this_outcome_threshold,
+                                                            gen_interval = this_gen_interval,
+                                                            IR_outcome = this_IR_outcome,
+                                                            develop_outcome = this_develop_outcome,
+                                                            R0 = this_R0),
              days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
       select(days_to_detection,R0)
     this_configuration$days_to_detection <- workshop

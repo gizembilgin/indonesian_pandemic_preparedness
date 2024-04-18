@@ -13,6 +13,7 @@ generate_simulations <- function(
       phase = c("uniform", "step up", "step down"),
       daily_vaccine_delivery_realistic = FALSE,
       
+      detection_outcome = "deaths",
       outcome_threshold = 2,
       gen_interval = 7,
       develop_outcome = 14,
@@ -80,13 +81,19 @@ generate_simulations <- function(
         for (R0_to_fit in this_configuration$R0){
           
           days_to_detection_df = crossing(
-            outcome_threshold = this_configuration$outcome_threshold,
-            gen_interval = this_configuration$gen_interval,
-            IR_outcome = this_configuration$IR_outcome,
-            develop_outcome = this_configuration$develop_outcome,
-            R0 = R0_to_fit
+            this_outcome = this_configuration$detection_outcome,
+            this_outcome_threshold = this_configuration$outcome_threshold,
+            this_gen_interval = this_configuration$gen_interval,
+            this_IR_outcome = this_configuration$IR_outcome,
+            this_develop_outcome = this_configuration$develop_outcome,
+            this_R0 = R0_to_fit
           ) %>%
-            mutate(days_to_detection = estimate_days_to_detection(outcome_threshold,gen_interval,IR_outcome,develop_outcome,R0),
+            mutate(days_to_detection = estimate_days_to_detection(outcome = this_outcome,
+                                                                  outcome_threshold = this_outcome_threshold,
+                                                                  gen_interval = this_gen_interval,
+                                                                  IR_outcome = this_IR_outcome,
+                                                                  develop_outcome = this_develop_outcome,
+                                                                  R0 = this_R0),
                    #days_to_detection = round(days_to_detection)) %>%
                    days_to_detection = round(days_to_detection/ROUND_days_to_detection)*ROUND_days_to_detection) %>%
             arrange(days_to_detection)

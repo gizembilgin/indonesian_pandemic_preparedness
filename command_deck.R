@@ -22,7 +22,8 @@ TOGGLE_average_exposed_period = 7
 
 #simulation configuration
 TOGGLE_simulation_days = 365 #scope of analysis to one year + assume detected within a year of introduction
-TOGGLE_days_to_detection = estimate_days_to_detection(outcome_threshold = 2,
+TOGGLE_days_to_detection = estimate_days_to_detection(outcome = "deaths",
+                                                      outcome_threshold = 2,
                                                       gen_interval = TOGGLE_average_symptomatic_period,
                                                       IR_outcome = 0.01, #dummy flu-like set up
                                                       develop_outcome = TOGGLE_average_symptomatic_period,
