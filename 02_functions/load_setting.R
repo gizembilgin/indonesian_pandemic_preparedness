@@ -2,7 +2,8 @@
 
 load_setting <- function(include_comorbidity = FALSE,
                          this_setting = "Indonesia",
-                         age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110")) {
+                         age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
+                         vaccine_acceptance_overwrite = data.frame()) {
   
   ### IMPORT
   #(1/8) age-structure
@@ -62,12 +63,23 @@ load_setting <- function(include_comorbidity = FALSE,
   daily_vaccine_delivery$capacity = daily_vaccine_delivery$capacity*sum(population$individuals)
   
   
-  #(5/8) vaccine_acceptance (DUMMY VALUE) - COVID-19 vaccination data
-  vaccine_acceptance = data.frame(phase = c(rep("healthcare workers",2),rep("vaccination strategy",2)),
-                                  comorbidity = rep(c(FALSE,TRUE),2),
-                                  uptake = c(0.95,0.95,0.9,0.95))
-  
-  
+  #(5/8) vaccine_acceptance - COVID-19 vaccination data
+  vaccine_acceptance = crossing(health_care_worker = c(TRUE,FALSE),
+                                comorbidity = c(TRUE,FALSE),
+                                age_group = age_group_labels) %>%
+    mutate(uptake = case_when(
+      health_care_worker == TRUE ~ 0.98,
+      TRUE ~ 0.85
+    ))
+  if (nrow(vaccine_acceptance_overwrite)>0){
+    vaccine_acceptance <- vaccine_acceptance %>% 
+      left_join(vaccine_acceptance_overwrite, by = "age_group") %>%
+      mutate(uptake = case_when(
+        health_care_worker == FALSE ~ overwrite,
+        TRUE ~ uptake
+      ))
+  }
+
   #(6/8) % comorb 
   #NB: currently value from Clark et al. (2020, https://doi.org/10.1016/s2214-109x(20)30264-3) but a 
   #    better estimate could be taken from the  Basic Health Survey 2024 once that is released
