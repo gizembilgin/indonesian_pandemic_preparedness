@@ -29,10 +29,10 @@ estimate_days_to_detection <- function (
 # = 68 days
 
 # application to Ebola
-# estimate_days_to_detection(outcome_threshold = 2, 
-#                   gen_interval = 15,      
-#                   IR_outcome = 0.377,       
-#                   develop_outcome = 8,  
+# estimate_days_to_detection(outcome_threshold = 2,
+#                   gen_interval = 15,
+#                   IR_outcome = 0.377,
+#                   develop_outcome = 8,
 #                   R0 = 1.95)
 # = 60 days
 

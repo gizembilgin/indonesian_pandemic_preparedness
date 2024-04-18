@@ -169,9 +169,11 @@ ui <- page_sidebar(
   verbatimTextOutput ("test"),
   textOutput("test2"),
   textOutput("WARNING_no_plot"),
+  
   plotOutput("OUTPUT_plot", height = "800px"),
+  uiOutput("days_to_detection_statistic"),
   actionButton(inputId = "update_plot",
-               label = "Update plot")
+               label = "Update plot"),
 
 )
 ################################################################################
@@ -213,6 +215,29 @@ server <- function(input, output, session) {
   output$SWITCH_plot_dimensions <- renderUI({
     if(select_var(1)[[1]] != "R0" & length(count_plot_dimensions())>1) make_prettySwitch("switch_plot_dimensions","switch plot dimensions", default = FALSE)
   })
+  output$days_to_detection_statistic <- renderUI({
+    if (
+      is.null(input$detection_outcome) == FALSE &
+      is.null(input$R0) == FALSE &
+      is.null(input$outcome_threshold) == FALSE &
+      is.null(input$gen_interval) == FALSE &
+      is.null(input$IR_outcome) == FALSE &
+      is.null(input$develop_outcome) == FALSE){
+      
+      value_box(
+        title = "Days to detection of novel pathogen",
+        value = estimate_days_to_detection(outcome = input$detection_outcome,
+                                           outcome_threshold = as.numeric(input$outcome_threshold),
+                                           gen_interval = as.numeric(input$gen_interval), 
+                                           IR_outcome = as.numeric(input$IR_outcome),  
+                                           develop_outcome = as.numeric(input$develop_outcome),
+                                           R0 = as.numeric(input$R0)),
+        showcase = bsicons::bs_icon("stopwatch"),
+        width = 0.3
+      )
+    }
+  })
+
   
   #call_waiter: creates spinner while waiting for plot to load
   call_waiter <- function(this_output){
