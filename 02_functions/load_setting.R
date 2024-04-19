@@ -6,7 +6,7 @@ load_setting <- function(include_comorbidity = FALSE,
                          vaccine_acceptance_overwrite = data.frame()) {
   
   ### IMPORT
-  #(1/8) age-structure
+  #(1/6) age-structure
   load(paste0(gsub("/04_shiny","",getwd()),"/01_inputs/population_MASTER.Rdata"))
   if (! this_setting %in% unique(population_MASTER$name_english) || ! this_setting %in% unique(population_MASTER$name_indonesian)){  
     stop("this_setting does not exist in population_MASTER")
@@ -22,7 +22,7 @@ load_setting <- function(include_comorbidity = FALSE,
   rm(population_MASTER)
   
   
-  #(2/8) contact patterns
+  #(2/6) contact patterns
   load(paste0(gsub("/04_shiny","",getwd()),"/01_inputs/contact_matrix_MASTER.Rdata"))
   contact_matrix <- contact_matrix_MASTER %>%
     filter(name_english == this_setting | name_indonesian == this_setting) %>%
@@ -43,7 +43,7 @@ load_setting <- function(include_comorbidity = FALSE,
   contact_matrix <- as.matrix(workshop[,-c(1)])
   
   
-  #(3/8) % of healthcare workers - COVID-19 vaccination data
+  #(3/6) % of healthcare workers - COVID-19 vaccination data
   #2 million doses delivered to healthcare workers during the first prioritised stage of the Indonesian COVID-19 vaccine rollout
   #NB: Assuming healthcare workers all 18 to 59, and uniformly distributed
   healthcare_workers <- 2046639/indonesia_population_numeric #% of population
@@ -63,7 +63,7 @@ load_setting <- function(include_comorbidity = FALSE,
   daily_vaccine_delivery$capacity = daily_vaccine_delivery$capacity*sum(population$individuals)
   
   
-  #(5/8) vaccine_acceptance - COVID-19 vaccination data
+  #(5/6) vaccine_acceptance - COVID-19 vaccination data
   vaccine_acceptance = crossing(health_care_worker = c(TRUE,FALSE),
                                 comorbidity = c(TRUE,FALSE),
                                 age_group = age_group_labels) %>%
@@ -81,7 +81,7 @@ load_setting <- function(include_comorbidity = FALSE,
       select(-overwrite)
   }
 
-  #(6/8) % comorb 
+  #(6/6) % comorb 
   #NB: currently value from Clark et al. (2020, https://doi.org/10.1016/s2214-109x(20)30264-3) but a 
   #    better estimate could be taken from the  Basic Health Survey 2024 once that is released
   if (include_comorbidity == TRUE){
@@ -104,22 +104,12 @@ load_setting <- function(include_comorbidity = FALSE,
   }
   
   
-  #(7/8) access to care (DUMMY VALUE) - Basic Health Survey, seroprevalence, OR health facilities research
-  access_to_care <- crossing(age_group = age_group_labels,
-                             proportion = 0.8)
-  
-  
-  #(8/8) modification on R0 based on province - seroprevalence survey
-  R0_adjustement = 1
-  
   
   loaded_setting_characteristics <- list(population = population,
                                          contact_matrix = contact_matrix,
                                          healthcare_workers = healthcare_workers,
                                          daily_vaccine_delivery = daily_vaccine_delivery,
-                                         vaccine_acceptance = vaccine_acceptance,
-                                         access_to_care = access_to_care,
-                                         R0_adjustement = R0_adjustement)
+                                         vaccine_acceptance = vaccine_acceptance)
   
   return(loaded_setting_characteristics)
   
