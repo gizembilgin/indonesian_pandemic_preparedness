@@ -96,7 +96,9 @@ vaccination_strategy_inputs <- list(
                             CHOICES$vaccine_delivery_start_date, 100),
   make_checkboxGroupButtons("supply", "Vaccine supply (% population):", CHOICES$supply, 0.2),
   make_checkboxGroupButtons("rollout_modifier", "Rollout speed:", CHOICES$rollout_modifier, 1),
-  make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE)
+  make_prettySwitch("daily_vaccine_delivery_realistic","gradual increase (mirroring COVID-19)", default = FALSE),
+  make_prettySwitch("manually_specify_vaccine_acceptance","manually specify vaccine acceptance", default = FALSE),
+  uiOutput("vaccine_acceptance_overwrite")
 )
 
 pathogen_detection_inputs <- list(
@@ -123,7 +125,6 @@ plot_configuration_inputs <- list(
   make_prettySwitch("display_age_proportion_on_severity_curve", "age proportions on severity curve", default = FALSE ),
   make_prettySwitch("display_vaccine_availability", "dashed line of vaccine availability" ),
   make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery"),
-  #make_prettySwitch("colour_healthcare_workers_phase","colour healthcare worker delivery"),
   uiOutput("SWITCH_plot_dimensions")
 )
 ################################################################################
@@ -167,7 +168,7 @@ ui <- page_sidebar(
   waiter::useWaiter(),
   
   verbatimTextOutput ("test"),
-  textOutput("test2"),
+  tableOutput("test2"),
   textOutput("WARNING_no_plot"),
   
   plotOutput("OUTPUT_plot", height = "800px"),
@@ -185,20 +186,12 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   
  # output$test <- renderText ({
- #   indicator_plot_ready
+ #   nrow(vaccine_acceptance_overwrite_REACTIVE())>0
+ #   exists("vaccine_acceptance_overwrite_REACTIVE")
  #   })
- output$test2 <- renderText ({
-   # paste(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),is.numeric))
-   # paste(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome)
-   # paste(sapply(sapply(c(input$R0, input$outcome_threshold,input$gen_interval,input$IR_outcome,input$develop_outcome),as.numeric),is.numeric))
-   # estimate_days_to_detection (
-   #   as.numeric(input$outcome_threshold), # threshold number of this outcome for detection
-   #   as.numeric(input$gen_interval),      # generation interval (days)
-   #   as.numeric(input$IR_outcome),        # incidence rate for this outcome
-   #   as.numeric(input$develop_outcome),   # time to developing outcome (days)
-   #   as.numeric(input$R0)                # basic reproduction number
-   # )
- })
+ # output$test2 <- renderTable ({
+ #   vaccine_acceptance_overwrite_REACTIVE()
+ # })
   
   
   ### Conditional UI components
@@ -222,7 +215,8 @@ server <- function(input, output, session) {
       is.null(input$outcome_threshold) == FALSE &
       is.null(input$gen_interval) == FALSE &
       is.null(input$IR_outcome) == FALSE &
-      is.null(input$develop_outcome) == FALSE){
+      is.null(input$develop_outcome) == FALSE &
+      length(input$R0) == 1){
       
       value_box(
         title = "Days to detection of novel pathogen",
@@ -237,7 +231,39 @@ server <- function(input, output, session) {
       )
     }
   })
+  output$vaccine_acceptance_overwrite <- renderUI({
+    if (input$manually_specify_vaccine_acceptance){
+      list(
+        h6("Vaccine acceptance by age group:"),
+        numericInput(inputId = "vaccine_acceptance_0_4", label = "0 to 4", value = 0.85, min = 0, max = 1),
+        numericInput(inputId = "vaccine_acceptance_5_17", label = "5 to 17", value = 0.85, min = 0, max = 1),
+        numericInput(inputId = "vaccine_acceptance_18_29", label = "18 to 29", value = 0.85, min = 0, max = 1),
+        numericInput(inputId = "vaccine_acceptance_30_59", label = "30 to 59", value = 0.85, min = 0, max = 1),
+        numericInput(inputId = "vaccine_acceptance_60_110", label = "60 to 110", value = 0.85, min = 0, max = 1)       
+      )
 
+    }
+  })
+
+  vaccine_acceptance_overwrite_REACTIVE <- reactive({
+    if (input$manually_specify_vaccine_acceptance & 
+        is.null(input$vaccine_acceptance_0_4) == FALSE &
+        is.null(input$vaccine_acceptance_5_17) == FALSE &
+        is.null(input$vaccine_acceptance_18_29) == FALSE &
+        is.null(input$vaccine_acceptance_30_59) == FALSE &
+        is.null(input$vaccine_acceptance_60_110) == FALSE){
+      data.frame(age_group =  c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
+                 overwrite = c(
+                   input$vaccine_acceptance_0_4,
+                   input$vaccine_acceptance_5_17,
+                   input$vaccine_acceptance_18_29,
+                   input$vaccine_acceptance_30_59,
+                   input$vaccine_acceptance_60_110
+                 ))
+    } else{
+      data.frame()
+    }
+  })
   
   #call_waiter: creates spinner while waiting for plot to load
   call_waiter <- function(this_output){
@@ -299,6 +325,8 @@ server <- function(input, output, session) {
           is.character(input$deaths_age_distribution) &
           is.numeric(input$deaths_VE)
         )) &
+       exists("vaccine_acceptance_overwrite_REACTIVE") &
+       is.null(input$manually_specify_vaccine_acceptance) == FALSE & 
        is.null(input$R0) == FALSE &
        is.null(input$outcome_threshold) == FALSE &
        is.null(input$gen_interval) == FALSE &
@@ -335,6 +363,7 @@ server <- function(input, output, session) {
              gen_interval = as.numeric(input$gen_interval), 
              IR_outcome = as.numeric(input$IR_outcome),  
              develop_outcome = as.numeric(input$develop_outcome), 
+             vaccine_acceptance_overwrite = vaccine_acceptance_overwrite_REACTIVE(),
              vaccine_delivery_start_date = as.numeric(input$vaccine_delivery_start_date),
              phase = c(input$vaccination_strategies,"healthcare workers", "no vaccine"),
              supply = as.numeric(input$supply),
