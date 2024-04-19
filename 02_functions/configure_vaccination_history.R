@@ -363,23 +363,26 @@ configure_vaccination_history <- function(LIST_vaccination_strategies = list(),
   vaccination_history_permutations <- bind_rows(healthcare_worker_delivery,target_population_delivery)
   
   #CHECK: never deliver more doses than individuals
-  for (this_phase in unique(vaccination_history_permutations$phase)){
-    for (this_supply in unique(vaccination_history_permutations$supply)){
-      
-      check <- vaccination_history_permutations %>% 
-        filter(phase %in% c(this_phase,"healthcare workers") &
-                 (supply == this_supply | is.na(supply))) %>%
-        group_by(age_group,comorbidity) %>%
-        summarise(doses_delivered = sum(doses_delivered), .groups = "keep") %>%
-        left_join(population, by = c("age_group","comorbidity")) %>%
-        filter(individuals < doses_delivered)
-      
-      if (nrow(check)>0){stop(paste("too many doses delivered to some combination of", 
-                                    unique(check$age_group),
-                                    "with",
-                                    unique(check$comorbidity)))}
+  if (length(unique(vaccination_history_permutations$phase))>1){
+    for (this_phase in unique(vaccination_history_permutations$phase)){
+      for (this_supply in unique(vaccination_history_permutations$supply)){
+        
+        check <- vaccination_history_permutations %>% 
+          filter(phase %in% c(this_phase,"healthcare workers") &
+                   (supply == this_supply | is.na(supply))) %>%
+          group_by(age_group,comorbidity) %>%
+          summarise(doses_delivered = sum(doses_delivered), .groups = "keep") %>%
+          left_join(population, by = c("age_group","comorbidity")) %>%
+          filter(individuals < doses_delivered)
+        
+        if (nrow(check)>0){stop(paste("too many doses delivered to some combination of", 
+                                      unique(check$age_group),
+                                      "with",
+                                      unique(check$comorbidity)))}
+      }
     }
   }
+
   
   #CHECK: no gap day
   if (length(unique(vaccination_history_permutations$time)) !=
