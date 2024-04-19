@@ -10,6 +10,7 @@ run_disease_model <- function(simulation_days = 365,
   
   
   workshop <- configure_vaccination_history(LIST_vaccination_strategies = vaccination_strategies,
+                                            vaccine_acceptance = vaccine_acceptance,
                                             time_horizon = simulation_days)
   vaccination_history <- workshop$vaccination_history
   indicator_delivery_within_time_horizon <- workshop$indicator_delivery_within_time_horizon

@@ -17,6 +17,7 @@ plot_simulations <- function(
         develop_outcome = 14,  # time to developing outcome (days)
         # vaccine program variables
         vaccine_delivery_start_date = 100,
+        vaccine_acceptance_overwrite = data.frame(),
         phase = c(
           "older adults followed by all adults",
           "adults then children",               

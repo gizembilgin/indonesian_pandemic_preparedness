@@ -8,6 +8,7 @@ generate_simulations <- function(
       
       vaccine_derived_immunity = 1,
       vaccine_delivery_start_date = 100,
+      vaccine_acceptance_overwrite = data.frame(),
       supply = 0.2,
       rollout_modifier = 1,
       phase = c("uniform", "step up", "step down"),
@@ -110,6 +111,7 @@ generate_simulations <- function(
                   setting = this_configuration$setting,
                   days_to_detection = days_to_detection,
                   vaccine_delivery_start_date = vaccine_delivery_start_date,
+                  vaccine_acceptance_overwrite = this_configuration$vaccine_acceptance_overwrite,
                   
                   R0 = R0_to_fit,
                   infection_derived_immunity = infection_derived_immunity,

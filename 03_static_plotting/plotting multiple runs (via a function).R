@@ -1,7 +1,7 @@
 #Functional plotting for multiple runs of the command_deck (e.g., fleet_admiral)
 
 ### SETUP
-require(tidyverse); require(ggpubr)
+require(tidyverse); require(ggpubr);require(shiny)
 options(scipen = 1000)
 #rm(list = ls())
 TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
@@ -74,6 +74,9 @@ plot_simulations (
       detection_outcome = "deaths",
       develop_outcome = 7,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
+      # vaccine_acceptance_overwrite = data.frame(age_group =  c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
+      #                                           overwrite = rep(0.01,5)),
+      vaccine_acceptance_overwrite = data.frame(),
       phase = c(
         "uniform",
         "healthcare workers",
@@ -84,7 +87,7 @@ plot_simulations (
       rollout_modifier = 1,
       vaccine_derived_immunity = 1
     ),
-  simulations_source = "load", #load simulations for each run
+  simulations_source = "generate", #load simulations for each run
   #options: 0 (no), 1 (yes)
   colour_healthcare_workers_phase = 0,
   display_var_1 = 0,

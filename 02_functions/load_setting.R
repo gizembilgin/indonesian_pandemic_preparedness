@@ -77,7 +77,8 @@ load_setting <- function(include_comorbidity = FALSE,
       mutate(uptake = case_when(
         health_care_worker == FALSE ~ overwrite,
         TRUE ~ uptake
-      ))
+      )) %>%
+      select(-overwrite)
   }
 
   #(6/8) % comorb 
