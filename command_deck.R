@@ -79,12 +79,13 @@ if (exists("FLEET_ADMIRAL_OVERRIDE")){
   if ("rollout_modifier" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$rollout_modifier = FLEET_ADMIRAL_OVERRIDE$rollout_modifier
   if ("daily_vaccine_delivery_realistic" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$daily_vaccine_delivery_realistic = FLEET_ADMIRAL_OVERRIDE$daily_vaccine_delivery_realistic
   if ("strategy" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccination_strategy$strategy = FLEET_ADMIRAL_OVERRIDE$strategy
-  if ("vaccine_acceptance" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_acceptance_overwrite = FLEET_ADMIRAL_OVERRIDE$vaccine_acceptance
+  if ("vaccine_acceptance_overwrite" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_acceptance_overwrite = FLEET_ADMIRAL_OVERRIDE$vaccine_acceptance_overwrite
   if ("vaccine_derived_immunity" %in% names(FLEET_ADMIRAL_OVERRIDE)) TOGGLE_vaccine_derived_immunity = FLEET_ADMIRAL_OVERRIDE$vaccine_derived_immunity
 }
 
 TOGGLE_simulation_days                                  <- TOGGLE_simulation_days + TOGGLE_days_to_detection
 TOGGLE_vaccination_strategy$vaccine_delivery_start_date <- TOGGLE_vaccination_strategy$vaccine_delivery_start_date + TOGGLE_days_to_detection
+if(nrow(TOGGLE_vaccine_acceptance_overwrite)>0){if (sum(TOGGLE_vaccine_acceptance_overwrite$overwrite) == 0){stop("Please set vaccine uptake to a non-zero value!")}} 
 #_______________________________________________________________________________
 
 
