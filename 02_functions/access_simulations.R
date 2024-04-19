@@ -101,7 +101,7 @@ access_simulations <- function(
             ungroup() %>%
             select(n) %>%
             unique()
-          if (nrow(check)>1){stop("fleet_admiral: next_supply_times has unequal entries across phases")}
+          if (nrow(check)>1){stop("access_simulations: next_supply_times has unequal entries across phases")}
           next_supply_times = next_supply_times %>%
             ungroup() %>%
             select(time) %>%
@@ -167,7 +167,7 @@ access_simulations <- function(
     group_by(phase,supply,comorbidity,vaccination_status,age_group,setting,vaccine_delivery_start_date,R0,infection_derived_immunity,rollout_modifier,vaccine_derived_immunity) %>% 
     summarise(n=n(), .groups = "keep") %>%
     filter(n != max(this_ship_log_completed$time))
-  if (nrow(check)>1){stop("fleet_admiral: not all phase-supply-etc. scenarios have 365 days in this_ship_log_completed")}
+  if (nrow(check)>1){stop("access_simulations: not all phase-supply-etc. scenarios have 365 days in this_ship_log_completed")}
   rm(this_ship_log,additional_rows,this_before_strategy,before_strategy_contribution, this_workshop)
   
   if ("supply" %in% names(this_configuration)){#NB: couldn't remove earlier as needed to reconstruct the cascade
