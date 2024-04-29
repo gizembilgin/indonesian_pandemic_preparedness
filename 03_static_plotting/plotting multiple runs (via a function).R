@@ -32,8 +32,8 @@ plot_simulations (
           #"older adults followed by all adults",
           #"adults then children",               
           #"children then adults",                
-          "step up",                            
-          "step down",                           
+          "youngest to oldest",                            
+          "oldest to youngest",                           
           "uniform", 
           "healthcare workers",
           "no vaccine"
@@ -118,8 +118,8 @@ plot_simulations (
       phase =  c( #"older adults followed by all adults",
                   #"adults then children",               
                   #"children then adults",                
-                  "step up",                            
-                  "step down",                           
+                  "youngest to oldest",                            
+                  "oldest to youngest",                           
                   "uniform", 
                   "healthcare workers",
                   "no vaccine" ),
@@ -186,7 +186,7 @@ plot_simulations (
   this_outcome = "deaths",    #options: infections, deaths
   TOGGLES_project_deaths = list(
     point_estimate =  1 / 100,
-    age_distribution = c("SARS", "Plague", "Diptheria"),
+    age_distribution = c("Plague", "Diptheria","COVID-19 WT","Influenza 1918"),
     VE_death = 1,
     comorb_increased_risk = 1
   ),
@@ -202,9 +202,10 @@ plot_simulations (
       IR_outcome = 0.01,     # incidence rate for this outcome
       develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
+      vaccine_acceptance_overwrite = data.frame(),
       phase =  c(
-        "step up",                            
-        "step down",                           
+        "youngest to oldest",                            
+        "oldest to youngest", 
         "uniform" ,
         "healthcare workers",
         "no vaccine" ),

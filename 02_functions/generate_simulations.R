@@ -11,7 +11,7 @@ generate_simulations <- function(
       vaccine_acceptance_overwrite = data.frame(),
       supply = 0.2,
       rollout_modifier = 1,
-      phase = c("uniform", "step up", "step down"),
+      phase = c("uniform", "youngest to oldest", "oldest to youngest"),
       daily_vaccine_delivery_realistic = FALSE,
       
       detection_outcome = "deaths",
@@ -55,18 +55,18 @@ generate_simulations <- function(
            list(c("0 to 4", "5 to 17")),
            list(c("18 to 29", "30 to 59", "60 to 110")))
   }
-  if ("step up" %in% this_configuration$phase) {
+  if ("youngest to oldest" %in% this_configuration$phase) {
     LIST_strategy[[length(LIST_strategy)+1]] <- 
-      list("step up",
+      list("youngest to oldest",
                 list(c("0 to 4")),
                 list(c("5 to 17")),
                 list(c("18 to 29")),
                 list(c("30 to 59")),
                 list(c("60 to 110")))
   }
-  if ("step down" %in% this_configuration$phase) { 
+  if ("oldest to youngest" %in% this_configuration$phase) { 
     LIST_strategy[[length(LIST_strategy)+1]] <- 
-      list("step down",
+      list("oldest to youngest",
            list(c("60 to 110")),
            list(c("30 to 59")),
            list(c("18 to 29")),

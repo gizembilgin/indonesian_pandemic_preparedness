@@ -22,8 +22,8 @@ plot_simulations <- function(
           "older adults followed by all adults",
           "adults then children",               
           "children then adults",                
-          "step up",                            
-          "step down",                           
+          "youngest to oldest",                            
+          "oldest to youngest",                           
           "uniform", 
           "healthcare workers",
           "no vaccine"
@@ -155,8 +155,8 @@ plot_simulations <- function(
     to_plot$phase <- factor(to_plot$phase, levels = c("older adults followed by all adults",
                                                       "children then adults" ,
                                                       "adults then children"  ,
-                                                      "step down" ,
-                                                      "step up" ,
+                                                      "oldest to youngest" ,
+                                                      "youngest to oldest" ,
                                                       "uniform",
                                                       "healthcare workers" ,
                                                       "no vaccine" ))
@@ -288,8 +288,8 @@ plot_simulations <- function(
                                "older adults followed by all adults" = "#3b94b2",
                                "adults then children" = "#76c3c4" ,              
                                "children then adults" ="#ebd829" ,               
-                               "step up" = "#e1a500",                             
-                               "step down" = "#00B0F6" ,                          
+                               "youngest to oldest" = "#e1a500",                             
+                               "oldest to youngest" = "#00B0F6" ,                          
                                "uniform"  = "#00BA38")
   if(is.na(var_2) == FALSE){
     defined_colour_palette <- defined_colour_palette[1:length(unique(to_plot_left_plot$phase))]
@@ -330,7 +330,7 @@ plot_simulations <- function(
       filter(phase != "no vaccine" &
                time == max(to_plot$time)) %>%
       select(-time,-incidence,-cumulative_incidence) %>%
-      mutate(vaccine_effect = vaccine_effect/baseline)
+      mutate(vaccine_effect = 100*vaccine_effect/baseline)
     
     if (is.na(var_2) == FALSE & length(include_strategies) == 1){
       to_plot$phase <- parse_number(as.character(to_plot$phase))
@@ -346,12 +346,14 @@ plot_simulations <- function(
     right_plot <-  ggplot(to_plot) + 
       geom_tile(aes(x=.data[[var_1]],y=phase,fill=vaccine_effect)) +
       geom_text(aes(x=.data[[var_1]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
-      scale_fill_gradientn(colours=c("white","springgreen3","forestgreen"), limits=c(0,1)) +
-      ylab("strategy") +
+      scale_fill_gradientn(colours=c("white","springgreen3","forestgreen"), limits=c(0,100)) +
+      #ylab("strategy") +
+      ylab("") + 
+      xlab("") + 
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom") +
-      scale_y_discrete(labels = label_wrap(20))
+      scale_y_discrete(labels = label_wrap(15))
        
     if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse(labels = label_wrap(20)) else right_plot <- right_plot + scale_x_discrete(labels = label_wrap(20))
     

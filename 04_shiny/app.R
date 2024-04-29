@@ -21,7 +21,7 @@ CHOICES = list(
   vaccination_strategies = 
     c("uniform",
       "older adults followed by all adults","adults then children","children then adults",
-      "step up", "step down"),
+      "youngest to oldest", "oldest to youngest"),
   R0 = seq(2,6) ,
   vaccine_delivery_start_date = c(50,100,150,200) ,
   supply = 

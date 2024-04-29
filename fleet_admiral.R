@@ -20,7 +20,7 @@ result <- generate_simulations(
     supply = c(0.2,0.5,0.8),
     daily_vaccine_delivery_realistic = c(TRUE,FALSE), #TBD if we need to run this for ALL permutations
     strategy_name = c("older adults followed by all adults","adults then children","children then adults", 
-                           "step up","step down","uniform"),
+                      "youngest to oldest", "oldest to youngest","uniform"),
 
     #parameters impacting days to detection
     outcome_threshold = c(1,2,5,10),
