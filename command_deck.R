@@ -96,6 +96,7 @@ loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting,
                                                vaccine_acceptance_overwrite = TOGGLE_vaccine_acceptance_overwrite)
 
 inital_state <- configure_inital_state(
+  population = loaded_setting_characteristics$population
   #average_symptomatic_period = TOGGLE_average_symptomatic_period,
   #average_exposed_period  = TOGGLE_average_exposed_period 
 )
@@ -105,7 +106,9 @@ fitted_beta <- fit_beta_to_R0(
   this_average_symptomatic_period = TOGGLE_average_symptomatic_period,
   this_prevalence_symptoms = TOGGLE_prevalence_symptoms,
   this_reduced_infectiousness_asymptomatic = TOGGLE_reduced_infectiousness_asymptomatic,
-  this_susceptibility = TOGGLE_susceptibility
+  this_susceptibility = TOGGLE_susceptibility,
+  this_contact_matrix = loaded_setting_characteristics$contact_matrix,
+  this_pop = loaded_setting_characteristics$population
 )
 
 parameters = list(
