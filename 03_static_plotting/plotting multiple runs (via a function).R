@@ -60,23 +60,24 @@ plot_simulations (
   var_1 = "R0",             #options:vaccine_delivery_start_date, R0, infection_derived_immunity, rollout_modifier, vaccine_derived_immunity
   var_2 = "vaccine_delivery_start_date",
   yaxis_title ="incidence", #options: incidence, cumulative_incidence, cumulative_incidence_averted
-  this_outcome = "presentations",    #options: infections, deaths,presentations
+  this_outcome = "infections",    #options: infections, deaths,presentations
   TOGGLES_project_deaths = list(),
   free_yaxis = FALSE,
-  var_1_range = c(2,3,4,5),
+  var_1_range = c(2,3,4),
   var_2_range = c(50,100,200),
   default_configuration =
     list(
       R0 = 2,
       outcome_threshold = 2, # threshold number of this outcome for detection
       gen_interval = 7,      # generation interval (days)
-      IR_outcome = 0.5,     # incidence rate for this outcome
+      IR_outcome = 0.01,     # incidence rate for this outcome
       detection_outcome = "deaths",
-      develop_outcome = 7,  # time to developing outcome (days)
+      develop_outcome = 14,  # time to developing outcome (days)
       vaccine_delivery_start_date = 100,
       # vaccine_acceptance_overwrite = data.frame(age_group =  c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
       #                                           overwrite = rep(0.01,5)),
       vaccine_acceptance_overwrite = data.frame(),
+      daily_vaccine_delivery_realistic = TRUE,
       phase = c(
         "uniform",
         "healthcare workers",
