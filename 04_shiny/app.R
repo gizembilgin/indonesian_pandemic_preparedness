@@ -6,6 +6,8 @@ options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
 load(file =  paste0(gsub("/04_shiny","",getwd()),"/01_inputs/age_specific_severity_MASTER.Rdata"))
 is_local <- Sys.getenv("SHINY_PORT") == "" #boolean of whether this shiny is being hosted locally or on posit.co
+TOGGLE_setting = "Indonesia" #options: "Indonesia" or name a province of Indonesia
+loaded_setting_characteristics <- load_setting(this_setting = TOGGLE_setting)
 ################################################################################
 
 
@@ -186,11 +188,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   
  # output$test <- renderText ({
- #   nrow(vaccine_acceptance_overwrite_REACTIVE())>0
- #   exists("vaccine_acceptance_overwrite_REACTIVE")
+ #   
+ #   paste(input$this_outcome,
+ #         is.null(input$IR_outcome),
+ #         is.null(input$deaths_age_distribution),
+ #         is.null(input$deaths_VE))
+ #   
+ #   paste(input$this_outcome,
+ #         input$IR_outcome,
+ #         input$deaths_age_distribution,
+ #         input$deaths_VE)
+ # 
  #   })
  # output$test2 <- renderTable ({
- #   vaccine_acceptance_overwrite_REACTIVE()
+ #   data.frame(names(input)) %>% arrange()
  # })
   
   
@@ -320,11 +331,7 @@ server <- function(input, output, session) {
   }
   #call_plot: calls the plotting function after checking all required inputs provided
   call_plot <- function(){
-   if ((input$this_outcome %in% c("presentations","infections") |
-        (
-          is.character(input$deaths_age_distribution) &
-          is.numeric(input$deaths_VE)
-        )) &
+   if (
        exists("vaccine_acceptance_overwrite_REACTIVE") &
        is.null(input$manually_specify_vaccine_acceptance) == FALSE & 
        is.null(input$R0) == FALSE &
@@ -338,13 +345,20 @@ server <- function(input, output, session) {
        is.null(input$rollout_modifier) == FALSE &
        is.null(input$vaccine_derived_immunity) == FALSE) {
      
-     this_TOGGLES_project_deaths <- list(
-       point_estimate =  as.numeric(input$IR_outcome),
-       age_distribution = input$deaths_age_distribution,
-       VE_death =  as.numeric(input$deaths_VE),
-       comorb_increased_risk = 1
-     )
-     if (input$this_outcome %in% c("presentations","infections")) this_TOGGLES_project_deaths <- list()
+     if(input$this_outcome == "deaths"){
+       if (is.null(input$IR_outcome) == FALSE &
+           is.null(input$deaths_age_distribution) == FALSE &
+           is.null(input$deaths_VE) == FALSE) {
+         this_TOGGLES_project_deaths <- list(
+           point_estimate =  as.numeric(input$IR_outcome),
+           age_distribution = input$deaths_age_distribution,
+           VE_death =  as.numeric(input$deaths_VE),
+           comorb_increased_risk = 1
+         )
+       }
+     } else{
+       this_TOGGLES_project_deaths <- list()
+     }
      
      withProgress(message = "running underlying simulations",{
        plot_simulations(
