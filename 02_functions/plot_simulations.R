@@ -86,8 +86,8 @@ plot_simulations <- function(
   if (simulations_source == "generate" & is.na(var_1_range[1]) & var_1 != "pathogen") stop("you must specify var_1_range to generate this simulation")
   if (simulations_source == "generate" & is.na(var_2) == FALSE & length(var_2_range) == 0) stop("you must specify var_2_range to generate this simulation")
   
-  if (! "setting" %in% this_configuration) this_configuration$setting = "Indonesia"
-  if (! "daily_vaccine_delivery_realistic" %in% this_configuration) this_configuration$daily_vaccine_delivery_realistic = FALSE
+  if (! "setting" %in% names(this_configuration)) this_configuration$setting = "Indonesia"
+  if (! "daily_vaccine_delivery_realistic" %in% names(this_configuration)) this_configuration$daily_vaccine_delivery_realistic = FALSE
   
   if (simulations_source != "generate"){
     ROUND_days_to_detection = 1
@@ -119,8 +119,8 @@ plot_simulations <- function(
   to_plot <- to_plot_loaded <- access_simulations(
     simulations_source,
     this_configuration,
-    TOGGLES_project_deaths,
-    outcome = this_outcome
+    outcome = this_outcome,
+    TOGGLES_project_deaths
     )
   
   
@@ -138,7 +138,7 @@ plot_simulations <- function(
         to_plot <- to_plot %>%
           mutate(phase = case_when(
             phase %in% c("no vaccine","healthcare workers") ~ phase,
-            TRUE ~ paste(var_2,.data[[var_2]])
+            TRUE ~ paste(gsub("_"," ",var_2),.data[[var_2]])
           ))
       } else if (var_2 == "vaccine_delivery_start_date"){
         to_plot <- to_plot %>%
@@ -162,6 +162,16 @@ plot_simulations <- function(
                                                       "no vaccine" ))
   }
   
+  ### Make variables look nicer on plot
+  to_plot <- to_plot %>%
+    mutate(var_1_label = .data[[var_1]])
+  if (var_1 == "R0") to_plot$var_1_label = paste("R0 =",to_plot$var_1_label)
+  if (var_1 == "vaccine_delivery_start_date"){
+    to_plot$var_1_label = paste(to_plot$var_1_label,"days") 
+    to_plot$var_1_label = factor(to_plot$var_1_label, levels = paste(unique(to_plot$vaccine_delivery_start_date), "days"))
+  } 
+  
+
   
   ### Send error if no simulations selected
   if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
@@ -191,7 +201,7 @@ plot_simulations <- function(
       geom_line(aes(x=time,y=incidence,color=as.factor(phase)),linewidth = 1.25)  +
       labs(color="", linetype = "") +
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.) + 
+      facet_grid(var_1_label ~.) + 
       ylab(paste0("incidence (",this_outcome,")"))
   } 
   
@@ -248,7 +258,7 @@ plot_simulations <- function(
       labs(color="", linetype = "")+ 
       ylab(paste0("cumulative incidence (",this_outcome,")")) +
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)
+      facet_grid(var_1_label ~.)
   }
   
   
@@ -259,7 +269,7 @@ plot_simulations <- function(
     select(-phase,-supply,-incidence) %>%
     rename(baseline = cumulative_incidence)
   
-  join_by_list <- c("time", "setting","vaccine_delivery_start_date", "R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity")
+  join_by_list <- c("time", "setting","vaccine_delivery_start_date", "R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity","var_1_label")
   if("pathogen" %in% colnames(to_plot)) join_by_list = c("pathogen",join_by_list)
   
   to_plot <- to_plot %>%
@@ -277,7 +287,7 @@ plot_simulations <- function(
       ylab(paste0("cumulative incidence averted (",this_outcome,")")) +
       xlim(0,max(to_plot$time)) + 
       guides(color = guide_legend(nrow = 2)) +
-      facet_grid(.data[[var_1]] ~.)
+      facet_grid(var_1_label ~.)
   }
   
   
@@ -309,7 +319,7 @@ plot_simulations <- function(
   #dashed line for first day of vaccine availability 
   if (display_vaccine_availability == 1){
     vline_data <- to_plot %>%
-      group_by({{var_1}}) %>%
+      group_by(var_1_label) %>%
       reframe(vaccine_delivery_start_date = unique(vaccine_delivery_start_date))
     
     left_plot <- left_plot + geom_vline(data = vline_data, aes(xintercept = vaccine_delivery_start_date), linetype = "dashed")
@@ -320,7 +330,7 @@ plot_simulations <- function(
     left_plot <- left_plot + geom_vline(data = vline_data2, aes(xintercept = end_of_healthcare_workers_phase), linetype = "dashed")
   }
   #free y-axis
-  if (free_yaxis) left_plot <- left_plot + facet_grid(.data[[var_1]] ~. , scales = "free_y")
+  if (free_yaxis) left_plot <- left_plot + facet_grid(var_1_label ~. , scales = "free_y")
   
   
   ### Make heatmap & output plot!
@@ -340,21 +350,24 @@ plot_simulations <- function(
     }
     
     var_1_type <- data.frame(to_plot)
-    var_1_type <- typeof(var_1_type[,{{var_1}}])
-    if (var_1_type == "character") to_plot$pathogen <- factor(to_plot$pathogen, levels = rev(unique(to_plot$pathogen)))
+    var_1_type <- typeof(var_1_type$var_1_label)
+    if (var_1_type == "character") to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(unique(to_plot$var_1_label)))
+    if (is.factor(to_plot$var_1_label)) var_1_type = "character"; to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(levels(to_plot$var_1_label)))
     
     right_plot <-  ggplot(to_plot) + 
-      geom_tile(aes(x=.data[[var_1]],y=phase,fill=vaccine_effect)) +
-      geom_text(aes(x=.data[[var_1]],y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
+      geom_tile(aes(x=var_1_label,y=phase,fill=vaccine_effect)) +
+      geom_text(aes(x=var_1_label,y=phase,label = round(vaccine_effect,digits=2)), color = "black", size = 4)+ 
       scale_fill_gradientn(colours=c("white","springgreen3","forestgreen"), limits=c(0,100)) +
       #ylab("strategy") +
       ylab("") + 
       xlab("") + 
+      labs(fill = "vaccine effect (%)") +
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom") +
       scale_y_discrete(labels = label_wrap(15))
        
+
     if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse(labels = label_wrap(20)) else right_plot <- right_plot + scale_x_discrete(labels = label_wrap(20))
     
     if (is.na(var_2) == FALSE){
@@ -379,7 +392,9 @@ plot_simulations <- function(
       filter(vaccination_status == FALSE & comorbidity == FALSE) %>%
       ggplot() +
       geom_col(aes(x=age_group,y=infection_fatality_ratio)) +
-      facet_wrap(~ pathogen, ncol = 1,scales = "free") 
+      facet_wrap(~ pathogen, ncol = 1,scales = "free")  + 
+      xlab("age group") + 
+      ylab("infection fatality ratio")
     
     if (display_age_proportion_on_severity_curve == 1){
       extra_plot <- extra_plot +
