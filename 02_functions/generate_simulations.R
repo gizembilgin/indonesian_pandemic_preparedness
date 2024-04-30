@@ -105,7 +105,7 @@ generate_simulations <- function(
           
           for(days_to_detection in unique(days_to_detection_df$days_to_detection)){
             for (rollout_modifier in this_configuration$rollout_modifier){
-              for (daily_vaccine_delivery_realistic in this_configuration$daily_vaccine_delivery_realistic){
+              for (this_daily_vaccine_delivery_realistic in this_configuration$daily_vaccine_delivery_realistic){
                 
                 FLEET_ADMIRAL_OVERRIDE = list(
                   setting = this_configuration$setting,
@@ -118,7 +118,7 @@ generate_simulations <- function(
                   
                   supply = this_configuration$supply,
                   rollout_modifier = rollout_modifier,
-                  daily_vaccine_delivery_realistic = daily_vaccine_delivery_realistic,
+                  daily_vaccine_delivery_realistic = this_daily_vaccine_delivery_realistic,
                   strategy = LIST_strategy,
                   vaccine_derived_immunity = vaccine_derived_immunity
                 )
