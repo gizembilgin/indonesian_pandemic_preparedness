@@ -123,10 +123,10 @@ plot_configuration_inputs <- list(
               selected = "incidence"),
   make_prettySwitch("free_yaxis", "free y-axis"),
   make_prettySwitch("display_impact_heatmap", "heatmap"),
-  make_prettySwitch("display_severity_curve", "severity curve", default = FALSE),
+  make_prettySwitch("display_severity_curve", "severity curve"),
   make_prettySwitch("display_age_proportion_on_severity_curve", "age proportions on severity curve", default = FALSE ),
   make_prettySwitch("display_vaccine_availability", "dashed line of vaccine availability" ),
-  make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery"),
+  make_prettySwitch( "display_end_of_healthcare_worker_delivery", "dashed line denoting end of healthcare worker delivery", default = FALSE),
   uiOutput("SWITCH_plot_dimensions")
 )
 ################################################################################
@@ -188,16 +188,8 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   
  # output$test <- renderText ({
- #   
- #   paste(input$this_outcome,
- #         is.null(input$IR_outcome),
- #         is.null(input$deaths_age_distribution),
- #         is.null(input$deaths_VE))
- #   
- #   paste(input$this_outcome,
- #         input$IR_outcome,
- #         input$deaths_age_distribution,
- #         input$deaths_VE)
+ # 
+ #   input$daily_vaccine_delivery_realistic
  # 
  #   })
  # output$test2 <- renderTable ({
@@ -343,7 +335,8 @@ server <- function(input, output, session) {
        is.null(input$supply) == FALSE &
        is.null(input$infection_derived_immunity) == FALSE &
        is.null(input$rollout_modifier) == FALSE &
-       is.null(input$vaccine_derived_immunity) == FALSE) {
+       is.null(input$vaccine_derived_immunity) == FALSE &
+       is.null(input$daily_vaccine_delivery_realistic) == FALSE) {
      
      if(input$this_outcome == "deaths"){
        if (is.null(input$IR_outcome) == FALSE &
