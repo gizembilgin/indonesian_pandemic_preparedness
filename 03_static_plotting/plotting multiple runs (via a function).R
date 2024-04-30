@@ -28,6 +28,8 @@ plot_simulations (
         detection_outcome = "deaths",
         develop_outcome = 14,  # time to developing outcome (days)
         vaccine_delivery_start_date = 100,
+        vaccine_acceptance_overwrite = data.frame(),
+        daily_vaccine_delivery_realistic = TRUE,
         phase = c(
           #"older adults followed by all adults",
           #"adults then children",               
