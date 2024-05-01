@@ -1,6 +1,6 @@
 
 
-configure_inital_state <- function(index_case_age_group = c("30 to 59"),
+configure_inital_state <- function(index_case_age_group = c("30 to 59"), #CHECKED: very minor difference in results, rounded number is the same
                                    #average_symptomatic_period,
                                    #average_exposed_period,
                                    age_group_labels = c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
