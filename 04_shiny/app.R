@@ -1,6 +1,7 @@
 
 #### SETUP #####################################################################
 #rm(list = ls())
+#library(rsconnect); rsconnect::deployApp(paste0(getwd(),"/04_shiny/"), appName = "indonesian_pandemic_preparedness"); beep()
 require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(bsicons); require(scales)
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
