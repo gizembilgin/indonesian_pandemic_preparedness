@@ -124,6 +124,32 @@ plot_simulations <- function(
     )
   
   
+  ### Work around for supply to be var_1
+  if (var_1 == "supply"){
+    #no_vaccine
+    workshop <- to_plot %>% 
+      filter(supply == 0) %>%
+      ungroup() %>%
+      select(-supply) %>%
+      crossing(supply = unique(to_plot$supply[to_plot$supply != 0]))
+    to_plot <- to_plot %>%
+      filter(supply != 0)
+    to_plot = rbind(to_plot, workshop)
+  }
+  
+  
+  ### Make variables look nicer on plot
+  to_plot$supply <- to_plot$supply * 100
+  to_plot <- to_plot %>%
+    mutate(var_1_label = .data[[var_1]])
+  if (var_1 == "R0") to_plot$var_1_label = paste("R0 =",to_plot$var_1_label)
+  if (var_1 == "vaccine_delivery_start_date"){
+    to_plot$var_1_label = paste(to_plot$var_1_label,"days") 
+    to_plot$var_1_label = factor(to_plot$var_1_label, levels = paste(unique(to_plot$vaccine_delivery_start_date), "days"))
+  }
+  if (var_1 == "supply") to_plot$var_1_label = paste0(to_plot$var_1_label,"% supply")
+  
+  
   ### Rename phase to include var_2 in plot if relevant
   if (is.na(var_2) == FALSE){
     if (length(include_strategies)>1){
@@ -132,21 +158,27 @@ plot_simulations <- function(
           phase %in% c("no vaccine","healthcare workers") ~ phase,
           TRUE ~ paste(phase,"(",var_2,.data[[var_2]],")")
         ))
-    } else{
+    } else {
       
-      if (var_2 != "vaccine_delivery_start_date"){ # general case
-        to_plot <- to_plot %>%
-          mutate(phase = case_when(
-            phase %in% c("no vaccine","healthcare workers") ~ phase,
-            TRUE ~ paste(gsub("_"," ",var_2),.data[[var_2]])
-          ))
-      } else if (var_2 == "vaccine_delivery_start_date"){
+       if (var_2 == "vaccine_delivery_start_date"){
         to_plot <- to_plot %>%
           mutate(phase = case_when(
             phase %in% c("no vaccine","healthcare workers") ~ phase,
             TRUE ~ paste("vaccine delivery starting at",.data[[var_2]],"days")
           ))
-      }
+       } else if (var_2 == "supply"){
+         to_plot <- to_plot %>%
+           mutate(phase = case_when(
+             phase %in% c("no vaccine","healthcare workers") ~ phase,
+             TRUE ~ paste0("vaccine supply ",.data[[var_2]],"%")
+           ))
+       } else { # general case
+         to_plot <- to_plot %>%
+           mutate(phase = case_when(
+             phase %in% c("no vaccine","healthcare workers") ~ phase,
+             TRUE ~ paste(gsub("_"," ",var_2),.data[[var_2]])
+           ))
+       }
       
       to_plot$phase <- factor(to_plot$phase, levels = c(unique(to_plot$phase[to_plot$phase != "no vaccine"]) ,
                                                         "no vaccine" ))
@@ -161,23 +193,13 @@ plot_simulations <- function(
                                                       "healthcare workers" ,
                                                       "no vaccine" ))
   }
-  
-  ### Make variables look nicer on plot
-  to_plot <- to_plot %>%
-    mutate(var_1_label = .data[[var_1]])
-  if (var_1 == "R0") to_plot$var_1_label = paste("R0 =",to_plot$var_1_label)
-  if (var_1 == "vaccine_delivery_start_date"){
-    to_plot$var_1_label = paste(to_plot$var_1_label,"days") 
-    to_plot$var_1_label = factor(to_plot$var_1_label, levels = paste(unique(to_plot$vaccine_delivery_start_date), "days"))
-  } 
-  
 
-  
+
   ### Send error if no simulations selected
   if (nrow(to_plot[to_plot$phase != "no vaccine",]) == 0){
     return(filter_scenarios(to_plot_loaded,this_configuration,warning_search = 1))
   }
-  rm(to_plot_loaded)
+  #rm(to_plot_loaded)
   
   
   ### Collect information on the last date of healthcare worker rollout in case the explicit labelling of this phase is dropped later
@@ -185,6 +207,12 @@ plot_simulations <- function(
     filter(phase == "healthcare workers") %>%
     group_by(.data[[var_1]]) %>%
     summarise(end_of_healthcare_workers_phase = max(time), .groups = "keep") 
+  if(is.na(var_2) == FALSE){
+    vline_data2 <- to_plot %>%
+      filter(phase == "healthcare workers") %>%
+      group_by(.data[[var_1]],.data[[var_2]]) %>%
+      summarise(end_of_healthcare_workers_phase = max(time), .groups = "keep") 
+  }
   
   
   ### Making plot option 1/3: Incidence vs time
@@ -264,12 +292,13 @@ plot_simulations <- function(
   
   ### Calculate cumulative incidence averted
   workshop = to_plot %>%
-    filter(phase == "no vaccine" & supply == 0) %>%
+    filter(phase == "no vaccine") %>%
     ungroup() %>%
-    select(-phase,-supply,-incidence) %>%
-    rename(baseline = cumulative_incidence)
+    select(-phase,-supply,-incidence,-var_1_label) %>%
+    rename(baseline = cumulative_incidence) %>%
+    unique()
   
-  join_by_list <- c("time", "setting","vaccine_delivery_start_date", "R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity","var_1_label")
+  join_by_list <- c("time", "setting","vaccine_delivery_start_date", "R0", "infection_derived_immunity", "rollout_modifier", "vaccine_derived_immunity")
   if("pathogen" %in% colnames(to_plot)) join_by_list = c("pathogen",join_by_list)
   
   to_plot <- to_plot %>%
@@ -351,8 +380,8 @@ plot_simulations <- function(
     
     var_1_type <- data.frame(to_plot)
     var_1_type <- typeof(var_1_type$var_1_label)
-    if (var_1_type == "character") to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(unique(to_plot$var_1_label)))
-    if (is.factor(to_plot$var_1_label)) var_1_type = "character"; to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(levels(to_plot$var_1_label)))
+    if (var_1_type == "character") {to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(unique(to_plot$var_1_label)))
+    } else if (is.factor(to_plot$var_1_label)) {var_1_type = "character"; to_plot$var_1_label <- factor(to_plot$var_1_label, levels = rev(levels(to_plot$var_1_label)))}
     
     right_plot <-  ggplot(to_plot) + 
       geom_tile(aes(x=var_1_label,y=phase,fill=vaccine_effect)) +
@@ -371,8 +400,10 @@ plot_simulations <- function(
     if (var_1_type != "character") right_plot <- right_plot + scale_x_reverse(labels = label_wrap(20)) else right_plot <- right_plot + scale_x_discrete(labels = label_wrap(20))
     
     if (is.na(var_2) == FALSE){
+      ylab_var_2 <- gsub("_"," ",var_2)
+      ylab_var_2 <- gsub("supply","supply (%)",var_2)
       right_plot <- right_plot + 
-        ylab(gsub("_"," ",var_2))
+        ylab(ylab_var_2)
     }
     
     result <- ggarrange(left_plot,right_plot,nrow = 1)
@@ -405,7 +436,6 @@ plot_simulations <- function(
     if (display_impact_heatmap == 1)  result <- ggarrange(left_plot,right_plot,extra_plot,nrow = 1) 
     if (display_impact_heatmap == 0)  result <- ggarrange(left_plot,extra_plot,nrow = 1) 
   }
-  
   
   print(result)
 }
