@@ -401,7 +401,7 @@ plot_simulations <- function(
     
     if (is.na(var_2) == FALSE){
       ylab_var_2 <- gsub("_"," ",var_2)
-      ylab_var_2 <- gsub("supply","supply (%)",var_2)
+      ylab_var_2 <- gsub("supply","supply (%)",ylab_var_2)
       right_plot <- right_plot + 
         ylab(ylab_var_2)
     }

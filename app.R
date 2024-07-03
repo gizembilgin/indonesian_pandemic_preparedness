@@ -1,7 +1,7 @@
 
 #### SETUP #####################################################################
 #rm(list = ls())
-#library(rsconnect); rsconnect::deployApp(paste0(getwd(),"/04_shiny/"), appName = "indonesian_pandemic_preparedness"); beep()
+#library(rsconnect); rsconnect::deployApp(getwd(), appName = "indonesian_pandemic_preparedness"); beep()
 require(tidyverse); require(ggpubr);require(shiny); require(shinyWidgets); require(reactlog); require(waiter); require(bslib); require(bsicons); require(scales)
 options(scipen = 1000) #turn off scientific notation
 for (function_script in list.files(path=paste0(gsub("/04_shiny","",getwd()),"/02_functions/"), full.name = TRUE)){source(function_script)}
@@ -43,7 +43,7 @@ CHOICES = list(
   outcome_threshold = c(1,2,5,10,25),
   gen_interval = c(7,14,21,28),
   IR_outcome = c("1%"  = 0.01, # COVID-19 WT and influenza like
-                 "10%" = 0.1,  # diptheria and SARS like
+                 "10%" = 0.1,  # diphtheria and SARS like
                  "25%" = 0.25, # Lassa fever and MERS like
                  "50%" = 0.5,  # TB, cholera, JEV and HIV like
                  "65%" = 0.65  # plague and Ebola like

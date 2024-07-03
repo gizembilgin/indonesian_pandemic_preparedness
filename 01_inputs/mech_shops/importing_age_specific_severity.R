@@ -154,7 +154,7 @@ age_specific_severity_MASTER %>%
 # pathogen       infection_fatality_ratio
 # 1 COVID-19 WT                0.0124
 # 2 Influenza 1918             0.0213
-# 3 Diptheria                  0.0817
+# 3 Diphtheria                  0.0817
 # 4 SARS                       0.0915
 # 5 Lassa fever                0.240 
 # 6 MERS-CoV                   0.263 

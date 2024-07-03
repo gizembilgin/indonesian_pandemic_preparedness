@@ -79,7 +79,7 @@ plot_simulations (
       # vaccine_acceptance_overwrite = data.frame(age_group =  c("0 to 4","5 to 17","18 to 29","30 to 59","60 to 110"),
       #                                           overwrite = rep(0.01,5)),
       vaccine_acceptance_overwrite = data.frame(),
-      daily_vaccine_delivery_realistic = TRUE,
+      daily_vaccine_delivery_realistic = FALSE,
       phase = c(
         "uniform",
         "healthcare workers",
@@ -189,7 +189,7 @@ plot_simulations (
   this_outcome = "deaths",    #options: infections, deaths
   TOGGLES_project_deaths = list(
     point_estimate =  1 / 100,
-    age_distribution = c("Plague", "Diptheria","COVID-19 WT","Influenza 1918"),
+    age_distribution = c("Plague", "Diphtheria","COVID-19 WT","Influenza 1918"),
     VE_death = 1,
     comorb_increased_risk = 1
   ),
@@ -214,7 +214,7 @@ plot_simulations (
         "no vaccine" ),
       supply = c(0.2),
       infection_derived_immunity = 1,
-      rollout_modifier = 2,
+      rollout_modifier = 1,
       vaccine_derived_immunity = 1,
       daily_vaccine_delivery_realistic = FALSE
     ),

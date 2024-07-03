@@ -26,7 +26,7 @@ result <- generate_simulations(
     outcome_threshold = c(1,2,5,10),
     gen_interval = c(7, 14, 28),
     IR_outcome = c(0.01, # COVID-19 WT and influenza like
-                        0.1,  # diptheria and SARS like
+                        0.1,  # diphtheria and SARS like
                         0.25, # Lassa fever and MERS like
                         0.5,  # TB, cholera, JEV and HIV like
                         0.65  # plague and Ebola like
