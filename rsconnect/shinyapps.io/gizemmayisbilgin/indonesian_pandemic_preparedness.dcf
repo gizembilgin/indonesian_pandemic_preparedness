@@ -5,6 +5,6 @@ account: gizemmayisbilgin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11908501
-bundleId: 8822000
+bundleId: 8822015
 url: https://gizemmayisbilgin.shinyapps.io/indonesian_pandemic_preparedness/
 version: 1

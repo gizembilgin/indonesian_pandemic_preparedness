@@ -360,7 +360,8 @@ plot_simulations <- function(
   }
   #free y-axis
   if (free_yaxis) left_plot <- left_plot + facet_grid(var_1_label ~. , scales = "free_y")
-  
+  #comma in large values for left_plot
+  left_plot <- left_plot + scale_y_continuous(labels = comma)
   
   ### Make heatmap & output plot!
   if (display_impact_heatmap == 1){
