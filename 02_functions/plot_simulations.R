@@ -391,7 +391,7 @@ plot_simulations <- function(
       #ylab("strategy") +
       ylab("") + 
       xlab("") + 
-      labs(fill = "vaccine effect (%)") +
+      labs(fill = "incidence averted \n by vaccine (%)") +
       coord_flip() +
       theme_bw() +
       theme(legend.position="bottom") +
